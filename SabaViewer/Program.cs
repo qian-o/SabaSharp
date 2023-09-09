@@ -17,5 +17,9 @@ internal class Program
         Console.WriteLine($"Materials: {pmxParsing.Materials.Length}");
         Console.WriteLine($"Bones: {pmxParsing.Bones.Length}");
         Console.WriteLine($"Morphs: {pmxParsing.Morphs.Length}");
+        Console.WriteLine($"DisplayFrames: {pmxParsing.DisplayFrames.Length}");
+        Console.WriteLine($"RigidBodies: {pmxParsing.RigidBodies.Length}");
+        Console.WriteLine($"Joints: {pmxParsing.Joints.Length}");
+        Console.WriteLine($"SoftBodies: {pmxParsing.SoftBodies.Length}");
     }
 }

@@ -123,13 +123,13 @@ public enum PmxJointType : byte
     Hinge
 }
 
-public enum PmxSoftbodyType : byte
+public enum PmxSoftBodyType : byte
 {
     TriMesh,
     Rope
 }
 
-public enum PmxSoftbodyMask : byte
+public enum PmxSoftBodyMask : byte
 {
     BLink = 0x01,
     Cluster = 0x02,
@@ -754,6 +754,294 @@ public class PmxMorph
         }
     }
 }
+
+public class PmxDisplayFrame
+{
+    public class Target
+    {
+        public PmxTargetType TargetType { get; }
+
+        public int Index { get; }
+
+        public Target(BinaryReader binaryReader, PmxHeader header)
+        {
+            TargetType = (PmxTargetType)binaryReader.ReadByte();
+            Index = binaryReader.ReadIndex(TargetType == PmxTargetType.BoneIndex ? header.BoneIndexSize : header.MorphIndexSize);
+        }
+    }
+
+    public string Name { get; }
+
+    public string NameEn { get; }
+
+    public PmxFrameType FrameType { get; }
+
+    public Target[] Targets { get; } = Array.Empty<Target>();
+
+    public PmxDisplayFrame(BinaryReader binaryReader, PmxHeader header)
+    {
+        Name = binaryReader.ReadString(header.Encoding);
+        NameEn = binaryReader.ReadString(header.Encoding);
+        FrameType = (PmxFrameType)binaryReader.ReadByte();
+
+        Targets = new Target[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < Targets.Length; i++)
+        {
+            Targets[i] = new Target(binaryReader, header);
+        }
+    }
+}
+
+public class PmxRigidBody
+{
+    public string Name { get; }
+
+    public string NameEn { get; }
+
+    public int BoneIndex { get; }
+
+    public byte Group { get; }
+
+    public ushort CollisionGroup { get; }
+
+    public PmxShape Shape { get; }
+
+    public Vector3D<float> ShapeSize { get; }
+
+    public Vector3D<float> Translate { get; }
+
+    public Vector3D<float> Rotate { get; }
+
+    public float Mass { get; }
+
+    public float TranslateDimmer { get; }
+
+    public float RotateDimmer { get; }
+
+    public float Repulsion { get; }
+
+    public float Friction { get; }
+
+    public PmxOperation Op { get; }
+
+    public PmxRigidBody(BinaryReader binaryReader, PmxHeader header)
+    {
+        Name = binaryReader.ReadString(header.Encoding);
+        NameEn = binaryReader.ReadString(header.Encoding);
+        BoneIndex = binaryReader.ReadIndex(header.BoneIndexSize);
+        Group = binaryReader.ReadByte();
+        CollisionGroup = binaryReader.ReadUInt16();
+        Shape = (PmxShape)binaryReader.ReadByte();
+        ShapeSize = binaryReader.ReadVector3D();
+        Translate = binaryReader.ReadVector3D();
+        Rotate = binaryReader.ReadVector3D();
+        Mass = binaryReader.ReadSingle();
+        TranslateDimmer = binaryReader.ReadSingle();
+        RotateDimmer = binaryReader.ReadSingle();
+        Repulsion = binaryReader.ReadSingle();
+        Friction = binaryReader.ReadSingle();
+        Op = (PmxOperation)binaryReader.ReadByte();
+    }
+}
+
+public class PmxJoint
+{
+    public string Name { get; }
+
+    public string NameEn { get; }
+
+    public PmxJointType Type { get; }
+
+    public int RigidBodyIndexA { get; }
+
+    public int RigidBodyIndexB { get; }
+
+    public Vector3D<float> Translate { get; }
+
+    public Vector3D<float> Rotate { get; }
+
+    public Vector3D<float> TranslateLimitMin { get; }
+
+    public Vector3D<float> TranslateLimitMax { get; }
+
+    public Vector3D<float> RotateLimitMin { get; }
+
+    public Vector3D<float> RotateLimitMax { get; }
+
+    public Vector3D<float> SpringTranslate { get; }
+
+    public Vector3D<float> SpringRotate { get; }
+
+    public PmxJoint(BinaryReader binaryReader, PmxHeader header)
+    {
+        Name = binaryReader.ReadString(header.Encoding);
+        NameEn = binaryReader.ReadString(header.Encoding);
+        Type = (PmxJointType)binaryReader.ReadByte();
+        RigidBodyIndexA = binaryReader.ReadIndex(header.RigidBodyIndexSize);
+        RigidBodyIndexB = binaryReader.ReadIndex(header.RigidBodyIndexSize);
+        Translate = binaryReader.ReadVector3D();
+        Rotate = binaryReader.ReadVector3D();
+        TranslateLimitMin = binaryReader.ReadVector3D();
+        TranslateLimitMax = binaryReader.ReadVector3D();
+        RotateLimitMin = binaryReader.ReadVector3D();
+        RotateLimitMax = binaryReader.ReadVector3D();
+        SpringTranslate = binaryReader.ReadVector3D();
+        SpringRotate = binaryReader.ReadVector3D();
+    }
+}
+
+public class PmxSoftBody
+{
+    public class AnchorRigidBody
+    {
+        public int RigidBodyIndex { get; }
+
+        public int VertexIndex { get; }
+
+        public bool NearMode { get; }
+
+        public AnchorRigidBody(BinaryReader binaryReader, PmxHeader header)
+        {
+            RigidBodyIndex = binaryReader.ReadIndex(header.RigidBodyIndexSize);
+            VertexIndex = binaryReader.ReadIndex(header.VertexIndexSize);
+            NearMode = binaryReader.ReadBoolean();
+        }
+    }
+
+    public string Name { get; }
+
+    public string NameEn { get; }
+
+    public PmxSoftBodyType Type { get; }
+
+    public int MaterialIndex { get; }
+
+    public byte Group { get; }
+
+    public ushort CollisionGroup { get; }
+
+    public PmxSoftBodyMask Flag { get; }
+
+    public int BLinkLength { get; }
+
+    public int NumClusters { get; }
+
+    public float TotalMass { get; }
+
+    public float CollisionMargin { get; }
+
+    public PmxAeroModel AeroModel { get; }
+
+    public float VCF { get; }
+
+    public float DP { get; }
+
+    public float DG { get; }
+
+    public float LF { get; }
+
+    public float PR { get; }
+
+    public float VC { get; }
+
+    public float DF { get; }
+
+    public float MT { get; }
+
+    public float CHR { get; }
+
+    public float KHR { get; }
+
+    public float SHR { get; }
+
+    public float AHR { get; }
+
+    public float SRHR_CL { get; }
+
+    public float SKHR_CL { get; }
+
+    public float SSHR_CL { get; }
+
+    public float SR_SPLT_CL { get; }
+
+    public float SK_SPLT_CL { get; }
+
+    public float SS_SPLT_CL { get; }
+
+    public int V_IT { get; }
+
+    public int P_IT { get; }
+
+    public int D_IT { get; }
+
+    public int C_IT { get; }
+
+    public float LST { get; }
+
+    public float AST { get; }
+
+    public float VST { get; }
+
+    public AnchorRigidBody[] AnchorRigidbodies { get; } = Array.Empty<AnchorRigidBody>();
+
+    public int[] PinVertexIndices { get; } = Array.Empty<int>();
+
+    public PmxSoftBody(BinaryReader binaryReader, PmxHeader header)
+    {
+        Name = binaryReader.ReadString(header.Encoding);
+        NameEn = binaryReader.ReadString(header.Encoding);
+        Type = (PmxSoftBodyType)binaryReader.ReadByte();
+        MaterialIndex = binaryReader.ReadIndex(header.MaterialIndexSize);
+        Group = binaryReader.ReadByte();
+        CollisionGroup = binaryReader.ReadUInt16();
+        Flag = (PmxSoftBodyMask)binaryReader.ReadByte();
+        BLinkLength = binaryReader.ReadInt32();
+        NumClusters = binaryReader.ReadInt32();
+        TotalMass = binaryReader.ReadSingle();
+        CollisionMargin = binaryReader.ReadSingle();
+        AeroModel = (PmxAeroModel)binaryReader.ReadInt32();
+        VCF = binaryReader.ReadSingle();
+        DP = binaryReader.ReadSingle();
+        DG = binaryReader.ReadSingle();
+        LF = binaryReader.ReadSingle();
+        PR = binaryReader.ReadSingle();
+        VC = binaryReader.ReadSingle();
+        DF = binaryReader.ReadSingle();
+        MT = binaryReader.ReadSingle();
+        CHR = binaryReader.ReadSingle();
+        KHR = binaryReader.ReadSingle();
+        SHR = binaryReader.ReadSingle();
+        AHR = binaryReader.ReadSingle();
+        SRHR_CL = binaryReader.ReadSingle();
+        SKHR_CL = binaryReader.ReadSingle();
+        SSHR_CL = binaryReader.ReadSingle();
+        SR_SPLT_CL = binaryReader.ReadSingle();
+        SK_SPLT_CL = binaryReader.ReadSingle();
+        SS_SPLT_CL = binaryReader.ReadSingle();
+        V_IT = binaryReader.ReadInt32();
+        P_IT = binaryReader.ReadInt32();
+        D_IT = binaryReader.ReadInt32();
+        C_IT = binaryReader.ReadInt32();
+        LST = binaryReader.ReadSingle();
+        AST = binaryReader.ReadSingle();
+        VST = binaryReader.ReadSingle();
+
+        AnchorRigidbodies = new AnchorRigidBody[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < AnchorRigidbodies.Length; i++)
+        {
+            AnchorRigidbodies[i] = new AnchorRigidBody(binaryReader, header);
+        }
+
+        PinVertexIndices = new int[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < PinVertexIndices.Length; i++)
+        {
+            PinVertexIndices[i] = binaryReader.ReadIndex(header.VertexIndexSize);
+        }
+    }
+}
 #endregion
 
 public class PmxParsing
@@ -774,6 +1062,14 @@ public class PmxParsing
 
     public PmxMorph[] Morphs { get; }
 
+    public PmxDisplayFrame[] DisplayFrames { get; }
+
+    public PmxRigidBody[] RigidBodies { get; }
+
+    public PmxJoint[] Joints { get; }
+
+    public PmxSoftBody[] SoftBodies { get; }
+
     internal PmxParsing(PmxHeader header,
                         PmxInfo info,
                         PmxVertex[] vertices,
@@ -781,7 +1077,11 @@ public class PmxParsing
                         PmxTexture[] textures,
                         PmxMaterial[] materials,
                         PmxBone[] bones,
-                        PmxMorph[] morphs)
+                        PmxMorph[] morphs,
+                        PmxDisplayFrame[] displayFrames,
+                        PmxRigidBody[] rigidBodies,
+                        PmxJoint[] joints,
+                        PmxSoftBody[] softBodies)
     {
         Header = header;
         Info = info;
@@ -791,6 +1091,10 @@ public class PmxParsing
         Materials = materials;
         Bones = bones;
         Morphs = morphs;
+        DisplayFrames = displayFrames;
+        RigidBodies = rigidBodies;
+        Joints = joints;
+        SoftBodies = softBodies;
     }
 
     public static PmxParsing? ParsingByFile(string path)
@@ -811,7 +1115,11 @@ public class PmxParsing
                               ReadTextures(binaryReader, header),
                               ReadMaterials(binaryReader, header),
                               ReadBones(binaryReader, header),
-                              ReadMorphs(binaryReader, header));
+                              ReadMorphs(binaryReader, header),
+                              ReadDisplayFrames(binaryReader, header),
+                              ReadRigidBodies(binaryReader, header),
+                              ReadJoints(binaryReader, header),
+                              ReadSoftBodies(binaryReader, header));
     }
 
     private static PmxHeader ReadHeader(BinaryReader binaryReader)
@@ -894,5 +1202,58 @@ public class PmxParsing
         }
 
         return morphs;
+    }
+
+    private static PmxDisplayFrame[] ReadDisplayFrames(BinaryReader binaryReader, PmxHeader header)
+    {
+        PmxDisplayFrame[] displayFrames = new PmxDisplayFrame[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < displayFrames.Length; i++)
+        {
+            displayFrames[i] = new PmxDisplayFrame(binaryReader, header);
+        }
+
+        return displayFrames;
+    }
+
+    private static PmxRigidBody[] ReadRigidBodies(BinaryReader binaryReader, PmxHeader header)
+    {
+        PmxRigidBody[] rigidbodies = new PmxRigidBody[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            rigidbodies[i] = new PmxRigidBody(binaryReader, header);
+        }
+
+        return rigidbodies;
+    }
+
+    private static PmxJoint[] ReadJoints(BinaryReader binaryReader, PmxHeader header)
+    {
+        PmxJoint[] joints = new PmxJoint[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < joints.Length; i++)
+        {
+            joints[i] = new PmxJoint(binaryReader, header);
+        }
+
+        return joints;
+    }
+
+    private static PmxSoftBody[] ReadSoftBodies(BinaryReader binaryReader, PmxHeader header)
+    {
+        if (binaryReader.BaseStream.Position >= binaryReader.BaseStream.Length)
+        {
+            return Array.Empty<PmxSoftBody>();
+        }
+
+        PmxSoftBody[] softBodies = new PmxSoftBody[binaryReader.ReadInt32()];
+
+        for (int i = 0; i < softBodies.Length; i++)
+        {
+            softBodies[i] = new PmxSoftBody(binaryReader, header);
+        }
+
+        return softBodies;
     }
 }
