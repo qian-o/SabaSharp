@@ -363,7 +363,7 @@ public class PmxMaterial
 
     public string Memo { get; }
 
-    public int FaceCount { get; }
+    public int FaceVerticesCount { get; }
 
     public PmxMaterial(BinaryReader binaryReader, PmxHeader header)
     {
@@ -395,7 +395,7 @@ public class PmxMaterial
         }
 
         Memo = binaryReader.ReadString(header.Encoding);
-        FaceCount = binaryReader.ReadInt32();
+        FaceVerticesCount = binaryReader.ReadInt32();
     }
 }
 
