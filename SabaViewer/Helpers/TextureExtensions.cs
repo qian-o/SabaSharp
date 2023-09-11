@@ -12,23 +12,31 @@ public static unsafe class TextureExtensions
     {
         using SKImage image = SKImage.FromEncodedData(file);
 
-        texture.AllocationBuffer((uint)(image.Width * image.Height * 4), out void* pboData);
+        int comp = 4;
+        GLEnum color = GLEnum.Rgba;
+        if (image.ColorType != SKColorType.Rgba8888)
+        {
+            comp = 3;
+            color = GLEnum.Rgb;
+        }
 
-        image.ReadPixels(new SKImageInfo(image.Width, image.Height, SKColorType.Rgba8888), (nint)pboData, image.Width * 4, 0, 0);
+        texture.AllocationBuffer((uint)(image.Width * image.Height * comp), out void* pboData);
 
-        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), GLEnum.Rgba, GLEnum.UnsignedByte);
+        image.ReadPixels(new SKImageInfo(image.Width, image.Height, image.ColorType), (nint)pboData, image.Width * comp, 0, 0);
+
+        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), color, GLEnum.UnsignedByte);
     }
 
-    public static void WriteImage(this Texture2D texture, byte* image, int width, int height)
+    public static void WriteImage(this Texture2D texture, byte* image, int width, int height, int comp = 4)
     {
-        texture.AllocationBuffer((uint)(width * height * 4), out void* pboData);
+        texture.AllocationBuffer((uint)(width * height * comp), out void* pboData);
 
-        Span<byte> src = new(image, width * height * 4);
-        Span<byte> dst = new(pboData, width * height * 4);
+        Span<byte> src = new(image, width * height * comp);
+        Span<byte> dst = new(pboData, width * height * comp);
 
         src.CopyTo(dst);
 
-        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), GLEnum.Rgba, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), comp == 4 ? GLEnum.Rgba : GLEnum.Rgb, GLEnum.UnsignedByte);
     }
 
     public static void WriteFrame(this Texture2D texture, GL gl, int x, int y, int width, int height)

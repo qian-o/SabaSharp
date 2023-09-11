@@ -11,6 +11,8 @@ public unsafe class Texture2D : IDisposable
     private readonly uint _pbo;
     private readonly uint _tex;
 
+    public bool HasAlpha { get; private set; }
+
     public Texture2D(GL gl, GLEnum internalformat, GLEnum wrapParam)
     {
         _gl = gl;
@@ -57,6 +59,8 @@ public unsafe class Texture2D : IDisposable
 
     public void FlushTexture(Vector2D<uint> size, GLEnum format, GLEnum type)
     {
+        HasAlpha = format == GLEnum.Rgba;
+
         _gl.BindBuffer(GLEnum.PixelUnpackBuffer, _pbo);
         _gl.BindTexture(GLEnum.Texture2D, _tex);
 
