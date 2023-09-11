@@ -1,8 +1,9 @@
-﻿using Silk.NET.OpenGLES;
+﻿using Silk.NET.Maths;
+using Silk.NET.OpenGLES;
 
 namespace SabaViewer.Helpers;
 
-public static class GLESExtensions
+public static unsafe class GLESExtensions
 {
     public static uint CreateShader(this GL gl, GLEnum type, string shaderSource)
     {
@@ -50,5 +51,60 @@ public static class GLESExtensions
         gl.DeleteShader(fs);
 
         return program;
+    }
+
+    public static void SetUniform(this GL gl, int name, int data)
+    {
+        gl.Uniform1(name, data);
+    }
+
+    public static void SetUniform(this GL gl, int name, float data)
+    {
+        gl.Uniform1(name, data);
+    }
+
+    public static void SetUniform(this GL gl, int name, double data)
+    {
+        gl.Uniform1(name, Convert.ToSingle(data));
+    }
+
+    public static void SetUniform(this GL gl, int name, Vector2D<float> data)
+    {
+        gl.Uniform2(name, 1, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, Vector3D<float> data)
+    {
+        gl.Uniform3(name, 1, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, Vector4D<float> data)
+    {
+        gl.Uniform4(name, 1, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, Matrix2X2<float> data)
+    {
+        gl.UniformMatrix2(name, 1, false, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, Matrix3X3<float> data)
+    {
+        gl.UniformMatrix3(name, 1, false, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, Matrix4X4<float> data)
+    {
+        gl.UniformMatrix4(name, 1, false, (float*)&data);
+    }
+
+    public static void SetUniform(this GL gl, int name, IEnumerable<Matrix4X4<float>> data)
+    {
+        Matrix4X4<float>[] matrixArray = data.ToArray();
+
+        fixed (Matrix4X4<float>* matrix = matrixArray)
+        {
+            gl.UniformMatrix4(name, (uint)matrixArray.Length, false, (float*)matrix);
+        }
     }
 }

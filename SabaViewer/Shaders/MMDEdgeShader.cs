@@ -9,9 +9,9 @@ public class MMDEdgeShader : IDisposable
 
     public uint Id { get; }
 
-    public int InPos { get; }
+    public uint InPos { get; }
 
-    public int InNor { get; }
+    public uint InNor { get; }
 
     public int UniWV { get; }
 
@@ -28,10 +28,10 @@ public class MMDEdgeShader : IDisposable
         _gl = gl;
 
         Id = _gl.CreateShaderProgram("Resources/Shader/mmd_edge.vert", "Resources/Shader/mmd_edge.frag");
-    
+
         // Attributes
-        InPos = _gl.GetAttribLocation(Id, "in_Pos");
-        InNor = _gl.GetAttribLocation(Id, "in_Nor");
+        InPos = (uint)_gl.GetAttribLocation(Id, "in_Pos");
+        InNor = (uint)_gl.GetAttribLocation(Id, "in_Nor");
 
         // Uniforms
         UniWV = _gl.GetUniformLocation(Id, "u_WV");

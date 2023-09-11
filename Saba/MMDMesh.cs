@@ -1,14 +1,14 @@
 ﻿namespace Saba;
 
-public class Mesh
+public class MMDMesh
 {
     public uint BeginIndex { get; }
 
     public uint VertexCount { get; }
 
-    public Material Material { get; }
+    public MMDMaterial Material { get; }
 
-    public Mesh(uint beginIndex, uint vertexCount, Material material)
+    public MMDMesh(uint beginIndex, uint vertexCount, MMDMaterial material)
     {
         BeginIndex = beginIndex;
         VertexCount = vertexCount;

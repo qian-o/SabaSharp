@@ -9,11 +9,11 @@ public class MMDShader : IDisposable
 
     public uint Id { get; }
 
-    public int InPos { get; }
+    public uint InPos { get; }
 
-    public int InNor { get; }
+    public uint InNor { get; }
 
-    public int InUV { get; }
+    public uint InUV { get; }
 
     public int UniWV { get; }
 
@@ -78,9 +78,9 @@ public class MMDShader : IDisposable
         Id = _gl.CreateShaderProgram("Resources/Shader/mmd.vert", "Resources/Shader/mmd.frag");
 
         // Attributes
-        InPos = _gl.GetAttribLocation(Id, "in_Pos");
-        InNor = _gl.GetAttribLocation(Id, "in_Nor");
-        InUV = _gl.GetAttribLocation(Id, "in_UV");
+        InPos = (uint)_gl.GetAttribLocation(Id, "in_Pos");
+        InNor = (uint)_gl.GetAttribLocation(Id, "in_Nor");
+        InUV = (uint)_gl.GetAttribLocation(Id, "in_UV");
 
         // Uniforms
         UniWV = _gl.GetUniformLocation(Id, "u_WV");

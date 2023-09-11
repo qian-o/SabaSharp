@@ -7,16 +7,14 @@ namespace SabaViewer.Tools;
 public unsafe class Texture2D : IDisposable
 {
     private readonly GL _gl;
-    private readonly GLEnum _internalformat;
     private readonly uint _pbo;
     private readonly uint _tex;
 
-    public bool HasAlpha { get; private set; }
+    public bool HasAlpha { get; private set; } = true;
 
-    public Texture2D(GL gl, GLEnum internalformat, GLEnum wrapParam)
+    public Texture2D(GL gl, GLEnum wrapParam)
     {
         _gl = gl;
-        _internalformat = internalformat;
 
         _pbo = _gl.GenBuffer();
         _tex = _gl.GenTexture();
@@ -57,15 +55,15 @@ public unsafe class Texture2D : IDisposable
         _gl.BindBuffer(GLEnum.PixelUnpackBuffer, 0);
     }
 
-    public void FlushTexture(Vector2D<uint> size, GLEnum format, GLEnum type)
+    public void FlushTexture(Vector2D<uint> size, GLEnum internalformat, GLEnum format, GLEnum type, bool hasAlpha = true)
     {
-        HasAlpha = format == GLEnum.Rgba;
+        HasAlpha = hasAlpha;
 
         _gl.BindBuffer(GLEnum.PixelUnpackBuffer, _pbo);
         _gl.BindTexture(GLEnum.Texture2D, _tex);
 
         _gl.UnmapBuffer(GLEnum.PixelUnpackBuffer);
-        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)_internalformat, size.X, size.Y, 0, format, type, null);
+        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)internalformat, size.X, size.Y, 0, format, type, (void*)0);
         _gl.GenerateMipmap(GLEnum.Texture2D);
 
         _gl.BindTexture(GLEnum.Texture2D, 0);

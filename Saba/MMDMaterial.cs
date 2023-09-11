@@ -11,7 +11,7 @@ public enum SphereTextureMode
 }
 #endregion
 
-public class Material
+public class MMDMaterial
 {
     public string Name { get; set; }
 
@@ -59,7 +59,7 @@ public class Material
 
     public bool ShadowReceiver { get; set; }
 
-    public Material()
+    public MMDMaterial()
     {
         Name = string.Empty;
         Diffuse = Vector3D<float>.One;

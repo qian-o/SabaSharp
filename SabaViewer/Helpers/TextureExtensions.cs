@@ -12,31 +12,23 @@ public static unsafe class TextureExtensions
     {
         using SKImage image = SKImage.FromEncodedData(file);
 
-        int comp = 4;
-        GLEnum color = GLEnum.Rgba;
-        if (image.ColorType != SKColorType.Rgba8888)
-        {
-            comp = 3;
-            color = GLEnum.Rgb;
-        }
+        texture.AllocationBuffer((uint)(image.Width * image.Height * 4), out void* pboData);
 
-        texture.AllocationBuffer((uint)(image.Width * image.Height * comp), out void* pboData);
+        image.ReadPixels(new SKImageInfo(image.Width, image.Height, image.AlphaType == SKAlphaType.Premul ? SKColorType.Rgba8888 : SKColorType.Rgb888x), (nint)pboData, image.Width * 4, 0, 0);
 
-        image.ReadPixels(new SKImageInfo(image.Width, image.Height, image.ColorType), (nint)pboData, image.Width * comp, 0, 0);
-
-        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), color, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), GLEnum.Rgba, GLEnum.Rgba, GLEnum.UnsignedByte, image.AlphaType == SKAlphaType.Premul);
     }
 
-    public static void WriteImage(this Texture2D texture, byte* image, int width, int height, int comp = 4)
+    public static void WriteImage(this Texture2D texture, byte* image, int width, int height)
     {
-        texture.AllocationBuffer((uint)(width * height * comp), out void* pboData);
+        texture.AllocationBuffer((uint)(width * height * 4), out void* pboData);
 
-        Span<byte> src = new(image, width * height * comp);
-        Span<byte> dst = new(pboData, width * height * comp);
+        Span<byte> src = new(image, width * height * 4);
+        Span<byte> dst = new(pboData, width * height * 4);
 
         src.CopyTo(dst);
 
-        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), comp == 4 ? GLEnum.Rgba : GLEnum.Rgb, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), GLEnum.Rgba, GLEnum.Rgba, GLEnum.UnsignedByte);
     }
 
     public static void WriteFrame(this Texture2D texture, GL gl, int x, int y, int width, int height)
@@ -45,7 +37,7 @@ public static unsafe class TextureExtensions
 
         gl.ReadPixels(x, y, (uint)width, (uint)height, GLEnum.Rgba, GLEnum.UnsignedByte, pboData);
 
-        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), GLEnum.Rgba, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>((uint)width, (uint)height), GLEnum.Rgba, GLEnum.Rgba, GLEnum.UnsignedByte);
     }
 
     public static void WriteLinearColor(this Texture2D texture, Color[] colors, PointF begin, PointF end)
@@ -63,7 +55,7 @@ public static unsafe class TextureExtensions
         };
         surface.Canvas.DrawRect(0, 0, 1024, 1024, paint);
 
-        texture.FlushTexture(new Vector2D<uint>(1024, 1024), GLEnum.Rgba, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>(1024, 1024), GLEnum.Rgba, GLEnum.Rgba, GLEnum.UnsignedByte);
     }
 
     public static void WriteMatrixArray(this Texture2D texture, IEnumerable<Matrix4X4<float>> matrices)
@@ -76,7 +68,7 @@ public static unsafe class TextureExtensions
 
         matrixArray.CopyTo(span);
 
-        texture.FlushTexture(new Vector2D<uint>(4, (uint)matrixArray.Length), GLEnum.Rgba, GLEnum.Float);
+        texture.FlushTexture(new Vector2D<uint>(4, (uint)matrixArray.Length), GLEnum.Rgba, GLEnum.Rgba, GLEnum.Float);
     }
 
     public static void WriteColor(this Texture2D texture, Color color)
@@ -97,6 +89,6 @@ public static unsafe class TextureExtensions
 
         span[0] = color;
 
-        texture.FlushTexture(new Vector2D<uint>(1, 1), GLEnum.Rgba, GLEnum.UnsignedByte);
+        texture.FlushTexture(new Vector2D<uint>(1, 1), GLEnum.Rgba, GLEnum.Rgba, GLEnum.UnsignedByte);
     }
 }

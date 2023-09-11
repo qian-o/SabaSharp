@@ -9,7 +9,7 @@ public class MMDGroundShadowShader : IDisposable
 
     public uint Id { get; }
 
-    public int InPos { get; }
+    public uint InPos { get; }
 
     public int UniWVP { get; }
 
@@ -20,9 +20,9 @@ public class MMDGroundShadowShader : IDisposable
         _gl = gl;
 
         Id = _gl.CreateShaderProgram("Resources/Shader/mmd_ground_shadow.vert", "Resources/Shader/mmd_ground_shadow.frag");
-    
+
         // Attributes
-        InPos = _gl.GetAttribLocation(Id, "in_Pos");
+        InPos = (uint)_gl.GetAttribLocation(Id, "in_Pos");
 
         // Uniforms
         UniWVP = _gl.GetUniformLocation(Id, "u_WVP");

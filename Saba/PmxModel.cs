@@ -1,18 +1,17 @@
-﻿using Saba.Contracts;
-using Saba.Helpers;
+﻿using Saba.Helpers;
 using Silk.NET.Maths;
 
 namespace Saba;
 
-public class PmxModel : IModel
+public class PmxModel : MMDModel
 {
     private readonly List<Vector3D<float>> _positions;
     private readonly List<Vector3D<float>> _normals;
     private readonly List<Vector2D<float>> _uvs;
     private readonly List<VertexBoneInfo> _vertexBoneInfos;
     private readonly List<uint> _indices;
-    private readonly List<Material> _materials;
-    private readonly List<Mesh> _meshes;
+    private readonly List<MMDMaterial> _materials;
+    private readonly List<MMDMesh> _meshes;
 
     public PmxModel()
     {
@@ -21,11 +20,11 @@ public class PmxModel : IModel
         _uvs = new List<Vector2D<float>>();
         _vertexBoneInfos = new List<VertexBoneInfo>();
         _indices = new List<uint>();
-        _materials = new List<Material>();
-        _meshes = new List<Mesh>();
+        _materials = new List<MMDMaterial>();
+        _meshes = new List<MMDMesh>();
     }
 
-    public bool Load(string path, string mmdDataDir)
+    public override bool Load(string path, string mmdDataDir)
     {
         Destroy();
 
@@ -135,7 +134,7 @@ public class PmxModel : IModel
         uint beginIndex = 0;
         foreach (PmxMaterial material in pmx.Materials)
         {
-            Material mat = new()
+            MMDMaterial mat = new()
             {
                 Name = material.Name,
                 Diffuse = material.Diffuse.ToVector3D(),
@@ -197,7 +196,7 @@ public class PmxModel : IModel
             }
 
             _materials.Add(mat);
-            _meshes.Add(new Mesh(beginIndex, (uint)material.FaceVerticesCount, mat));
+            _meshes.Add(new MMDMesh(beginIndex, (uint)material.FaceVerticesCount, mat));
 
             beginIndex += (uint)material.FaceVerticesCount;
         }
@@ -205,7 +204,59 @@ public class PmxModel : IModel
         return true;
     }
 
-    public void Destroy()
+    public override int GetVertexCount()
+    {
+        return _positions.Count;
+    }
+
+    public override unsafe Vector3D<float>* GetPositions()
+    {
+        fixed (Vector3D<float>* ptr = _positions.ToArray())
+        {
+            return ptr;
+        }
+    }
+
+    public override unsafe Vector3D<float>* GetNormals()
+    {
+        fixed (Vector3D<float>* ptr = _normals.ToArray())
+        {
+            return ptr;
+        }
+    }
+
+    public override unsafe Vector2D<float>* GetUVs()
+    {
+        fixed (Vector2D<float>* ptr = _uvs.ToArray())
+        {
+            return ptr;
+        }
+    }
+
+    public override int GetIndexCount()
+    {
+        return _indices.Count;
+    }
+
+    public override unsafe uint* GetIndices()
+    {
+        fixed (uint* ptr = _indices.ToArray())
+        {
+            return ptr;
+        }
+    }
+
+    public override MMDMaterial[] GetMaterials()
+    {
+        return _materials.ToArray();
+    }
+
+    public override MMDMesh[] GetMeshes()
+    {
+        return _meshes.ToArray();
+    }
+
+    public override void Destroy()
     {
         _positions.Clear();
         _normals.Clear();
@@ -216,9 +267,10 @@ public class PmxModel : IModel
         _meshes.Clear();
     }
 
-
-    public void Dispose()
+    public override void Dispose()
     {
+        Destroy();
+
         GC.SuppressFinalize(this);
     }
 }
