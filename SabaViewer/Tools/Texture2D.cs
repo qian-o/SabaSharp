@@ -12,7 +12,7 @@ public unsafe class Texture2D : IDisposable
 
     public bool HasAlpha { get; private set; } = true;
 
-    public Texture2D(GL gl, GLEnum wrapParam)
+    public Texture2D(GL gl, GLEnum wrapParam = GLEnum.Repeat)
     {
         _gl = gl;
 
@@ -55,7 +55,7 @@ public unsafe class Texture2D : IDisposable
         _gl.BindBuffer(GLEnum.PixelUnpackBuffer, 0);
     }
 
-    public void FlushTexture(Vector2D<uint> size, GLEnum internalformat, GLEnum format, GLEnum type, bool hasAlpha = true)
+    public void FlushTexture(Vector2D<uint> size, GLEnum format, GLEnum type, bool hasAlpha = true)
     {
         HasAlpha = hasAlpha;
 
@@ -63,7 +63,7 @@ public unsafe class Texture2D : IDisposable
         _gl.BindTexture(GLEnum.Texture2D, _tex);
 
         _gl.UnmapBuffer(GLEnum.PixelUnpackBuffer);
-        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)internalformat, size.X, size.Y, 0, format, type, (void*)0);
+        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)format, size.X, size.Y, 0, format, type, (void*)0);
         _gl.GenerateMipmap(GLEnum.Texture2D);
 
         _gl.BindTexture(GLEnum.Texture2D, 0);

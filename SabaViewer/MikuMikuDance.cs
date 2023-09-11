@@ -41,7 +41,7 @@ public unsafe class MikuMikuDance : IDisposable
         _mmdGroundShadowShader = new(gl);
         _materials = new();
         _textures = new();
-        _defaultTexture = new Texture2D(_gl, GLEnum.Linear);
+        _defaultTexture = new Texture2D(_gl);
         _defaultTexture.WriteColor(new Vector3D<byte>(255));
     }
 
@@ -185,6 +185,8 @@ public unsafe class MikuMikuDance : IDisposable
         {
             return;
         }
+
+        _gl.Enable(GLEnum.DepthTest);
 
         foreach (MMDMesh mesh in model.GetMeshes())
         {
@@ -345,7 +347,7 @@ public unsafe class MikuMikuDance : IDisposable
     {
         if (!_textures.TryGetValue(texturePath, out Texture2D? texture))
         {
-            texture = new Texture2D(_gl, GLEnum.Linear);
+            texture = new Texture2D(_gl);
             texture.WriteImage(texturePath);
 
             _textures.Add(texturePath, texture);

@@ -41,7 +41,7 @@ public class PmxModel : MMDModel
         {
             Vector3D<float> position = vertex.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f);
             Vector3D<float> normal = vertex.Normal * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-            Vector2D<float> uv = new(vertex.UV.X, 1.0f - vertex.UV.Y);
+            Vector2D<float> uv = vertex.UV;
             _positions.Add(position);
             _normals.Add(normal);
             _uvs.Add(uv);
