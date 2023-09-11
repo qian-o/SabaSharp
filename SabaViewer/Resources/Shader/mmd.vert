@@ -21,7 +21,7 @@ void main()
     gl_Position = u_WVP * vec4(in_Pos, 1.0);
     vs_Pos = (u_WV * vec4(in_Pos, 1.0)).xyz;
     vs_Nor = mat3(u_WV) * in_Nor;
-    vs_UV = in_UV;
+    vs_UV = vec2(in_UV.x, -in_UV.y);
 
     for (int i = 0; i < NUM_SHADOWMAP; i++)
     {
