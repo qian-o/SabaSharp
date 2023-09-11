@@ -11,14 +11,12 @@ namespace SabaViewer.Contracts.Windows;
 
 public abstract class Game
 {
-    private readonly List<double> _fpsSample;
     private readonly IWindow _window;
 
     protected GL gl = null!;
     protected IInputContext inputContext = null!;
     protected ImGuiController imGuiController = null!;
     protected Camera camera = null!;
-    protected int fps;
 
     #region Input
     protected IMouse mouse = null!;
@@ -40,8 +38,6 @@ public abstract class Game
 
     public Game()
     {
-        _fpsSample = new List<double>();
-
         WindowOptions windowOptions = WindowOptions.Default;
         windowOptions.API = new GraphicsAPI(ContextAPI.OpenGLES, new APIVersion(3, 2));
         windowOptions.Samples = 8;
@@ -131,22 +127,13 @@ public abstract class Game
         };
         _window.Render += (obj) =>
         {
-            if (_fpsSample.Count == 100)
-            {
-                fps = Convert.ToInt32(_fpsSample.Average());
-
-                _fpsSample.Clear();
-            }
-
-            _fpsSample.Add(1.0d / obj);
-
             gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
             Render(obj);
 
             imGuiController!.Update((float)obj);
 
-            ImGui.GetBackgroundDrawList().AddText(new Vector2(0, 0), ImGui.GetColorU32(new Vector4(0.0f, 1.0f, 0.0f, 1.0f)), fps.ToString());
+            ImGui.GetBackgroundDrawList().AddText(new Vector2(0, 0), ImGui.GetColorU32(new Vector4(0.0f, 1.0f, 0.0f, 1.0f)), ImGui.GetIO().Framerate.ToString("F0"));
 
             ImGui.Begin("Camera Settings");
 

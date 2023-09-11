@@ -1,5 +1,8 @@
-﻿using SabaViewer.Contracts.Windows;
+﻿using ImGuiNET;
+using SabaViewer.Contracts.Windows;
+using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
+using System.Numerics;
 
 namespace SabaViewer.Windows;
 
@@ -23,5 +26,20 @@ public class Scene1 : Game
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
         mmd.Draw(camera, Width, Height);
+    }
+
+    protected override void RenderImGui(double obj)
+    {
+        ImGui.Begin("MMD");
+
+        Vector3 lightColor = MikuMikuDance.LightColor.ToSystem();
+        ImGui.ColorEdit3(nameof(MikuMikuDance.LightColor), ref lightColor);
+        MikuMikuDance.LightColor = lightColor.ToGeneric();
+
+        Vector3 lightDir = MikuMikuDance.LightDir.ToSystem();
+        ImGui.DragFloat3(nameof(MikuMikuDance.LightDir), ref lightDir);
+        MikuMikuDance.LightDir = lightDir.ToGeneric();
+
+        ImGui.End();
     }
 }
