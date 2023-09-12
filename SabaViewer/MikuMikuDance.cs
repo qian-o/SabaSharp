@@ -312,6 +312,9 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.BindVertexArray(0);
             _gl.UseProgram(0);
         }
+    
+        _gl.Disable(GLEnum.Blend);
+        _gl.Disable(GLEnum.DepthTest);
     }
 
     public void Dispose()
