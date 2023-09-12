@@ -111,7 +111,7 @@ void main() {
 	}
 
 	if(u_ToonTexMode != 0) {
-		vec3 toonColor = texture(u_ToonTex, vec2(0.0, ln)).rgb;
+		vec3 toonColor = texture(u_ToonTex, vec2(0.0, 1.0 - ln)).rgb;
 		toonColor = ComputeTexMulFactor(toonColor, u_ToonTexMulFactor);
 		toonColor = ComputeTexAddFactor(toonColor, u_ToonTexAddFactor);
 		color *= toonColor;

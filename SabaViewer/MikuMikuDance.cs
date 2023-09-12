@@ -33,6 +33,10 @@ public unsafe class MikuMikuDance : IDisposable
 
     public static Vector3D<float> LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
+    public static Vector4D<float> ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
+
+    public Matrix4X4<float> Transform { get; set; } = Matrix4X4<float>.Identity;
+
     public MikuMikuDance(GL gl)
     {
         _gl = gl;
@@ -191,12 +195,13 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.Enable(GLEnum.Blend);
         _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
 
+        // Draw model
         foreach (MMDMesh mesh in model.GetMeshes())
         {
             MMDMaterial mmdMat = mesh.Material;
             Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
 
-            if (mmdMat.Alpha == 0)
+            if (mmdMat.Alpha == 0.0f)
             {
                 continue;
             }
@@ -204,8 +209,8 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.UseProgram(_mmdShader.Id);
             _gl.BindVertexArray(mmdVAO);
 
-            _gl.SetUniform(_mmdShader.UniWVP, camera.View * camera.Projection);
-            _gl.SetUniform(_mmdShader.UniWV, camera.View);
+            _gl.SetUniform(_mmdShader.UniWVP, Transform * camera.View * camera.Projection);
+            _gl.SetUniform(_mmdShader.UniWV, Transform * camera.View);
 
             _gl.SetUniform(_mmdShader.UniAmbinet, mmdMat.Ambient);
             _gl.SetUniform(_mmdShader.UniDiffuse, mmdMat.Diffuse);
@@ -280,7 +285,7 @@ public unsafe class MikuMikuDance : IDisposable
             }
 
             _gl.SetUniform(_mmdShader.UniLightColor, LightColor);
-            _gl.SetUniform(_mmdShader.UniLightDir, Vector3D.Transform(LightDir, camera.View));
+            _gl.SetUniform(_mmdShader.UniLightDir, LightDir);
 
             if (mmdMat.BothFace)
             {
@@ -312,7 +317,94 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.BindVertexArray(0);
             _gl.UseProgram(0);
         }
-    
+
+        // Draw edge
+        Vector2D<float> screenSize = new(screenWidth, screenHeight);
+        foreach (MMDMesh mesh in model.GetMeshes())
+        {
+            MMDMaterial mmdMat = mesh.Material;
+            Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
+
+            if (mmdMat.EdgeFlag == 0)
+            {
+                continue;
+            }
+
+            if (mmdMat.Alpha == 0.0f)
+            {
+                continue;
+            }
+
+            _gl.UseProgram(_mmdEdgeShader.Id);
+            _gl.BindVertexArray(mmdEdgeVAO);
+
+            _gl.SetUniform(_mmdEdgeShader.UniWVP, Transform * camera.View * camera.Projection);
+            _gl.SetUniform(_mmdEdgeShader.UniWV, Transform * camera.View);
+            _gl.SetUniform(_mmdEdgeShader.UniScreenSize, screenSize);
+            _gl.SetUniform(_mmdEdgeShader.UniEdgeSize, mmdMat.EdgeSize);
+            _gl.SetUniform(_mmdEdgeShader.UniEdgeColor, mmdMat.EdgeColor);
+
+            _gl.Enable(GLEnum.CullFace);
+            _gl.CullFace(GLEnum.Front);
+
+            _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+
+            _gl.BindVertexArray(0);
+            _gl.UseProgram(0);
+        }
+
+        // Draw ground shadow
+        _gl.Enable(GLEnum.PolygonOffsetFill);
+        _gl.PolygonOffset(-1.0f, -1.0f);
+
+        Matrix4X4<float> shadow = Matrix4X4.CreateShadow(-LightDir, new Plane<float>(0.0f, 1.0f, 0.0f, 0.0f));
+        Matrix4X4<float> shadowMatrix = Transform * shadow * camera.View * camera.Projection;
+
+        if (ShadowColor.W < 1.0f)
+        {
+            _gl.Enable(GLEnum.Blend);
+            _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+
+            _gl.Enable(GLEnum.StencilTest);
+            _gl.StencilFuncSeparate(GLEnum.FrontAndBack, GLEnum.Notequal, 1, 1);
+            _gl.StencilOp(GLEnum.Keep, GLEnum.Keep, GLEnum.Replace);
+        }
+        else
+        {
+            _gl.Disable(GLEnum.Blend);
+        }
+
+        _gl.Disable(GLEnum.CullFace);
+
+        foreach (MMDMesh mesh in model.GetMeshes())
+        {
+            MMDMaterial mmdMat = mesh.Material;
+            Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
+
+            if (!mmdMat.GroundShadow)
+            {
+                continue;
+            }
+
+            if (mmdMat.Alpha == 0.0f)
+            {
+                continue;
+            }
+
+            _gl.UseProgram(_mmdGroundShadowShader.Id);
+            _gl.BindVertexArray(mmdGroundShadowVAO);
+
+            _gl.SetUniform(_mmdGroundShadowShader.UniWVP, shadowMatrix);
+            _gl.SetUniform(_mmdGroundShadowShader.UniShadowColor, ShadowColor);
+
+            _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+
+            _gl.BindVertexArray(0);
+            _gl.UseProgram(0);
+        }
+
+        _gl.Disable(GLEnum.StencilTest);
+        _gl.Disable(GLEnum.PolygonOffsetFill);
         _gl.Disable(GLEnum.Blend);
         _gl.Disable(GLEnum.DepthTest);
     }
