@@ -7,8 +7,10 @@ namespace SabaViewer.Tools;
 public unsafe class Texture2D : IDisposable
 {
     private readonly GL _gl;
-    private readonly uint _pbo;
-    private readonly uint _tex;
+
+    public uint Id { get; }
+
+    public uint Pbo { get; }
 
     public bool HasAlpha { get; private set; } = true;
 
@@ -16,15 +18,15 @@ public unsafe class Texture2D : IDisposable
     {
         _gl = gl;
 
-        _pbo = _gl.GenBuffer();
-        _tex = _gl.GenTexture();
+        Id = _gl.GenTexture();
+        Pbo = _gl.GenBuffer();
 
         _gl.GetFloat((GLEnum)EXT.MaxTextureMaxAnisotropyExt, out float maxAnisotropy);
 
-        _gl.BindTexture(GLEnum.Texture2D, _tex);
+        _gl.BindTexture(GLEnum.Texture2D, Id);
 
         _gl.TexParameter(GLEnum.Texture2D, (GLEnum)EXT.MaxTextureMaxAnisotropyExt, maxAnisotropy);
-        _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+        _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
         _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
         _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)wrapParam);
         _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)wrapParam);
@@ -34,19 +36,9 @@ public unsafe class Texture2D : IDisposable
         _gl.BindTexture(GLEnum.Texture2D, 0);
     }
 
-    public void Enable()
-    {
-        _gl.BindTexture(GLEnum.Texture2D, _tex);
-    }
-
-    public void Disable()
-    {
-        _gl.BindTexture(GLEnum.Texture2D, 0);
-    }
-
     public void AllocationBuffer(uint pboSize, out void* pboData, bool needRead = false)
     {
-        _gl.BindBuffer(GLEnum.PixelUnpackBuffer, _pbo);
+        _gl.BindBuffer(GLEnum.PixelUnpackBuffer, Pbo);
 
         _gl.BufferData(GLEnum.PixelUnpackBuffer, pboSize, null, GLEnum.StreamDraw);
 
@@ -59,8 +51,8 @@ public unsafe class Texture2D : IDisposable
     {
         HasAlpha = hasAlpha;
 
-        _gl.BindBuffer(GLEnum.PixelUnpackBuffer, _pbo);
-        _gl.BindTexture(GLEnum.Texture2D, _tex);
+        _gl.BindBuffer(GLEnum.PixelUnpackBuffer, Pbo);
+        _gl.BindTexture(GLEnum.Texture2D, Id);
 
         _gl.UnmapBuffer(GLEnum.PixelUnpackBuffer);
         _gl.TexImage2D(GLEnum.Texture2D, 0, (int)format, size.X, size.Y, 0, format, type, (void*)0);
@@ -72,8 +64,8 @@ public unsafe class Texture2D : IDisposable
 
     public void Dispose()
     {
-        _gl.DeleteBuffer(_pbo);
-        _gl.DeleteTexture(_tex);
+        _gl.DeleteTexture(Id);
+        _gl.DeleteBuffer(Pbo);
 
         GC.SuppressFinalize(this);
     }

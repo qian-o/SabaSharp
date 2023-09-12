@@ -188,6 +188,9 @@ public unsafe class MikuMikuDance : IDisposable
 
         _gl.Enable(GLEnum.DepthTest);
 
+        _gl.Enable(GLEnum.Blend);
+        _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+
         foreach (MMDMesh mesh in model.GetMeshes())
         {
             MMDMaterial mmdMat = mesh.Material;
@@ -226,13 +229,12 @@ public unsafe class MikuMikuDance : IDisposable
                 _gl.SetUniform(_mmdShader.UniTexMulFactor, mmdMat.TextureMulFactor);
                 _gl.SetUniform(_mmdShader.UniTexAddFactor, mmdMat.TextureAddFactor);
 
-                mat.Texture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, mat.Texture.Id);
             }
             else
             {
                 _gl.SetUniform(_mmdShader.UniTexMode, 0);
-
-                _defaultTexture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
             }
 
             _gl.ActiveTexture(TextureUnit.Texture0 + 1);
@@ -251,13 +253,12 @@ public unsafe class MikuMikuDance : IDisposable
                 _gl.SetUniform(_mmdShader.UniSphereTexMulFactor, mmdMat.SpTextureMulFactor);
                 _gl.SetUniform(_mmdShader.UniSphereTexAddFactor, mmdMat.SpTextureAddFactor);
 
-                mat.SpTexture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, mat.SpTexture.Id);
             }
             else
             {
                 _gl.SetUniform(_mmdShader.UniSphereTexMode, 0);
-
-                _defaultTexture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
             }
 
             _gl.ActiveTexture(TextureUnit.Texture0 + 2);
@@ -268,15 +269,14 @@ public unsafe class MikuMikuDance : IDisposable
                 _gl.SetUniform(_mmdShader.UniToonTexAddFactor, mmdMat.ToonTextureAddFactor);
                 _gl.SetUniform(_mmdShader.UniToonTexMode, 1);
 
-                mat.ToonTexture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, mat.ToonTexture.Id);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
             }
             else
             {
                 _gl.SetUniform(_mmdShader.UniToonTexMode, 0);
-
-                _defaultTexture.Enable();
+                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
             }
 
             _gl.SetUniform(_mmdShader.UniLightColor, LightColor);
@@ -291,9 +291,6 @@ public unsafe class MikuMikuDance : IDisposable
                 _gl.Enable(GLEnum.CullFace);
                 _gl.CullFace(GLEnum.Back);
             }
-
-            _gl.Enable(GLEnum.Blend);
-            _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
 
             _gl.SetUniform(_mmdShader.UniShadowMapEnabled, 0);
             _gl.SetUniform(_mmdShader.UniShadowMap0, 3);

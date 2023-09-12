@@ -2,7 +2,9 @@
 using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
 using SkiaSharp;
+using StbImageSharp;
 using System.Drawing;
+using Buffer = System.Buffer;
 
 namespace SabaViewer.Helpers;
 
@@ -10,13 +12,17 @@ public static unsafe class TextureExtensions
 {
     public static void WriteImage(this Texture2D texture, string file)
     {
-        using SKImage image = SKImage.FromEncodedData(file);
+        ImageResult image = ImageResult.FromStream(File.OpenRead(file), ColorComponents.RedGreenBlueAlpha);
 
-        texture.AllocationBuffer((uint)(image.Width * image.Height * 4), out void* pboData);
+        int size = image.Width * image.Height * 4;
+        texture.AllocationBuffer((uint)(size), out void* pboData);
 
-        image.ReadPixels(new SKImageInfo(image.Width, image.Height, SKColorType.Rgba8888), (nint)pboData, image.Width * 4, 0, 0);
+        fixed (byte* ptr = image.Data)
+        {
+            Buffer.MemoryCopy(ptr, pboData, size, size);
+        }
 
-        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), GLEnum.Rgba, GLEnum.UnsignedByte, image.AlphaType == SKAlphaType.Premul);
+        texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), GLEnum.Rgba, GLEnum.UnsignedByte, image.SourceComp == ColorComponents.RedGreenBlueAlpha);
     }
 
     public static void WriteImage(this Texture2D texture, byte* image, int width, int height)
