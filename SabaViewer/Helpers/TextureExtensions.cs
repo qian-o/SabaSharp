@@ -14,12 +14,12 @@ public static unsafe class TextureExtensions
     {
         ImageResult image = ImageResult.FromStream(File.OpenRead(file), ColorComponents.RedGreenBlueAlpha);
 
-        int size = image.Width * image.Height * 4;
-        texture.AllocationBuffer((uint)(size), out void* pboData);
+        int pboSize = image.Width * image.Height * 4;
+        texture.AllocationBuffer((uint)pboSize, out void* pboData);
 
         fixed (byte* ptr = image.Data)
         {
-            Buffer.MemoryCopy(ptr, pboData, size, size);
+            Buffer.MemoryCopy(ptr, pboData, pboSize, pboSize);
         }
 
         texture.FlushTexture(new Vector2D<uint>((uint)image.Width, (uint)image.Height), GLEnum.Rgba, GLEnum.UnsignedByte, image.SourceComp == ColorComponents.RedGreenBlueAlpha);
