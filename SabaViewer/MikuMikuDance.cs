@@ -31,9 +31,9 @@ public unsafe class MikuMikuDance : IDisposable
 
     public static Vector3D<float> LightColor { get; set; } = new(1.0f, 1.0f, 1.0f);
 
-    public static Vector3D<float> LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
-
     public static Vector4D<float> ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
+
+    public static Vector3D<float> LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
     public Matrix4X4<float> Transform { get; set; } = Matrix4X4<float>.Identity;
 
