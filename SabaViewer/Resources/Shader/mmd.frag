@@ -44,21 +44,18 @@ uniform sampler2DShadow u_ShadowMap2;
 uniform sampler2DShadow u_ShadowMap3;
 uniform int u_ShadowMapEnabled;
 
-vec3 ComputeTexMulFactor(vec3 texColor, vec4 factor)
-{
+vec3 ComputeTexMulFactor(vec3 texColor, vec4 factor) {
 	vec3 ret = texColor * factor.rgb;
 	return mix(vec3(1.0, 1.0, 1.0), ret, factor.a);
 }
 
-vec3 ComputeTexAddFactor(vec3 texColor, vec4 factor)
-{
-	vec3 ret = texColor + (texColor - vec3(1.0)) * factor.a ;
-	ret = clamp(ret, vec3(0.0), vec3(1.0))+ factor.rgb;
+vec3 ComputeTexAddFactor(vec3 texColor, vec4 factor) {
+	vec3 ret = texColor + (texColor - vec3(1.0)) * factor.a;
+	ret = clamp(ret, vec3(0.0), vec3(1.0)) + factor.rgb;
 	return ret;
 }
 
-void main()
-{
+void main() {
 	vec3 eyeDir = normalize(vs_Pos);
 	vec3 lightDir = normalize(-u_LightDir);
 	vec3 nor = normalize(vs_Nor);
@@ -71,65 +68,49 @@ void main()
 	color += u_Ambient;
 	color = clamp(color, 0.0, 1.0);
 
-	if (u_ShadowMapEnabled != 0)
-	{
+	if(u_ShadowMapEnabled != 0) {
 		float z = -vs_Pos.z;
 		float visibility = 1.0;
-		if (u_ShadowMapSplitPositions[0] <= z && z < u_ShadowMapSplitPositions[0 + 1])
-		{
+		if(u_ShadowMapSplitPositions[0] <= z && z < u_ShadowMapSplitPositions[0 + 1]) {
 			visibility = textureProj(u_ShadowMap0, vs_shadowMapCoord[0]);
-		}
-		else if (u_ShadowMapSplitPositions[1] <= z && z < u_ShadowMapSplitPositions[1 + 1])
-		{
+		} else if(u_ShadowMapSplitPositions[1] <= z && z < u_ShadowMapSplitPositions[1 + 1]) {
 			visibility = textureProj(u_ShadowMap1, vs_shadowMapCoord[1]);
-		}
-		else if (u_ShadowMapSplitPositions[2] <= z && z < u_ShadowMapSplitPositions[2 + 1])
-		{
+		} else if(u_ShadowMapSplitPositions[2] <= z && z < u_ShadowMapSplitPositions[2 + 1]) {
 			visibility = textureProj(u_ShadowMap2, vs_shadowMapCoord[2]);
-		}
-		else if (u_ShadowMapSplitPositions[3] <= z && z < u_ShadowMapSplitPositions[3 + 1])
-		{
+		} else if(u_ShadowMapSplitPositions[3] <= z && z < u_ShadowMapSplitPositions[3 + 1]) {
 			visibility = textureProj(u_ShadowMap3, vs_shadowMapCoord[3]);
 		}
 		ln *= (1.0 - visibility);
 	}
 
-    if (u_TexMode != 0)
-    {
+	if(u_TexMode != 0) {
 		vec4 texColor = texture(u_Tex, vs_UV);
 		texColor.rgb = ComputeTexMulFactor(texColor.rgb, u_TexMulFactor);
 		texColor.rgb = ComputeTexAddFactor(texColor.rgb, u_TexAddFactor);
-        color *= texColor.rgb;
-		if (u_TexMode == 2)
-		{
+		color *= texColor.rgb;
+		if(u_TexMode == 2) {
 			alpha *= texColor.a;
 		}
-    }
-	if (alpha == 0.0)
-	{
+	}
+	if(alpha == 0.0) {
 		discard;
 	}
 
-	if (u_SphereTexMode != 0)
-	{
+	if(u_SphereTexMode != 0) {
 		vec2 spUV = vec2(0.0);
 		spUV.x = nor.x * 0.5 + 0.5;
 		spUV.y = 1.0 - (nor.y * 0.5 + 0.5);
 		vec3 spColor = texture(u_SphereTex, spUV).rgb;
 		spColor = ComputeTexMulFactor(spColor, u_SphereTexMulFactor);
 		spColor = ComputeTexAddFactor(spColor, u_SphereTexAddFactor);
-		if (u_SphereTexMode == 1)
-		{
+		if(u_SphereTexMode == 1) {
 			color *= spColor;
-		}
-		else if (u_SphereTexMode == 2)
-		{
+		} else if(u_SphereTexMode == 2) {
 			color += spColor;
 		}
 	}
 
-	if (u_ToonTexMode != 0)
-	{
+	if(u_ToonTexMode != 0) {
 		vec3 toonColor = texture(u_ToonTex, vec2(0.0, ln)).rgb;
 		toonColor = ComputeTexMulFactor(toonColor, u_ToonTexMulFactor);
 		toonColor = ComputeTexAddFactor(toonColor, u_ToonTexAddFactor);
@@ -137,14 +118,13 @@ void main()
 	}
 
 	vec3 specular = vec3(0.0);
-	if (u_SpecularPower > 0.0)
-	{
+	if(u_SpecularPower > 0.0) {
 		vec3 halfVec = normalize(eyeDir + lightDir);
 		vec3 specularColor = u_Specular * u_LightColor;
 		specular += pow(max(0.0, dot(halfVec, nor)), u_SpecularPower) * specularColor;
 	}
 
 	color += specular;
-	
+
 	out_Color = vec4(color, alpha);
 }
