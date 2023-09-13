@@ -5,6 +5,145 @@ namespace Saba;
 
 public class PmxModel : MMDModel
 {
+    #region Enums
+    private enum MorphType
+    {
+        None,
+        Position,
+        UV,
+        Material,
+        Bone,
+        Group
+    }
+    #endregion
+
+    #region Classes
+    private class PmxMorph : MMDMorph
+    {
+        public MorphType MorphType { get; set; }
+
+        public int DataIndex { get; set; }
+    }
+
+    private class PositionMorph
+    {
+        public int Index { get; set; }
+
+        public Vector3D<float> Position { get; set; }
+    }
+
+    private class PositionMorphData
+    {
+        public List<PositionMorph> MorphVertices { get; } = new();
+    }
+
+    private class UVMorph
+    {
+        public int Index { get; set; }
+
+        public Vector4D<float> UV { get; set; }
+    }
+
+    private class UVMorphData
+    {
+        public List<UVMorph> MorphUVs { get; } = new();
+    }
+
+    private class MaterialFactor
+    {
+        public Vector3D<float> Diffuse { get; set; }
+
+        public float Alpha { get; set; }
+
+        public Vector3D<float> Specular { get; set; }
+
+        public float SpecularPower { get; set; }
+
+        public Vector3D<float> Ambient { get; set; }
+
+        public Vector4D<float> EdgeColor { get; set; }
+
+        public float EdgeSize { get; set; }
+
+        public Vector4D<float> TextureCoefficient { get; set; }
+
+        public Vector4D<float> SphereTextureCoefficient { get; set; }
+
+        public Vector4D<float> ToonTextureCoefficient { get; set; }
+
+        public MaterialFactor(Saba.PmxMorph.MaterialMorph pmxMat)
+        {
+            Diffuse = pmxMat.Diffuse.ToVector3D();
+            Alpha = pmxMat.Diffuse.W;
+            Specular = pmxMat.Specular;
+            SpecularPower = pmxMat.SpecularPower;
+            Ambient = pmxMat.Ambient;
+            EdgeColor = pmxMat.EdgeColor;
+            EdgeSize = pmxMat.EdgeSize;
+            TextureCoefficient = pmxMat.TextureCoefficient;
+            SphereTextureCoefficient = pmxMat.SphereTextureCoefficient;
+            ToonTextureCoefficient = pmxMat.ToonTextureCoefficient;
+        }
+
+        public void Mul(MaterialFactor val, float weight)
+        {
+            Diffuse = Vector3D.Lerp(Diffuse, Diffuse * val.Diffuse, weight);
+            Alpha = MathHelper.Lerp(Alpha, Alpha * val.Alpha, weight);
+            Specular = Vector3D.Lerp(Specular, Specular * val.Specular, weight);
+            SpecularPower = MathHelper.Lerp(SpecularPower, SpecularPower * val.SpecularPower, weight);
+            Ambient = Vector3D.Lerp(Ambient, Ambient * val.Ambient, weight);
+            EdgeColor = Vector4D.Lerp(EdgeColor, EdgeColor * val.EdgeColor, weight);
+            EdgeSize = MathHelper.Lerp(EdgeSize, EdgeSize * val.EdgeSize, weight);
+            TextureCoefficient = Vector4D.Lerp(TextureCoefficient, TextureCoefficient * val.TextureCoefficient, weight);
+            SphereTextureCoefficient = Vector4D.Lerp(SphereTextureCoefficient, SphereTextureCoefficient * val.SphereTextureCoefficient, weight);
+            ToonTextureCoefficient = Vector4D.Lerp(ToonTextureCoefficient, ToonTextureCoefficient * val.ToonTextureCoefficient, weight);
+        }
+
+        public void Add(MaterialFactor val, float weight)
+        {
+            Diffuse += val.Diffuse * weight;
+            Alpha += val.Alpha * weight;
+            Specular += val.Specular * weight;
+            SpecularPower += val.SpecularPower * weight;
+            Ambient += val.Ambient * weight;
+            EdgeColor += val.EdgeColor * weight;
+            EdgeSize += val.EdgeSize * weight;
+            TextureCoefficient += val.TextureCoefficient * weight;
+            SphereTextureCoefficient += val.SphereTextureCoefficient * weight;
+            ToonTextureCoefficient += val.ToonTextureCoefficient * weight;
+        }
+    }
+
+    private class MaterialMorphData
+    {
+        public List<Saba.PmxMorph.MaterialMorph> MaterialMorphs { get; } = new();
+    }
+
+    private class BoneMorph
+    {
+        public MMDNode Node { get; }
+
+        public Vector3D<float> Position { get; set; }
+
+        public Quaternion<float> Rotate { get; set; }
+
+        public BoneMorph(MMDNode node)
+        {
+            Node = node;
+        }
+    }
+
+    private class BoneMorphData
+    {
+        public List<BoneMorph> BoneMorphs { get; } = new();
+    }
+
+    private class GroupMorphData
+    {
+        public List<Saba.PmxMorph.GroupMorph> GroupMorphs { get; } = new();
+    }
+    #endregion
+
     private readonly List<Vector3D<float>> _positions;
     private readonly List<Vector3D<float>> _normals;
     private readonly List<Vector2D<float>> _uvs;
@@ -16,6 +155,7 @@ public class PmxModel : MMDModel
     private readonly List<Matrix4X4<float>> _transforms;
     private readonly List<PmxNode> _sortedNodes;
     private readonly List<MMDIkSolver> _ikSolvers;
+    private readonly List<PmxMorph> _morphs;
 
     public PmxModel()
     {
@@ -30,6 +170,7 @@ public class PmxModel : MMDModel
         _transforms = new List<Matrix4X4<float>>();
         _sortedNodes = new List<PmxNode>();
         _ikSolvers = new List<MMDIkSolver>();
+        _morphs = new List<PmxMorph>();
     }
 
     public override bool Load(string path, string mmdDataDir)
@@ -338,6 +479,23 @@ public class PmxModel : MMDModel
             }
         }
 
+        // Morph
+        foreach (Saba.PmxMorph pmxMorph in pmx.Morphs)
+        {
+            PmxMorph morph = new()
+            {
+                Name = pmxMorph.Name,
+                Weight = 0.0f,
+                MorphType = MorphType.None
+            };
+
+            if (pmxMorph.MorphType == PmxMorphType.Position)
+            {
+                morph.MorphType = MorphType.Position;
+                morph.DataIndex = _positions.Count;
+            }
+        }
+
         return true;
     }
 
@@ -406,6 +564,7 @@ public class PmxModel : MMDModel
         _transforms.Clear();
         _sortedNodes.Clear();
         _ikSolvers.Clear();
+        _morphs.Clear();
     }
 
     public override void Dispose()
