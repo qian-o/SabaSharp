@@ -407,9 +407,9 @@ public class PmxBone
 
         public bool EnableLimit { get; }
 
-        public Vector3D<float> LowerLimit { get; }
+        public Vector3D<float> LimitMin { get; }
 
-        public Vector3D<float> UpperLimit { get; }
+        public Vector3D<float> LimitMax { get; }
 
         public IKLink(BinaryReader binaryReader, PmxHeader header)
         {
@@ -418,8 +418,8 @@ public class PmxBone
 
             if (EnableLimit)
             {
-                LowerLimit = binaryReader.ReadVector3D();
-                UpperLimit = binaryReader.ReadVector3D();
+                LimitMin = binaryReader.ReadVector3D();
+                LimitMax = binaryReader.ReadVector3D();
             }
         }
     }

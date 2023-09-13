@@ -12,6 +12,10 @@ public class PmxModel : MMDModel
     private readonly List<uint> _indices;
     private readonly List<MMDMaterial> _materials;
     private readonly List<MMDMesh> _meshes;
+    private readonly List<PmxNode> _nodes;
+    private readonly List<Matrix4X4<float>> _transforms;
+    private readonly List<PmxNode> _sortedNodes;
+    private readonly List<MMDIkSolver> _ikSolvers;
 
     public PmxModel()
     {
@@ -22,6 +26,10 @@ public class PmxModel : MMDModel
         _indices = new List<uint>();
         _materials = new List<MMDMaterial>();
         _meshes = new List<MMDMesh>();
+        _nodes = new List<PmxNode>();
+        _transforms = new List<Matrix4X4<float>>();
+        _sortedNodes = new List<PmxNode>();
+        _ikSolvers = new List<MMDIkSolver>();
     }
 
     public override bool Load(string path, string mmdDataDir)
@@ -201,6 +209,135 @@ public class PmxModel : MMDModel
             beginIndex += (uint)material.FaceVerticesCount;
         }
 
+        // 骨骼信息
+        foreach (PmxBone bone in pmx.Bones)
+        {
+            _nodes.Add(new PmxNode() { Index = _nodes.Count, Name = bone.Name });
+        }
+
+        for (int i = 0; i < pmx.Bones.Length; i++)
+        {
+            int boneIndex = pmx.Bones.Length - i - 1;
+            PmxBone bone = pmx.Bones[boneIndex];
+            PmxNode node = _nodes[boneIndex];
+
+            // 检查节点是否循环
+            bool isLoop = false;
+            if (bone.ParentBoneIndex != -1)
+            {
+                MMDNode? parent = _nodes[bone.ParentBoneIndex];
+                while (parent != null)
+                {
+                    if (parent == node)
+                    {
+                        isLoop = true;
+
+                        Console.WriteLine($"This bone hierarchy is a loop: bone= {bone.Name}");
+
+                        break;
+                    }
+
+                    parent = parent.Parent;
+                }
+            }
+
+            // 检查父级节点索引位置
+            if (bone.ParentBoneIndex != -1)
+            {
+                if (bone.ParentBoneIndex >= boneIndex)
+                {
+                    Console.WriteLine($"The parent index of this node is big: bone= {bone.Name}");
+                }
+            }
+
+            if (bone.ParentBoneIndex != -1 && !isLoop)
+            {
+                PmxBone parentBone = pmx.Bones[bone.ParentBoneIndex];
+                MMDNode parent = _nodes[bone.ParentBoneIndex];
+
+                parent.AddChild(node);
+
+                Vector3D<float> localPos = bone.Position - parentBone.Position;
+                localPos.Z *= -1.0f;
+                node.Translate = localPos;
+            }
+            else
+            {
+                Vector3D<float> localPos = bone.Position;
+                localPos.Z *= -1.0f;
+                node.Translate = localPos;
+            }
+
+            Matrix4X4<float> init = Matrix4X4.CreateTranslation(bone.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f));
+
+            node.Global = init;
+            node.CalculateInverseInitTransform();
+
+            node.DeformDepth = bone.DeformDepth;
+            node.IsDeformAfterPhysics = bone.BoneFlags.HasFlag(PmxBoneFlags.DeformAfterPhysics);
+            node.IsAppendRotate = bone.BoneFlags.HasFlag(PmxBoneFlags.AppendRotate);
+            node.IsAppendTranslate = bone.BoneFlags.HasFlag(PmxBoneFlags.AppendTranslate);
+
+            if ((node.IsAppendRotate || node.IsAppendTranslate) && bone.AppendBoneIndex != -1)
+            {
+                if (bone.AppendBoneIndex >= boneIndex)
+                {
+                    Console.WriteLine($"The parent(morph assignment) index of this node is big: bone= {bone.Name}");
+                }
+                node.AppendNode = _nodes[bone.AppendBoneIndex];
+                node.IsAppendLocal = bone.BoneFlags.HasFlag(PmxBoneFlags.AppendLocal);
+                node.AppendWeight = bone.AppendWeight;
+            }
+            node.SaveInitialTRS();
+        }
+
+        _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
+
+        // IK
+        for (int i = 0; i < pmx.Bones.Length; i++)
+        {
+            PmxBone bone = pmx.Bones[i];
+            if (bone.BoneFlags.HasFlag(PmxBoneFlags.IK))
+            {
+                MMDIkSolver solver = new();
+                PmxNode ikNode = _nodes[i];
+
+                solver.IkNode = ikNode;
+                ikNode.IkSolver = solver;
+
+                _ikSolvers.Add(solver);
+
+                if (bone.IKTargetBoneIndex < 0 || bone.IKTargetBoneIndex >= _nodes.Count)
+                {
+                    Console.WriteLine($"IK target bone index is invalid: bone= {bone.Name}");
+
+                    continue;
+                }
+
+                solver.IkTarget = _nodes[bone.IKTargetBoneIndex];
+
+                foreach (PmxBone.IKLink ikLink in bone.IKLinks)
+                {
+                    PmxNode linkNode = _nodes[ikLink.BoneIndex];
+                    if (ikLink.EnableLimit)
+                    {
+                        Vector3D<float> limitMax = ikLink.LimitMin * new Vector3D<float>(-1.0f);
+                        Vector3D<float> limitMin = ikLink.LimitMax * new Vector3D<float>(-1.0f);
+
+                        solver.AddIkChain(linkNode, true, limitMin, limitMax);
+                    }
+                    else
+                    {
+                        solver.AddIkChain(linkNode);
+                    }
+                    linkNode.EnableIK = true;
+                }
+
+                solver.IterateCount = (uint)bone.IKIterationCount;
+                solver.LimitAngle = bone.IKLimit;
+            }
+        }
+
         return true;
     }
 
@@ -265,6 +402,10 @@ public class PmxModel : MMDModel
         _indices.Clear();
         _materials.Clear();
         _meshes.Clear();
+        _nodes.Clear();
+        _transforms.Clear();
+        _sortedNodes.Clear();
+        _ikSolvers.Clear();
     }
 
     public override void Dispose()

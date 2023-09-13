@@ -62,7 +62,7 @@ public class MMDIkSolver
         BaseAnimEnable = true;
     }
 
-    public void AddIkChain(MMDNode node, bool isKnee)
+    public void AddIkChain(MMDNode node, bool isKnee = false)
     {
         Vector3D<float> limixMin = Vector3D<float>.Zero;
         Vector3D<float> limitMax = Vector3D<float>.Zero;
