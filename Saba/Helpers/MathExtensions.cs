@@ -19,4 +19,11 @@ public static class MathExtensions
     {
         return new Vector4D<float>(value.X, value.Y, value.Z, value.W);
     }
+
+    public static Matrix4X4<T> Invert<T>(this Matrix4X4<T> matrix) where T : unmanaged, IFormattable, IEquatable<T>, IComparable<T>
+    {
+        Matrix4X4.Invert(matrix, out Matrix4X4<T> result);
+
+        return result;
+    }
 }
