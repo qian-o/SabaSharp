@@ -156,6 +156,11 @@ public class PmxModel : MMDModel
     private readonly List<PmxNode> _sortedNodes;
     private readonly List<MMDIkSolver> _ikSolvers;
     private readonly List<PmxMorph> _morphs;
+    private readonly List<PositionMorphData> _positionMorphDatas;
+    private readonly List<UVMorphData> _uvMorphDatas;
+    private readonly List<MaterialMorphData> _materialMorphDatas;
+    private readonly List<BoneMorphData> _boneMorphDatas;
+    private readonly List<GroupMorphData> _groupMorphDatas;
 
     public PmxModel()
     {
@@ -171,6 +176,11 @@ public class PmxModel : MMDModel
         _sortedNodes = new List<PmxNode>();
         _ikSolvers = new List<MMDIkSolver>();
         _morphs = new List<PmxMorph>();
+        _positionMorphDatas = new List<PositionMorphData>();
+        _uvMorphDatas = new List<UVMorphData>();
+        _materialMorphDatas = new List<MaterialMorphData>();
+        _boneMorphDatas = new List<BoneMorphData>();
+        _groupMorphDatas = new List<GroupMorphData>();
     }
 
     public override bool Load(string path, string mmdDataDir)
@@ -492,7 +502,83 @@ public class PmxModel : MMDModel
             if (pmxMorph.MorphType == PmxMorphType.Position)
             {
                 morph.MorphType = MorphType.Position;
-                morph.DataIndex = _positions.Count;
+                morph.DataIndex = _positionMorphDatas.Count;
+
+                PositionMorphData morphData = new();
+                foreach (Saba.PmxMorph.PositionMorph vtx in pmxMorph.PositionMorphs)
+                {
+                    PositionMorph morphVtx = new()
+                    {
+                        Index = vtx.VertexIndex,
+                        Position = vtx.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f)
+                    };
+
+                    morphData.MorphVertices.Add(morphVtx);
+                }
+                _positionMorphDatas.Add(morphData);
+            }
+            else if (pmxMorph.MorphType == PmxMorphType.UV)
+            {
+                morph.MorphType = MorphType.UV;
+                morph.DataIndex = _uvMorphDatas.Count;
+
+                UVMorphData morphData = new();
+                foreach (Saba.PmxMorph.UVMorph uv in pmxMorph.UVMorphs)
+                {
+                    UVMorph morphUV = new()
+                    {
+                        Index = uv.VertexIndex,
+                        UV = uv.UV
+                    };
+
+                    morphData.MorphUVs.Add(morphUV);
+                }
+                _uvMorphDatas.Add(morphData);
+            }
+            else if (pmxMorph.MorphType == PmxMorphType.Material)
+            {
+                morph.MorphType = MorphType.Material;
+                morph.DataIndex = _materialMorphDatas.Count;
+
+                MaterialMorphData morphData = new();
+                morphData.MaterialMorphs.AddRange(pmxMorph.MaterialMorphs);
+                _materialMorphDatas.Add(morphData);
+            }
+            else if (pmxMorph.MorphType == PmxMorphType.Bone)
+            {
+                morph.MorphType = MorphType.Bone;
+                morph.DataIndex = _boneMorphDatas.Count;
+
+                BoneMorphData boneMorphData = new();
+                foreach (Saba.PmxMorph.BoneMorph pmxBoneMorph in pmxMorph.BoneMorphs)
+                {
+                    BoneMorph boneMorph = new(_nodes[pmxBoneMorph.BoneIndex])
+                    {
+                        Position = pmxBoneMorph.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f)
+                    };
+
+                    Matrix3X3<float> invZ = Matrix3X3.CreateScale(new Vector3D<float>(1.0f, 1.0f, -1.0f));
+                    Matrix3X3<float> rot0 = Matrix3X3.CreateFromQuaternion(pmxBoneMorph.Quaternion);
+                    Matrix3X3<float> rot1 = invZ * rot0 * invZ;
+
+                    boneMorph.Rotate = Quaternion<float>.CreateFromRotationMatrix(rot1);
+
+                    boneMorphData.BoneMorphs.Add(boneMorph);
+                }
+                _boneMorphDatas.Add(boneMorphData);
+            }
+            else if (pmxMorph.MorphType == PmxMorphType.Group)
+            {
+                morph.MorphType = MorphType.Group;
+                morph.DataIndex = _groupMorphDatas.Count;
+
+                GroupMorphData groupMorphData = new();
+                groupMorphData.GroupMorphs.AddRange(pmxMorph.GroupMorphs);
+                _groupMorphDatas.Add(groupMorphData);
+            }
+            else
+            {
+                Console.WriteLine($"Not Supported Morp Type({pmxMorph.MorphType}): [{pmxMorph.Name}]");
             }
         }
 
@@ -565,6 +651,11 @@ public class PmxModel : MMDModel
         _sortedNodes.Clear();
         _ikSolvers.Clear();
         _morphs.Clear();
+        _positionMorphDatas.Clear();
+        _uvMorphDatas.Clear();
+        _materialMorphDatas.Clear();
+        _boneMorphDatas.Clear();
+        _groupMorphDatas.Clear();
     }
 
     public override void Dispose()
