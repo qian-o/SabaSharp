@@ -23,7 +23,11 @@ public abstract class MMDNode
 
     public Vector3D<float> AnimTranslate { get; set; }
 
+    public Vector3D<float> AnimateTranslate => AnimTranslate + Translate;
+
     public Quaternion<float> AnimRotate { get; set; }
+
+    public Quaternion<float> AnimateRotate => AnimRotate * Rotate;
 
     public Vector3D<float> BaseAnimTranslate { get; set; }
 
@@ -156,8 +160,8 @@ public abstract class MMDNode
 
     protected virtual void OnUpdateLocalTransform()
     {
-        Matrix4X4<float> t = Matrix4X4.CreateTranslation(AnimTranslate);
-        Matrix4X4<float> r = Matrix4X4.CreateFromQuaternion(AnimRotate);
+        Matrix4X4<float> t = Matrix4X4.CreateTranslation(AnimateTranslate);
+        Matrix4X4<float> r = Matrix4X4.CreateFromQuaternion(AnimateRotate);
         Matrix4X4<float> s = Matrix4X4.CreateScale(Scale);
 
         if (EnableIK)
