@@ -143,11 +143,87 @@ public class MMDIkSolver
 
     private void SolveCore(uint iteration)
     {
+        Vector3D<float> ikPos = IkNode!.Global.Row4.ToVector3D();
 
+        for (int i = 0; i < _chains.Count; i++)
+        {
+            IkChain chain = _chains[i];
+            MMDNode chainNode = chain.Node;
+
+            if (chainNode == IkTarget)
+            {
+                continue;
+            }
+
+            if (chain.EnableAxisLimit)
+            {
+                if ((chain.LimitMin.X != 0.0f || chain.LimitMax.X != 0.0f)
+                    && (chain.LimitMin.Y == 0.0f || chain.LimitMax.Y == 0.0f)
+                    && (chain.LimitMin.Z == 0.0f || chain.LimitMax.Z == 0.0f))
+                {
+                    SolvePlane(iteration, i, SolveAxis.X);
+
+                    continue;
+                }
+                else if ((chain.LimitMin.Y != 0.0f || chain.LimitMax.Y != 0.0f)
+                         && (chain.LimitMin.Z == 0.0f || chain.LimitMax.Z == 0.0f)
+                         && (chain.LimitMin.X == 0.0f || chain.LimitMax.X == 0.0f))
+                {
+                    SolvePlane(iteration, i, SolveAxis.Y);
+
+                    continue;
+                }
+                else if ((chain.LimitMin.Z != 0.0f || chain.LimitMax.Z != 0.0f)
+                         && (chain.LimitMin.X == 0.0f || chain.LimitMax.X == 0.0f)
+                         && (chain.LimitMin.Y == 0.0f || chain.LimitMax.Y == 0.0f))
+                {
+                    SolvePlane(iteration, i, SolveAxis.Z);
+
+                    continue;
+                }
+            }
+
+            Vector3D<float> targetPos = IkTarget!.Global.Row4.ToVector3D();
+
+            Matrix4X4<float> invChain = chain.Node.Global.Invert();
+
+            Vector3D<float> chainIkPos = Vector3D.Transform(ikPos, invChain);
+            Vector3D<float> chainTargetPos = Vector3D.Transform(targetPos, invChain);
+
+            Vector3D<float> chainIkVec = Vector3D.Normalize(chainIkPos);
+            Vector3D<float> chainTargetVec = Vector3D.Normalize(chainTargetPos);
+
+            float dot = Vector3D.Dot(chainTargetVec, chainIkVec);
+            dot = MathHelper.Clamp(dot, -1.0f, 1.0f);
+
+            float angle = MathHelper.Acos(dot);
+            float angleDeg = MathHelper.RadiansToDegrees(angle);
+            if (angleDeg < 0.001)
+            {
+                continue;
+            }
+            angle = MathHelper.Clamp(angle, -LimitAngle, LimitAngle);
+            Vector3D<float> cross = Vector3D.Normalize(Vector3D.Cross(chainTargetVec, chainIkVec));
+            Quaternion<float> rot = Quaternion<float>.CreateFromAxisAngle(cross, angle);
+
+            Quaternion<float> chainRot = chainNode.IkRotate * chainNode.AnimateRotate * rot;
+            if (chain.EnableAxisLimit)
+            {
+                // 未完成（9.14）
+                Matrix3X3<float> chainRotM = Matrix3X3.CreateFromQuaternion(chainRot);
+                Matrix3X3.Decompose(chainRotM, out _, out _);
+            }
+
+            Quaternion<float> ikRot = chainRot * Quaternion<float>.Inverse(chainNode.AnimateRotate);
+            chainNode.IkRotate = ikRot;
+
+            chainNode.UpdateLocalTransform();
+            chainNode.UpdateGlobalTransform();
+        }
     }
 
     private void SolvePlane(uint iteration, int chainIdx, SolveAxis solveAxis)
     {
-
+        // 未完成（待定）
     }
 }

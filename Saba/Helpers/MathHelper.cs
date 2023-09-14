@@ -160,6 +160,14 @@ public static class MathHelper
     public static double Acos(double radians) => Math.Acos(radians);
 
     /// <summary>
+    /// Returns the arc sine of the specified angle.
+    /// </summary>
+    /// <param name="radians">The specified angle.</param>
+    /// <returns>Arc sine of the specified angle. If radians is equal to NaN, NegativeInfinity, or PositiveInfinity, this method returns NaN.</returns>
+    [Pure]
+    public static float Acos(float radians) => MathF.Acos(radians);
+
+    /// <summary>
     /// Returns the tangent of the specified angle.
     /// </summary>
     /// <param name="radians">The specified angle.</param>
