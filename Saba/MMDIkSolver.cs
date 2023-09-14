@@ -141,6 +141,21 @@ public class MMDIkSolver
         }
     }
 
+    public void SaveBaseAnimation()
+    {
+        BaseAnimEnable = Enable;
+    }
+
+    public void LoadBaseAnimation()
+    {
+        Enable = BaseAnimEnable;
+    }
+
+    public void ClearBaseAnimation()
+    {
+        BaseAnimEnable = true;
+    }
+
     private void SolveCore(uint iteration)
     {
         Vector3D<float> ikPos = IkNode!.Global.Row4.ToVector3D();

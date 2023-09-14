@@ -92,6 +92,12 @@ public abstract class MMDNode
         AnimRotate = BaseAnimRotate;
     }
 
+    public void ClearBaseAnimation()
+    {
+        AnimTranslate = Vector3D<float>.Zero;
+        AnimRotate = Quaternion<float>.Identity;
+    }
+
     public void AddChild(MMDNode child)
     {
         Children.Add(child);

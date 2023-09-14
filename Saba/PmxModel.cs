@@ -152,7 +152,6 @@ public class PmxModel : MMDModel
     private readonly List<MMDMaterial> _materials;
     private readonly List<MMDMesh> _meshes;
     private readonly List<PmxNode> _nodes;
-    private readonly List<Matrix4X4<float>> _transforms;
     private readonly List<PmxNode> _sortedNodes;
     private readonly List<MMDIkSolver> _ikSolvers;
     private readonly List<PmxMorph> _morphs;
@@ -161,6 +160,10 @@ public class PmxModel : MMDModel
     private readonly List<MaterialMorphData> _materialMorphDatas;
     private readonly List<BoneMorphData> _boneMorphDatas;
     private readonly List<GroupMorphData> _groupMorphDatas;
+
+    private Vector3D<float>[] morphPositions = Array.Empty<Vector3D<float>>();
+    private Vector4D<float>[] morphUVs = Array.Empty<Vector4D<float>>();
+    private Matrix4X4<float>[] transforms = Array.Empty<Matrix4X4<float>>();
 
     public PmxModel()
     {
@@ -172,7 +175,6 @@ public class PmxModel : MMDModel
         _materials = new List<MMDMaterial>();
         _meshes = new List<MMDMesh>();
         _nodes = new List<PmxNode>();
-        _transforms = new List<Matrix4X4<float>>();
         _sortedNodes = new List<PmxNode>();
         _ikSolvers = new List<MMDIkSolver>();
         _morphs = new List<PmxMorph>();
@@ -265,6 +267,9 @@ public class PmxModel : MMDModel
 
             _vertexBoneInfos.Add(vertexBoneInfo);
         }
+        
+        Array.Resize(ref morphPositions, _positions.Count);
+        Array.Resize(ref morphUVs, _uvs.Count);
 
         // 面信息
         foreach (PmxFace face in pmx.Faces)
@@ -441,7 +446,8 @@ public class PmxModel : MMDModel
             }
             node.SaveInitialTRS();
         }
-
+        
+        Array.Resize(ref transforms, _nodes.Count);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -585,6 +591,36 @@ public class PmxModel : MMDModel
         return true;
     }
 
+    public override MMDNode[] GetNodes()
+    {
+        return _nodes.ToArray();
+    }
+
+    public override MMDMorph[] GetMorphs()
+    {
+        return _morphs.ToArray();
+    }
+
+    public override MMDIkSolver[] GetIkSolvers()
+    {
+        return _ikSolvers.ToArray();
+    }
+
+    public override MMDNode? FindNode(Predicate<MMDNode> predicate)
+    {
+        return _nodes.Find(predicate);
+    }
+
+    public override MMDMorph? FindMorph(Predicate<MMDMorph> predicate)
+    {
+        return _morphs.Find(predicate);
+    }
+
+    public override MMDIkSolver? FindIkSolver(Predicate<MMDIkSolver> predicate)
+    {
+        return _ikSolvers.Find(predicate);
+    }
+
     public override int GetVertexCount()
     {
         return _positions.Count;
@@ -637,6 +673,103 @@ public class PmxModel : MMDModel
         return _meshes.ToArray();
     }
 
+    public override void InitializeAnimation()
+    {
+        ClearBaseAnimation();
+
+        foreach (PmxNode node in _nodes)
+        {
+            node.AnimTranslate = Vector3D<float>.Zero;
+            node.AnimRotate = Quaternion<float>.Identity;
+        }
+
+        BeginAnimation();
+
+        foreach (PmxNode node in _nodes)
+        {
+            node.UpdateLocalTransform();
+        }
+
+        foreach (PmxMorph morph in _morphs)
+        {
+            morph.Weight = 0.0f;
+        }
+
+        foreach (MMDIkSolver ikSolver in _ikSolvers)
+        {
+            ikSolver.Enable = true;
+        }
+
+        foreach (PmxNode node in _nodes.Where(item => item.Parent != null))
+        {
+            node.UpdateGlobalTransform();
+        }
+
+        foreach (PmxNode node in _sortedNodes)
+        {
+            if (node.AppendNode != null)
+            {
+                node.UpdateAppendTransform();
+                node.UpdateGlobalTransform();
+            }
+
+            if (node.IkSolver != null)
+            {
+                node.IkSolver.Solve();
+
+                node.UpdateGlobalTransform();
+            }
+        }
+
+        foreach (PmxNode node in _nodes.Where(item => item.Parent == null))
+        {
+            node.UpdateGlobalTransform();
+        }
+
+        EndAnimation();
+    }
+
+    public override void BeginAnimation()
+    {
+        foreach (PmxNode node in _nodes)
+        {
+            node.BeginUpdateTransform();
+        }
+
+        for (int i = 0; i < morphPositions.Length; i++)
+        {
+            morphPositions[i] = Vector3D<float>.Zero;
+        }
+
+        for (int i = 0; i < morphUVs.Length; i++)
+        {
+            morphUVs[i] = Vector4D<float>.Zero;
+        }
+    }
+
+    public override void EndAnimation()
+    {
+        foreach (PmxNode node in _nodes)
+        {
+            node.EndUpdateTransform();
+        }
+    }
+
+    public override void UpdateMorphAnimation()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void UpdateNodeAnimation(bool afterPhysicsAnim)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void UpdatePhysicsAnimation(float elapsed)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void Destroy()
     {
         _positions.Clear();
@@ -647,7 +780,6 @@ public class PmxModel : MMDModel
         _materials.Clear();
         _meshes.Clear();
         _nodes.Clear();
-        _transforms.Clear();
         _sortedNodes.Clear();
         _ikSolvers.Clear();
         _morphs.Clear();
@@ -656,6 +788,10 @@ public class PmxModel : MMDModel
         _materialMorphDatas.Clear();
         _boneMorphDatas.Clear();
         _groupMorphDatas.Clear();
+
+        morphPositions = Array.Empty<Vector3D<float>>();
+        morphUVs = Array.Empty<Vector4D<float>>();
+        transforms = Array.Empty<Matrix4X4<float>>();
     }
 
     public override void Dispose()
