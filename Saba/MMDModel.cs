@@ -26,6 +26,12 @@ public unsafe abstract class MMDModel : IDisposable
 
     public abstract Vector2D<float>* GetUVs();
 
+    public abstract Vector3D<float>* GetUpdatePositions();
+
+    public abstract Vector3D<float>* GetUpdateNormals();
+
+    public abstract Vector2D<float>* GetUpdateUVs();
+
     public abstract int GetIndexCount();
 
     public abstract uint* GetIndices();
@@ -45,6 +51,8 @@ public unsafe abstract class MMDModel : IDisposable
     public abstract void UpdateNodeAnimation(bool afterPhysicsAnim);
 
     public abstract void UpdatePhysicsAnimation(float elapsed);
+
+    public abstract void Update();
 
     public abstract void Destroy();
 

@@ -1,4 +1,5 @@
 ﻿using Saba.Helpers;
+using Silk.NET.Maths;
 
 namespace Saba;
 
@@ -11,7 +12,69 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
 
     public override void Evaluate(float t, float weight = 1.0f)
     {
+        t = 3;
 
+        if (Object == null)
+        {
+            return;
+        }
+
+        if (_keys.Count == 0)
+        {
+            Object.AnimTranslate = Vector3D<float>.Zero;
+            Object.AnimRotate = Quaternion<float>.Identity;
+
+            return;
+        }
+
+        int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
+        Vector3D<float> vt;
+        Quaternion<float> q;
+        if (keyIndex == -1)
+        {
+            vt = _keys.Last().Translate;
+            q = _keys.Last().Rotate;
+        }
+        else
+        {
+            vt = _keys[keyIndex].Translate;
+            q = _keys[keyIndex].Rotate;
+            if (keyIndex != 0)
+            {
+                VmdNodeAnimationKey key0 = _keys[keyIndex - 1];
+                VmdNodeAnimationKey key1 = _keys[keyIndex];
+
+                float timeRange = (float)key1.Time - key0.Time;
+                float time = (t - key0.Time) / timeRange;
+                float tx_x = key0.TxBezier.FindBezierX(time);
+                float ty_x = key0.TyBezier.FindBezierX(time);
+                float tz_x = key0.TzBezier.FindBezierX(time);
+                float rot_x = key0.RotBezier.FindBezierX(time);
+                float tx_y = key0.TxBezier.EvalY(tx_x);
+                float ty_y = key0.TyBezier.EvalY(ty_x);
+                float tz_y = key0.TzBezier.EvalY(tz_x);
+                float rot_y = key0.RotBezier.EvalY(rot_x);
+
+                vt = MathExtensions.Mix(key0.Translate, key1.Translate, new Vector3D<float>(tx_y, ty_y, tz_y));
+                q = Quaternion<float>.Slerp(key0.Rotate, key1.Rotate, rot_y);
+
+                StartKeyIndex = keyIndex;
+            }
+        }
+
+        if (weight == 1.0f)
+        {
+            Object.AnimTranslate = vt;
+            Object.AnimRotate = q;
+        }
+        else
+        {
+            Vector3D<float> baseT = Object.BaseAnimTranslate;
+            Quaternion<float> baseQ = Object.BaseAnimRotate;
+
+            Object.AnimTranslate = Vector3D.Lerp(baseT, vt, weight);
+            Object.AnimRotate = Quaternion<float>.Slerp(baseQ, q, weight);
+        }
     }
 }
 
@@ -152,6 +215,36 @@ public class VmdAnimation : IDisposable
         _morphControllers.ForEach(controller => controller.Evaluate(t, weight));
 
         _ikControllers.ForEach(controller => controller.Evaluate(t, weight));
+    }
+
+    public void SyncPhysics(float t, int frameCount = 30)
+    {
+        /*
+		すぐにアニメーションを反映すると、Physics が破たんする場合がある。
+		例：足がスカートを突き破る等
+		アニメーションを反映する際、初期状態から数フレームかけて、
+		目的のポーズへ遷移させる。
+		*/
+        Model!.SaveBaseAnimation();
+
+        // Physicsを反映する
+        for (int i = 0; i < frameCount; i++)
+        {
+
+            Model.BeginAnimation();
+
+            Evaluate((float)t, (1.0f + i) / frameCount);
+
+            Model.UpdateMorphAnimation();
+
+            Model.UpdateNodeAnimation(false);
+
+            Model.UpdatePhysicsAnimation(1.0f / 30.0f);
+
+            Model.UpdateNodeAnimation(true);
+
+            Model.EndAnimation();
+        }
     }
 
     public void Destroy()

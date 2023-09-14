@@ -137,13 +137,13 @@ public class VmdIkAnimationKey : VmdAnimationKey
 
 public abstract class VmdAnimationController<TKey, TObject> where TKey : VmdAnimationKey
 {
-    private readonly List<TKey> _keys;
+    protected readonly List<TKey> _keys;
 
     public TObject Object { get; }
 
     public TKey[] Keys => _keys.ToArray();
 
-    public int StartKeyIndex { get; private set; }
+    public int StartKeyIndex { get; protected set; }
 
     protected VmdAnimationController(TObject @object)
     {

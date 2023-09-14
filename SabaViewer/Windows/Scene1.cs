@@ -10,6 +10,7 @@ namespace SabaViewer.Windows;
 public class Scene1 : Game
 {
     private MikuMikuDance mmd = null!;
+    private double saveTime = 0.0;
 
     protected override void Load()
     {
@@ -22,7 +23,6 @@ public class Scene1 : Game
                       "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd");
 
         mmd.Setup();
-        mmd.Update();
     }
 
     protected override void Render(double obj)
@@ -30,6 +30,8 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
+        saveTime += obj;
+        mmd.Update((float)saveTime, (float)obj);
         mmd.Draw(camera, Width, Height);
     }
 

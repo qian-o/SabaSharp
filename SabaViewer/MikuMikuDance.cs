@@ -55,10 +55,14 @@ public unsafe class MikuMikuDance : IDisposable
         model = new PmxModel();
         model.Load(modelPath, "Resources/MMD/");
 
+        model.InitializeAnimation();
+
         if (!string.IsNullOrEmpty(vmdPath))
         {
             animation = new VmdAnimation();
             animation.Load(vmdPath, model);
+
+            animation.SyncPhysics(0.0f);
         }
     }
 
@@ -167,26 +171,35 @@ public unsafe class MikuMikuDance : IDisposable
         }
     }
 
-    public void Update()
+    public void Update(float animTime, float elapsed)
     {
         if (model is null)
         {
             return;
         }
 
+        if (animation is not null)
+        {
+            model.BeginAnimation();
+            model.UpdateAllAnimation(animation, animTime, elapsed);
+            model.EndAnimation();
+
+            model.Update();
+        }
+
         // Update vertices
         int vtxCount = model.GetVertexCount();
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetPositions());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetUpdatePositions());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetNormals());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetUpdateNormals());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector2D<float>) * vtxCount), model.GetUVs());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector2D<float>) * vtxCount), model.GetUpdateUVs());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
     }
 
