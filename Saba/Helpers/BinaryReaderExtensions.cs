@@ -5,6 +5,8 @@ namespace Saba.Helpers;
 
 internal static class BinaryReaderExtensions
 {
+    public static Encoding ShiftJIS { get; } = CodePagesEncodingProvider.Instance.GetEncoding("Shift-JIS")!;
+
     public static string ReadString(this BinaryReader binaryReader, Encoding? encoding = null)
     {
         encoding ??= Encoding.UTF8;
@@ -19,7 +21,7 @@ internal static class BinaryReaderExtensions
         byte[] buffer = new byte[length];
         binaryReader.Read(buffer, 0, (int)length);
 
-        return encoding.GetString(buffer);
+        return encoding.GetString(buffer).TrimEnd('\0');
     }
 
     public static int ReadIndex(this BinaryReader binaryReader, byte indexSize)

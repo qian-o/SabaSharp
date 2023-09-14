@@ -18,7 +18,8 @@ public class Scene1 : Game
             Transform = Matrix4X4.CreateScale(0.2f, 0.2f, 0.2f)
         };
 
-        mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx");
+        mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx",
+                      "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd");
 
         mmd.Setup();
         mmd.Update();

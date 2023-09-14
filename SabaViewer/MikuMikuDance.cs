@@ -18,6 +18,7 @@ public unsafe class MikuMikuDance : IDisposable
     private readonly Texture2D _defaultTexture;
 
     private MMDModel? model;
+    private VmdAnimation? animation;
 
     private uint posVBO;
     private uint norVBO;
@@ -49,10 +50,16 @@ public unsafe class MikuMikuDance : IDisposable
         _defaultTexture.WriteColor(new Vector3D<byte>(255));
     }
 
-    public void LoadModel(string path)
+    public void LoadModel(string modelPath, string? vmdPath = null)
     {
         model = new PmxModel();
-        model.Load(path, "Resources/MMD/");
+        model.Load(modelPath, "Resources/MMD/");
+
+        if (!string.IsNullOrEmpty(vmdPath))
+        {
+            animation = new VmdAnimation();
+            animation.Load(vmdPath, model);
+        }
     }
 
     public void Setup()
