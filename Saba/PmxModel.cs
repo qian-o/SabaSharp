@@ -267,7 +267,7 @@ public class PmxModel : MMDModel
 
             _vertexBoneInfos.Add(vertexBoneInfo);
         }
-        
+
         Array.Resize(ref morphPositions, _positions.Count);
         Array.Resize(ref morphUVs, _uvs.Count);
 
@@ -446,7 +446,7 @@ public class PmxModel : MMDModel
             }
             node.SaveInitialTRS();
         }
-        
+
         Array.Resize(ref transforms, _nodes.Count);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
