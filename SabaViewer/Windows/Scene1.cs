@@ -30,10 +30,7 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        mmd.Update((float)Time, (float)(Time - saveTime));
         mmd.Draw(camera, Width, Height);
-
-        saveTime = Time;
     }
 
     protected override void RenderImGui(double obj)
@@ -53,5 +50,11 @@ public class Scene1 : Game
         MikuMikuDance.LightDir = lightDir.ToGeneric();
 
         ImGui.End();
+    }
+
+    protected override void Update(double obj)
+    {
+        saveTime += obj;
+        mmd.Update((float)saveTime, (float)obj);
     }
 }
