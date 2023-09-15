@@ -669,12 +669,12 @@ public class PmxModel : MMDModel
             physicsManager.AddRigidBody(rigidBody);
         }
 
+        MMDRigidBody[] rigidBodies = physicsManager.RigidBodies;
+
         foreach (PmxJoint pmxJoint in pmx.Joints)
         {
             if (pmxJoint.RigidBodyIndexA != -1 && pmxJoint.RigidBodyIndexB != -1 && pmxJoint.RigidBodyIndexA != pmxJoint.RigidBodyIndexB)
             {
-                MMDRigidBody[] rigidBodies = physicsManager.RigidBodies;
-
                 MMDJoint joint = new(pmxJoint, rigidBodies[pmxJoint.RigidBodyIndexA], rigidBodies[pmxJoint.RigidBodyIndexB]);
 
                 physicsManager.AddJoint(joint);
@@ -682,6 +682,8 @@ public class PmxModel : MMDModel
         }
 
         ResetPhysics();
+
+        Update();
 
         return true;
     }

@@ -42,12 +42,7 @@ public class MMDPhysics : IDisposable
         RigidBodyConstructionInfo groundInfo = new(0.0f, _groundMS, _groundShape, Vector3.Zero);
         _groundRB = new RigidBody(groundInfo);
 
-        DynamicsWorld.AddRigidBody(_groundRB);
-
-        //MMDFilterCallback filterCB = new();
-        //filterCB.NonFilterProxy.Add(_groundRB.BroadphaseProxy);
-
-        //DynamicsWorld.PairCache.SetOverlapFilterCallback(filterCB);
+        DynamicsWorld.AddRigidBody(_groundRB, 1 << 0, 65534);
     }
 
     public void Update(float time)
@@ -57,7 +52,7 @@ public class MMDPhysics : IDisposable
 
     public void AddRigidBody(MMDRigidBody rigidBody)
     {
-        DynamicsWorld.AddRigidBody(rigidBody.RigidBody);
+        DynamicsWorld.AddRigidBody(rigidBody.RigidBody, 1 << rigidBody.Group, rigidBody.GroupMask);
     }
 
     public void RemoveRigidBody(MMDRigidBody rigidBody)
