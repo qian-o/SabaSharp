@@ -300,18 +300,10 @@ public class VmdAnimation : IDisposable
 
     public void SyncPhysics(float t, int frameCount = 30)
     {
-        /*
-		すぐにアニメーションを反映すると、Physics が破たんする場合がある。
-		例：足がスカートを突き破る等
-		アニメーションを反映する際、初期状態から数フレームかけて、
-		目的のポーズへ遷移させる。
-		*/
         Model!.SaveBaseAnimation();
 
-        // Physicsを反映する
         for (int i = 0; i < frameCount; i++)
         {
-
             Model.BeginAnimation();
 
             Evaluate((float)t, (1.0f + i) / frameCount);

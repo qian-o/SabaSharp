@@ -50,6 +50,8 @@ public unsafe abstract class MMDModel : IDisposable
 
     public abstract void UpdateNodeAnimation(bool afterPhysicsAnim);
 
+    public abstract void ResetPhysics();
+
     public abstract void UpdatePhysicsAnimation(float elapsed);
 
     public abstract void Update();

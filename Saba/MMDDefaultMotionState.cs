@@ -4,13 +4,13 @@ using Silk.NET.Maths;
 
 namespace Saba;
 
-public class DefaultMotionState : MMDMotionState
+public class MMDDefaultMotionState : MMDMotionState
 {
     private readonly Matrix4x4 _initialTransform;
 
     private Matrix4x4 transform;
 
-    public DefaultMotionState(Matrix4X4<float> transform)
+    public MMDDefaultMotionState(Matrix4X4<float> transform)
     {
         _initialTransform = transform.ToBtTransform();
     }

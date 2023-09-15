@@ -11,8 +11,12 @@ public class MMDJoint : IDisposable
 
     public MMDJoint(PmxJoint pmxJoint, MMDRigidBody rigidBodyA, MMDRigidBody rigidBodyB)
     {
-        Matrix4x4 transform = Matrix4X4.CreateTranslation(pmxJoint.Translate).ToBtTransform();
-        transform.SetBasis(Matrix4X4.CreateFromYawPitchRoll(pmxJoint.Rotate.Z, pmxJoint.Rotate.Y, pmxJoint.Rotate.X).ToBtTransform());
+        Matrix4X4<float> matrix = Matrix4X4.CreateRotationX(pmxJoint.Rotate.X)
+                                  * Matrix4X4.CreateRotationY(pmxJoint.Rotate.Y)
+                                  * Matrix4X4.CreateRotationZ(pmxJoint.Rotate.Z)
+                                  * Matrix4X4.CreateTranslation(pmxJoint.Translate);
+
+        Matrix4x4 transform = matrix.ToBtTransform();
 
         Matrix4x4 invA = Matrix4x4.Invert(rigidBodyA.RigidBody.WorldTransform);
         Matrix4x4 invB = Matrix4x4.Invert(rigidBodyB.RigidBody.WorldTransform);

@@ -109,7 +109,7 @@ public class MMDRigidBody : IDisposable
             }
             else
             {
-                _activeMotionState = new DefaultMotionState(_offsetMat);
+                _activeMotionState = new MMDDefaultMotionState(_offsetMat);
                 _kinematicMotionState = new KinematicMotionState(kinematicNode, _offsetMat);
             }
 
@@ -163,7 +163,17 @@ public class MMDRigidBody : IDisposable
 
     public void Reset(MMDPhysics physics)
     {
-        // 未完成（待定）
+        OverlappingPairCache cache = physics.DynamicsWorld.PairCache;
+
+        if (cache != null)
+        {
+            Dispatcher dispatcher = physics.DynamicsWorld.Dispatcher;
+            cache.CleanProxyFromPairs(RigidBody.BroadphaseHandle, dispatcher);
+        }
+
+        RigidBody.AngularVelocity = Vector3.Zero;
+        RigidBody.LinearVelocity = Vector3.Zero;
+        RigidBody.ClearForces();
     }
 
     public void ReflectGlobalTransform()
