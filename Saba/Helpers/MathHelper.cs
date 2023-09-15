@@ -1155,7 +1155,7 @@ public static class MathHelper
         t = Math.Clamp(t, 0, 1);
         return start + t * (end - start);
     }
-    
+
     public static Vector3D<float> Lerp(Vector3D<float> a, Vector3D<float> b, Vector3D<float> c)
     {
         float x = Lerp(a.X, b.X, c.X);
