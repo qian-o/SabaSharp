@@ -11,19 +11,14 @@ public class MMDJoint : IDisposable
 
     public MMDJoint(PmxJoint pmxJoint, MMDRigidBody rigidBodyA, MMDRigidBody rigidBodyB)
     {
-        Matrix4X4<float> matrix = Matrix4X4.CreateRotationX(pmxJoint.Rotate.X)
-                                  * Matrix4X4.CreateRotationY(pmxJoint.Rotate.Y)
-                                  * Matrix4X4.CreateRotationZ(pmxJoint.Rotate.Z)
-                                  * Matrix4X4.CreateTranslation(pmxJoint.Translate);
+        Matrix4X4<float> t0 = Matrix4X4.CreateFromYawPitchRoll(pmxJoint.Rotate.Y, pmxJoint.Rotate.X, pmxJoint.Rotate.Z) * Matrix4X4.CreateTranslation(pmxJoint.Translate);
 
-        Matrix4x4 transform = matrix.ToBtTransform();
+        Matrix4X4<float> t1 = rigidBodyA.RigidBody.WorldTransform.ToMatrix4X4().Invert();
+        Matrix4X4<float> t2 = rigidBodyB.RigidBody.WorldTransform.ToMatrix4X4().Invert();
+        t1 = t0 * t1;
+        t2 = t0 * t2;
 
-        Matrix4x4 invA = Matrix4x4.Invert(rigidBodyA.RigidBody.WorldTransform);
-        Matrix4x4 invB = Matrix4x4.Invert(rigidBodyB.RigidBody.WorldTransform);
-        invA = transform * invA;
-        invB = transform * invB;
-
-        Generic6DofSpringConstraint constraint = new(rigidBodyA.RigidBody, rigidBodyB.RigidBody, invA, invB, true)
+        Generic6DofSpringConstraint constraint = new(rigidBodyA.RigidBody, rigidBodyB.RigidBody, t1.ToBtTransform(), t2.ToBtTransform(), true)
         {
             LinearLowerLimit = new Vector3(pmxJoint.TranslateLowerLimit.X,
                                            pmxJoint.TranslateLowerLimit.Y,

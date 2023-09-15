@@ -8,12 +8,17 @@ public class MMDFilterCallback : OverlapFilterCallback
 
     public override bool NeedBroadphaseCollision(BroadphaseProxy proxy0, BroadphaseProxy proxy1)
     {
-        if (proxy0 == null || proxy1 == null)
+        if (proxy0 != null && NonFilterProxy.Any(item => item.Uid == proxy0.Uid))
         {
-            return false;
+            return true;
         }
 
-        if (NonFilterProxy.Any(item => item.Uid == proxy0.Uid) || NonFilterProxy.Any(item => item.Uid == proxy1.Uid))
+        if (proxy1 != null && NonFilterProxy.Any(item => item.Uid == proxy1.Uid))
+        {
+            return true;
+        }
+
+        if (proxy0 == null || proxy1 == null)
         {
             return true;
         }

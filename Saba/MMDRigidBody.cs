@@ -77,7 +77,7 @@ public class MMDRigidBody : IDisposable
         Matrix4X4<float> ry = Matrix4X4.CreateRotationY(pmxRigidBody.Rotate.Y, new Vector3D<float>(0.0f, 1.0f, 0.0f));
         Matrix4X4<float> rz = Matrix4X4.CreateRotationZ(pmxRigidBody.Rotate.Z, new Vector3D<float>(0.0f, 0.0f, 1.0f));
         Matrix4X4<float> rotMat = rz * rx * ry;
-        Matrix4X4<float> translateMat = Matrix4X4.CreateTranslation(pmxRigidBody.Translate) * rotMat;
+        Matrix4X4<float> translateMat = Matrix4X4.CreateTranslation(pmxRigidBody.Translate);
 
         Matrix4X4<float> rbMat = (rotMat * translateMat).InvZ();
 

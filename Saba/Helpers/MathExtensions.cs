@@ -1,6 +1,5 @@
 ﻿using Silk.NET.Maths;
 using System.Numerics;
-using BtTransform3x3 = Evergine.Mathematics.Matrix3x3;
 using BtTransform4x4 = Evergine.Mathematics.Matrix4x4;
 
 namespace Saba.Helpers;
@@ -43,24 +42,8 @@ public static class MathExtensions
         return invZ * matrix * invZ;
     }
 
-    public static BtTransform3x3 ToBtTransform(this Matrix3X3<float> matrix)
-    {
-        matrix = Matrix3X3.Transpose(matrix);
-
-        return new BtTransform3x3(matrix.M11, matrix.M12, matrix.M13, matrix.M21, matrix.M22, matrix.M23, matrix.M31, matrix.M32, matrix.M33);
-    }
-
-    public static Matrix3X3<float> ToMatrix3X3(this BtTransform3x3 transform)
-    {
-        Matrix3X3<float> matrix = new(transform.M11, transform.M12, transform.M13, transform.M21, transform.M22, transform.M23, transform.M31, transform.M32, transform.M33);
-
-        return Matrix3X3.Transpose(matrix);
-    }
-
     public static BtTransform4x4 ToBtTransform(this Matrix4X4<float> matrix)
     {
-        // matrix = Matrix4X4.Transpose(matrix);
-
         return new BtTransform4x4(matrix.M11, matrix.M12, matrix.M13, matrix.M14, matrix.M21, matrix.M22, matrix.M23, matrix.M24, matrix.M31, matrix.M32, matrix.M33, matrix.M34, matrix.M41, matrix.M42, matrix.M43, matrix.M44);
     }
 
@@ -69,6 +52,5 @@ public static class MathExtensions
         Matrix4X4<float> matrix = new(transform.M11, transform.M12, transform.M13, transform.M14, transform.M21, transform.M22, transform.M23, transform.M24, transform.M31, transform.M32, transform.M33, transform.M34, transform.M41, transform.M42, transform.M43, transform.M44);
 
         return matrix;
-        return Matrix4X4.Transpose(matrix);
     }
 }
