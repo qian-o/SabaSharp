@@ -8,7 +8,7 @@ public class MMDFilterCallback : OverlapFilterCallback
 
     public override bool NeedBroadphaseCollision(BroadphaseProxy proxy0, BroadphaseProxy proxy1)
     {
-        if (proxy0 == null ||  proxy1 == null)
+        if (proxy0 == null || proxy1 == null)
         {
             return false;
         }
@@ -18,12 +18,7 @@ public class MMDFilterCallback : OverlapFilterCallback
             return true;
         }
 
-        if (proxy0 != null && proxy1 != null)
-        {
-            return (proxy0.CollisionFilterGroup & proxy1.CollisionFilterMask) != 0 &&
+        return (proxy0.CollisionFilterGroup & proxy1.CollisionFilterMask) != 0 &&
                    (proxy1.CollisionFilterGroup & proxy0.CollisionFilterMask) != 0;
-        }
-
-        return false;
     }
 }
