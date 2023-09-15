@@ -33,13 +33,4 @@ public static class MathExtensions
 
         return invZ * matrix * invZ;
     }
-
-    public static Vector3D<float> Mix(Vector3D<float> a, Vector3D<float> b, Vector3D<float> c)
-    {
-        float x = a.X + (b.X - a.X) * c.X;
-        float y = a.Y + (b.Y - a.Y) * c.Y;
-        float z = a.Z + (b.Z - a.Z) * c.Z;
-
-        return new Vector3D<float>(x, y, z);
-    }
 }

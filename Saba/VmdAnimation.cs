@@ -12,8 +12,6 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
 
     public override void Evaluate(float t, float weight = 1.0f)
     {
-        t = 3;
-
         if (Object == null)
         {
             return;
@@ -27,9 +25,9 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
             return;
         }
 
-        int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
         Vector3D<float> vt;
         Quaternion<float> q;
+        int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
         if (keyIndex == -1)
         {
             vt = _keys.Last().Translate;
@@ -55,7 +53,7 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
                 float tz_y = key0.TzBezier.EvalY(tz_x);
                 float rot_y = key0.RotBezier.EvalY(rot_x);
 
-                vt = MathExtensions.Mix(key0.Translate, key1.Translate, new Vector3D<float>(tx_y, ty_y, tz_y));
+                vt = MathHelper.Lerp(key0.Translate, key1.Translate, new Vector3D<float>(tx_y, ty_y, tz_y));
                 q = Quaternion<float>.Slerp(key0.Rotate, key1.Rotate, rot_y);
 
                 StartKeyIndex = keyIndex;
@@ -86,7 +84,46 @@ public class VmdMorphController : VmdAnimationController<VmdMorphAnimationKey, M
 
     public override void Evaluate(float t, float weight = 1.0f)
     {
+        if (Object == null)
+        {
+            return;
+        }
 
+        if (_keys.Count == 0)
+        {
+            return;
+        }
+
+        float w;
+        int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
+        if (keyIndex == -1)
+        {
+            w = _keys.Last().Weight;
+        }
+        else
+        {
+            w = _keys[keyIndex].Weight;
+            if (keyIndex != 0)
+            {
+                VmdMorphAnimationKey key0 = _keys[keyIndex - 1];
+                VmdMorphAnimationKey key1 = _keys[keyIndex];
+
+                float timeRange = (float)key1.Time - key0.Time;
+                float time = (t - key0.Time) / timeRange;
+                w = (key1.Weight - key0.Weight) * time + key0.Weight;
+
+                StartKeyIndex = keyIndex;
+            }
+        }
+
+        if (weight == 1.0f)
+        {
+            Object.Weight = w;
+        }
+        else
+        {
+            Object.Weight = MathHelper.Lerp(Object.SaveAnimWeight, w, weight);
+        }
     }
 }
 
@@ -98,7 +135,51 @@ public class VmdIkController : VmdAnimationController<VmdIkAnimationKey, MMDIkSo
 
     public override void Evaluate(float t, float weight = 1.0f)
     {
+        if (Object == null)
+        {
+            return;
+        }
 
+        if (_keys.Count == 0)
+        {
+            Object.Enable = true;
+
+            return;
+        }
+
+        bool enable;
+        int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
+        if (keyIndex == -1)
+        {
+            enable = _keys.Last().Enable;
+        }
+        else
+        {
+            enable = _keys.First().Enable;
+            if (keyIndex != 0)
+            {
+                VmdIkAnimationKey key = _keys[keyIndex - 1];
+                enable = key.Enable;
+
+                StartKeyIndex = keyIndex;
+            }
+        }
+
+        if (weight == 1.0f)
+        {
+            Object.Enable = enable;
+        }
+        else
+        {
+            if (weight < 1.0f)
+            {
+                Object.Enable = Object.BaseAnimEnable;
+            }
+            else
+            {
+                Object.Enable = enable;
+            }
+        }
     }
 }
 #endregion
