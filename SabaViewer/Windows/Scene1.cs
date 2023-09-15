@@ -30,9 +30,10 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        saveTime += obj;
-        mmd.Update((float)saveTime, (float)obj);
+        mmd.Update((float)Time, (float)(Time - saveTime));
         mmd.Draw(camera, Width, Height);
+
+        saveTime = Time;
     }
 
     protected override void RenderImGui(double obj)

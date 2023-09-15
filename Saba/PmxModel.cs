@@ -217,6 +217,8 @@ public class PmxModel : MMDModel
     private MaterialFactor[] mulMaterialFactors = Array.Empty<MaterialFactor>();
     private MaterialFactor[] addMaterialFactors = Array.Empty<MaterialFactor>();
 
+    public bool IsParallel { get; } = true;
+
     public PmxModel()
     {
         _positions = new List<Vector3D<float>>();
@@ -644,6 +646,8 @@ public class PmxModel : MMDModel
             {
                 Console.WriteLine($"Not Supported Morp Type({pmxMorph.MorphType}): [{pmxMorph.Name}]");
             }
+
+            _morphs.Add(morph);
         }
 
         return true;
@@ -922,66 +926,17 @@ public class PmxModel : MMDModel
             transforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
         }
 
-        Parallel.For(0, _positions.Count, (i) =>
+        if (IsParallel)
         {
-            Vector3D<float> position = _positions[i];
-            Vector3D<float> normal = _normals[i];
-            Vector2D<float> uv = _uvs[i];
-            Vector3D<float> morphPos = morphPositions[i];
-            Vector4D<float> morphUV = morphUVs[i];
-            VertexBoneInfo vtxInfo = _vertexBoneInfos[i];
-
-            Matrix4X4<float> m = Matrix4X4<float>.Identity;
-
-            switch (vtxInfo.SkinningType)
+            Parallel.For(0, _positions.Count, Update);
+        }
+        else
+        {
+            for (int i = 0; i < _positions.Count; i++)
             {
-                case SkinningType.Weight1:
-                    m = transforms[vtxInfo.BoneIndices[0]];
-                    break;
-                case SkinningType.Weight2:
-                    m = transforms[vtxInfo.BoneIndices[0]] * vtxInfo.BoneWeights[0] +
-                        transforms[vtxInfo.BoneIndices[1]] * vtxInfo.BoneWeights[1];
-                    break;
-                case SkinningType.Weight4:
-                    m = transforms[vtxInfo.BoneIndices[0]] * vtxInfo.BoneWeights[0] +
-                        transforms[vtxInfo.BoneIndices[1]] * vtxInfo.BoneWeights[1] +
-                        transforms[vtxInfo.BoneIndices[2]] * vtxInfo.BoneWeights[2] +
-                        transforms[vtxInfo.BoneIndices[3]] * vtxInfo.BoneWeights[3];
-                    break;
-                case SkinningType.SDEF:
-                    {
-                        int i0 = vtxInfo.SDEF.BoneIndices[0];
-                        int i1 = vtxInfo.SDEF.BoneIndices[1];
-                        float w0 = vtxInfo.SDEF.BoneWeight;
-                        float w1 = 1.0f - vtxInfo.SDEF.BoneWeight;
-                        Vector3D<float> center = vtxInfo.SDEF.C;
-                        Vector3D<float> cr0 = vtxInfo.SDEF.R0;
-                        Vector3D<float> cr1 = vtxInfo.SDEF.R1;
-                        Quaternion<float> q0 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i0].Global);
-                        Quaternion<float> q1 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i1].Global);
-                        Matrix4X4<float> m0 = transforms[i0];
-                        Matrix4X4<float> m1 = transforms[i1];
-
-                        Vector3D<float> pos = position + morphPos;
-                        Matrix4X4<float> rot_mat = Matrix4X4.CreateFromQuaternion(Quaternion<float>.Slerp(q0, q1, w1));
-
-                        updatePositions[i] = Vector3D.Transform(pos - center, rot_mat) + Vector3D.Transform(cr0, m0) * w0 + Vector3D.Transform(cr1, m1) * w1;
-                        updateNormals[i] = Vector3D.Transform(normal, rot_mat);
-                    }
-                    break;
-                case SkinningType.DualQuaternion:
-                    break;
-                default: break;
+                Update(i);
             }
-
-            if (vtxInfo.SkinningType != SkinningType.SDEF)
-            {
-                updatePositions[i] = Vector3D.Transform(position + morphPos, m);
-                updateNormals[i] = Vector3D.Normalize(Vector3D.Transform(normal, m));
-            }
-
-            updateUVs[i] = uv + new Vector2D<float>(morphUV.X, morphUV.Y);
-        });
+        }
     }
 
     public override void Destroy()
@@ -1162,5 +1117,66 @@ public class PmxModel : MMDModel
             Quaternion<float> q = Quaternion<float>.Slerp(node.Rotate, boneMorph.Rotate, weight);
             node.Rotate = q;
         }
+    }
+
+    private void Update(int i)
+    {
+        Vector3D<float> position = _positions[i];
+        Vector3D<float> normal = _normals[i];
+        Vector2D<float> uv = _uvs[i];
+        Vector3D<float> morphPos = morphPositions[i];
+        Vector4D<float> morphUV = morphUVs[i];
+        VertexBoneInfo vtxInfo = _vertexBoneInfos[i];
+
+        Matrix4X4<float> m = Matrix4X4<float>.Identity;
+
+        switch (vtxInfo.SkinningType)
+        {
+            case SkinningType.Weight1:
+                m = transforms[vtxInfo.BoneIndices[0]];
+                break;
+            case SkinningType.Weight2:
+                m = transforms[vtxInfo.BoneIndices[0]] * vtxInfo.BoneWeights[0] +
+                    transforms[vtxInfo.BoneIndices[1]] * vtxInfo.BoneWeights[1];
+                break;
+            case SkinningType.Weight4:
+                m = transforms[vtxInfo.BoneIndices[0]] * vtxInfo.BoneWeights[0] +
+                    transforms[vtxInfo.BoneIndices[1]] * vtxInfo.BoneWeights[1] +
+                    transforms[vtxInfo.BoneIndices[2]] * vtxInfo.BoneWeights[2] +
+                    transforms[vtxInfo.BoneIndices[3]] * vtxInfo.BoneWeights[3];
+                break;
+            case SkinningType.SDEF:
+                {
+                    int i0 = vtxInfo.SDEF.BoneIndices[0];
+                    int i1 = vtxInfo.SDEF.BoneIndices[1];
+                    float w0 = vtxInfo.SDEF.BoneWeight;
+                    float w1 = 1.0f - vtxInfo.SDEF.BoneWeight;
+                    Vector3D<float> center = vtxInfo.SDEF.C;
+                    Vector3D<float> cr0 = vtxInfo.SDEF.R0;
+                    Vector3D<float> cr1 = vtxInfo.SDEF.R1;
+                    Quaternion<float> q0 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i0].Global);
+                    Quaternion<float> q1 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i1].Global);
+                    Matrix4X4<float> m0 = transforms[i0];
+                    Matrix4X4<float> m1 = transforms[i1];
+
+                    Vector3D<float> pos = position + morphPos;
+                    Matrix4X4<float> rot_mat = Matrix4X4.CreateFromQuaternion(Quaternion<float>.Slerp(q0, q1, w1));
+
+                    updatePositions[i] = Vector3D.Transform(pos - center, rot_mat) + Vector3D.Transform(cr0, m0) * w0 + Vector3D.Transform(cr1, m1) * w1;
+                    updateNormals[i] = Vector3D.Transform(normal, rot_mat);
+                }
+                break;
+            case SkinningType.DualQuaternion:
+                break;
+            default: break;
+        }
+
+        if (vtxInfo.SkinningType != SkinningType.SDEF)
+        {
+            updatePositions[i] = Vector3D.Transform(position + morphPos, m);
+            updateNormals[i] = Vector3D.Normalize(Vector3D.Transform(normal, m));
+        }
+
+        updateUVs[i] = uv + new Vector2D<float>(morphUV.X, morphUV.Y);
     }
 }
