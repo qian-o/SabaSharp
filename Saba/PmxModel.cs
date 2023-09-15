@@ -974,11 +974,12 @@ public class PmxModel : MMDModel
                 default: break;
             }
 
-            if (vtxInfo.SkinningType == SkinningType.SDEF)
+            if (vtxInfo.SkinningType != SkinningType.SDEF)
             {
                 updatePositions[i] = Vector3D.Transform(position + morphPos, m);
                 updateNormals[i] = Vector3D.Normalize(Vector3D.Transform(normal, m));
             }
+
             updateUVs[i] = uv + new Vector2D<float>(morphUV.X, morphUV.Y);
         });
     }

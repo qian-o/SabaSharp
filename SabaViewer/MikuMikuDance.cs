@@ -181,7 +181,7 @@ public unsafe class MikuMikuDance : IDisposable
         if (animation is not null)
         {
             model.BeginAnimation();
-            model.UpdateAllAnimation(animation, animTime, elapsed);
+            model.UpdateAllAnimation(animation, animTime * 30.0f, elapsed);
             model.EndAnimation();
 
             model.Update();
