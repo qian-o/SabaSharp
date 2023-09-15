@@ -861,13 +861,13 @@ public class PmxJoint
 
     public Vector3D<float> Rotate { get; }
 
-    public Vector3D<float> TranslateLimitMin { get; }
+    public Vector3D<float> TranslateLowerLimit { get; }
 
-    public Vector3D<float> TranslateLimitMax { get; }
+    public Vector3D<float> TranslateUpperLimit { get; }
 
-    public Vector3D<float> RotateLimitMin { get; }
+    public Vector3D<float> RotateLowerLimit { get; }
 
-    public Vector3D<float> RotateLimitMax { get; }
+    public Vector3D<float> RotateUpperLimit { get; }
 
     public Vector3D<float> SpringTranslate { get; }
 
@@ -882,10 +882,10 @@ public class PmxJoint
         RigidBodyIndexB = binaryReader.ReadIndex(header.RigidBodyIndexSize);
         Translate = binaryReader.ReadVector3D();
         Rotate = binaryReader.ReadVector3D();
-        TranslateLimitMin = binaryReader.ReadVector3D();
-        TranslateLimitMax = binaryReader.ReadVector3D();
-        RotateLimitMin = binaryReader.ReadVector3D();
-        RotateLimitMax = binaryReader.ReadVector3D();
+        TranslateLowerLimit = binaryReader.ReadVector3D();
+        TranslateUpperLimit = binaryReader.ReadVector3D();
+        RotateLowerLimit = binaryReader.ReadVector3D();
+        RotateUpperLimit = binaryReader.ReadVector3D();
         SpringTranslate = binaryReader.ReadVector3D();
         SpringRotate = binaryReader.ReadVector3D();
     }

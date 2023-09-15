@@ -217,6 +217,8 @@ public class PmxModel : MMDModel
     private MaterialFactor[] mulMaterialFactors = Array.Empty<MaterialFactor>();
     private MaterialFactor[] addMaterialFactors = Array.Empty<MaterialFactor>();
 
+    private MMDPhysicsManager? physicsManager;
+
     public bool IsParallel { get; } = true;
 
     public PmxModel()
@@ -650,6 +652,39 @@ public class PmxModel : MMDModel
             _morphs.Add(morph);
         }
 
+        // Physics
+        physicsManager = new MMDPhysicsManager();
+
+        foreach (PmxRigidBody pmxRB in pmx.RigidBodies)
+        {
+            MMDNode? node = null;
+
+            if (pmxRB.BoneIndex != -1)
+            {
+                node = _nodes[pmxRB.BoneIndex];
+            }
+
+            MMDRigidBody rigidBody = new(pmxRB, this, node);
+
+            physicsManager.AddRigidBody(rigidBody);
+        }
+
+        MMDRigidBody[] rigidBodies = physicsManager.RigidBodies;
+
+        foreach (PmxJoint pmxJoint in pmx.Joints)
+        {
+            if (pmxJoint.RigidBodyIndexA != -1 && pmxJoint.RigidBodyIndexB != -1 && pmxJoint.RigidBodyIndexA != pmxJoint.RigidBodyIndexB)
+            {
+                MMDJoint joint = new(pmxJoint, rigidBodies[pmxJoint.RigidBodyIndexA], rigidBodies[pmxJoint.RigidBodyIndexB]);
+
+                physicsManager.AddJoint(joint);
+            }
+        }
+
+        ResetPhysics();
+
+        Update();
+
         return true;
     }
 
@@ -913,9 +948,70 @@ public class PmxModel : MMDModel
         }
     }
 
+    public override void ResetPhysics()
+    {
+        if (physicsManager == null)
+        {
+            return;
+        }
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.SetActivation(false);
+            rb.ResetTransform();
+        }
+
+        physicsManager.Physics.Update(1.0f / 60.0f);
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.ReflectGlobalTransform();
+        }
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.CalcLocalTransform();
+        }
+
+        foreach (PmxNode node in _nodes.Where(item => item.Parent == null))
+        {
+            node.UpdateGlobalTransform();
+        }
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.Reset(physicsManager.Physics);
+        }
+    }
+
     public override void UpdatePhysicsAnimation(float elapsed)
     {
+        if (physicsManager == null)
+        {
+            return;
+        }
 
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.SetActivation(true);
+        }
+
+        physicsManager.Physics.Update(elapsed);
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.ReflectGlobalTransform();
+        }
+
+        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        {
+            rb.CalcLocalTransform();
+        }
+
+        foreach (PmxNode node in _nodes.Where(item => item.Parent == null))
+        {
+            node.UpdateGlobalTransform();
+        }
     }
 
     public override void Update()
@@ -961,6 +1057,8 @@ public class PmxModel : MMDModel
         morphPositions = Array.Empty<Vector3D<float>>();
         morphUVs = Array.Empty<Vector4D<float>>();
         transforms = Array.Empty<Matrix4X4<float>>();
+
+        physicsManager?.Dispose();
     }
 
     public override void Dispose()
