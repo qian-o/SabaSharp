@@ -11,7 +11,7 @@ public class MMDJoint : IDisposable
 
     public MMDJoint(PmxJoint pmxJoint, MMDRigidBody rigidBodyA, MMDRigidBody rigidBodyB)
     {
-        Matrix4X4<float> t0 = Matrix4X4.CreateFromYawPitchRoll(pmxJoint.Rotate.Y, pmxJoint.Rotate.X, pmxJoint.Rotate.Z) * Matrix4X4.CreateTranslation(pmxJoint.Translate);
+        Matrix4X4<float> t0 = Matrix4X4.CreateFromYawPitchRoll(pmxJoint.Rotate.Z, pmxJoint.Rotate.Y, pmxJoint.Rotate.X) * Matrix4X4.CreateTranslation(pmxJoint.Translate);
 
         Matrix4X4<float> t1 = rigidBodyA.RigidBody.WorldTransform.ToMatrix4X4().Invert();
         Matrix4X4<float> t2 = rigidBodyB.RigidBody.WorldTransform.ToMatrix4X4().Invert();
