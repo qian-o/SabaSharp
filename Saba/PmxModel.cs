@@ -219,8 +219,6 @@ public class PmxModel : MMDModel
 
     private MMDPhysicsManager? physicsManager;
 
-    public bool IsParallel { get; } = true;
-
     public PmxModel()
     {
         _positions = new List<Vector3D<float>>();
@@ -857,15 +855,9 @@ public class PmxModel : MMDModel
             node.BeginUpdateTransform();
         }
 
-        for (int i = 0; i < morphPositions.Length; i++)
-        {
-            morphPositions[i] = Vector3D<float>.Zero;
-        }
+        Array.Fill(morphPositions, Vector3D<float>.Zero);
 
-        for (int i = 0; i < morphUVs.Length; i++)
-        {
-            morphUVs[i] = Vector4D<float>.Zero;
-        }
+        Array.Fill(morphUVs, Vector4D<float>.Zero);
     }
 
     public override void EndAnimation()
@@ -955,7 +947,9 @@ public class PmxModel : MMDModel
             return;
         }
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        MMDRigidBody[] rigidBodies = physicsManager.RigidBodies;
+
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.SetActivation(false);
             rb.ResetTransform();
@@ -963,12 +957,12 @@ public class PmxModel : MMDModel
 
         physicsManager.Physics.Update(1.0f / 60.0f);
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.ReflectGlobalTransform();
         }
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.CalcLocalTransform();
         }
@@ -978,7 +972,7 @@ public class PmxModel : MMDModel
             node.UpdateGlobalTransform();
         }
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.Reset(physicsManager.Physics);
         }
@@ -991,19 +985,21 @@ public class PmxModel : MMDModel
             return;
         }
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        MMDRigidBody[] rigidBodies = physicsManager.RigidBodies;
+
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.SetActivation(true);
         }
 
         physicsManager.Physics.Update(elapsed);
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.ReflectGlobalTransform();
         }
 
-        foreach (MMDRigidBody rb in physicsManager.RigidBodies)
+        foreach (MMDRigidBody rb in rigidBodies)
         {
             rb.CalcLocalTransform();
         }
@@ -1022,17 +1018,7 @@ public class PmxModel : MMDModel
             transforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
         }
 
-        if (IsParallel)
-        {
-            Parallel.For(0, _positions.Count, Update);
-        }
-        else
-        {
-            for (int i = 0; i < _positions.Count; i++)
-            {
-                Update(i);
-            }
-        }
+        Parallel.For(0, _positions.Count, Update);
     }
 
     public override void Destroy()

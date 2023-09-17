@@ -13,7 +13,7 @@ public unsafe class MikuMikuDance : IDisposable
     private readonly MMDShader _mmdShader;
     private readonly MMDEdgeShader _mmdEdgeShader;
     private readonly MMDGroundShadowShader _mmdGroundShadowShader;
-    private readonly List<Material> _materials;
+    private readonly Dictionary<MMDMaterial, Material> _materials;
     private readonly Dictionary<string, Texture2D> _textures;
     private readonly Texture2D _defaultTexture;
 
@@ -150,7 +150,7 @@ public unsafe class MikuMikuDance : IDisposable
         // Setup materials
         foreach (MMDMaterial mmdMat in model.GetMaterials())
         {
-            Material mat = new(mmdMat);
+            Material mat = new();
 
             if (!string.IsNullOrEmpty(mmdMat.Texture))
             {
@@ -167,7 +167,7 @@ public unsafe class MikuMikuDance : IDisposable
                 mat.ToonTexture = GetTexture(mmdMat.ToonTexture);
             }
 
-            _materials.Add(mat);
+            _materials.Add(mmdMat, mat);
         }
     }
 
@@ -215,11 +215,13 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.Enable(GLEnum.Blend);
         _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
 
+        MMDMesh[] meshes = model.GetMeshes();
+
         // Draw model
-        foreach (MMDMesh mesh in model.GetMeshes())
+        foreach (MMDMesh mesh in meshes)
         {
             MMDMaterial mmdMat = mesh.Material;
-            Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
+            Material mat = _materials[mmdMat];
 
             if (mmdMat.Alpha == 0.0f)
             {
@@ -340,10 +342,9 @@ public unsafe class MikuMikuDance : IDisposable
 
         // Draw edge
         Vector2D<float> screenSize = new(screenWidth, screenHeight);
-        foreach (MMDMesh mesh in model.GetMeshes())
+        foreach (MMDMesh mesh in meshes)
         {
             MMDMaterial mmdMat = mesh.Material;
-            Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
 
             if (mmdMat.EdgeFlag == 0)
             {
@@ -396,10 +397,9 @@ public unsafe class MikuMikuDance : IDisposable
 
         _gl.Disable(GLEnum.CullFace);
 
-        foreach (MMDMesh mesh in model.GetMeshes())
+        foreach (MMDMesh mesh in meshes)
         {
             MMDMaterial mmdMat = mesh.Material;
-            Material mat = _materials.Find(item => item.MMDMaterial == mmdMat)!;
 
             if (!mmdMat.GroundShadow)
             {
@@ -431,11 +431,11 @@ public unsafe class MikuMikuDance : IDisposable
 
     public void Dispose()
     {
-        foreach (Material material in _materials)
+        foreach (KeyValuePair<MMDMaterial, Material> pair in _materials)
         {
-            material.Texture?.Dispose();
-            material.SpTexture?.Dispose();
-            material.ToonTexture?.Dispose();
+            pair.Value.Texture?.Dispose();
+            pair.Value.SpTexture?.Dispose();
+            pair.Value.ToonTexture?.Dispose();
         }
         _materials.Clear();
 
