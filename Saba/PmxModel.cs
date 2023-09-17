@@ -1040,9 +1040,16 @@ public class PmxModel : MMDModel
         _boneMorphDatas.Clear();
         _groupMorphDatas.Clear();
 
+        updatePositions = Array.Empty<Vector3D<float>>();
+        updateNormals = Array.Empty<Vector3D<float>>();
+        updateUVs = Array.Empty<Vector2D<float>>();
+
+        transforms = Array.Empty<Matrix4X4<float>>();
+
         morphPositions = Array.Empty<Vector3D<float>>();
         morphUVs = Array.Empty<Vector4D<float>>();
-        transforms = Array.Empty<Matrix4X4<float>>();
+
+        initMaterials = Array.Empty<MMDMaterial>();
 
         physicsManager?.Dispose();
     }
