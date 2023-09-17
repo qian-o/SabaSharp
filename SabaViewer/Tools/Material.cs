@@ -1,6 +1,4 @@
-﻿using Saba;
-
-namespace SabaViewer.Tools;
+﻿namespace SabaViewer.Tools;
 
 public class Material
 {
