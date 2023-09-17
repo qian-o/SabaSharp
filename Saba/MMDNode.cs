@@ -145,7 +145,7 @@ public abstract class MMDNode
     {
         foreach (MMDNode child in Children)
         {
-            child.UpdateChildTransform();
+            child.UpdateGlobalTransform();
         }
     }
 
