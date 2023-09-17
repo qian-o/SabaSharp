@@ -73,7 +73,10 @@ public class MMDRigidBody : IDisposable
             _shape.CalculateLocalInertia(mass, out localInertia);
         }
 
-        Matrix4X4<float> rotMat = Matrix4X4.CreateFromYawPitchRoll(pmxRigidBody.Rotate.Z, pmxRigidBody.Rotate.Y, pmxRigidBody.Rotate.X);
+        Matrix4X4<float> rx = Matrix4X4.CreateRotationX(pmxRigidBody.Rotate.X, new Vector3D<float>(1.0f, 0.0f, 0.0f));
+        Matrix4X4<float> ry = Matrix4X4.CreateRotationY(pmxRigidBody.Rotate.Y, new Vector3D<float>(0.0f, 1.0f, 0.0f));
+        Matrix4X4<float> rz = Matrix4X4.CreateRotationZ(pmxRigidBody.Rotate.Z, new Vector3D<float>(0.0f, 0.0f, 1.0f));
+        Matrix4X4<float> rotMat = rz * rx * ry;
         Matrix4X4<float> translateMat = Matrix4X4.CreateTranslation(pmxRigidBody.Translate);
 
         Matrix4X4<float> rbMat = (rotMat * translateMat).InvZ();
