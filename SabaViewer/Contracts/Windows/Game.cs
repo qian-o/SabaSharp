@@ -5,11 +5,11 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
 using Silk.NET.OpenGLES.Extensions.ImGui;
 using Silk.NET.Windowing;
-using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace SabaViewer.Contracts.Windows;
 
-public abstract class Game
+public abstract unsafe class Game
 {
     private readonly IWindow _window;
 
@@ -17,6 +17,7 @@ public abstract class Game
     protected IInputContext inputContext = null!;
     protected ImGuiController imGuiController = null!;
     protected Camera camera = null!;
+    protected string renderer = string.Empty;
 
     #region Input
     protected IMouse mouse = null!;
@@ -54,6 +55,7 @@ public abstract class Game
                 Position = new Vector3D<float>(0.0f, 2.0f, 3.0f),
                 Fov = 45.0f
             };
+            renderer = Marshal.PtrToStringAnsi((nint)gl.GetString(GLEnum.Renderer))!;
 
             mouse = inputContext.Mice[0];
             keyboard = inputContext.Keyboards[0];
@@ -133,7 +135,8 @@ public abstract class Game
 
             imGuiController!.Update((float)obj);
 
-            ImGui.GetBackgroundDrawList().AddText(new Vector2(0, 0), ImGui.GetColorU32(new Vector4(0.0f, 1.0f, 0.0f, 1.0f)), ImGui.GetIO().Framerate.ToString("F0"));
+            ImGui.Begin(renderer);
+            ImGui.Value("FPS", ImGui.GetIO().Framerate);
 
             ImGui.Begin("Camera Settings");
 
