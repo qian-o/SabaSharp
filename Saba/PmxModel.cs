@@ -5,7 +5,7 @@ using static Saba.PmxMorph;
 
 namespace Saba;
 
-public class PmxModel : MMDModel
+public unsafe class PmxModel : MMDModel
 {
     #region Enums
     private enum MorphType
@@ -188,11 +188,6 @@ public class PmxModel : MMDModel
     }
     #endregion
 
-    private readonly List<Vector3D<float>> _positions;
-    private readonly List<Vector3D<float>> _normals;
-    private readonly List<Vector2D<float>> _uvs;
-    private readonly List<VertexBoneInfo> _vertexBoneInfos;
-    private readonly List<uint> _indices;
     private readonly List<MMDMaterial> _materials;
     private readonly List<MMDMesh> _meshes;
     private readonly List<PmxNode> _nodes;
@@ -204,6 +199,13 @@ public class PmxModel : MMDModel
     private readonly List<MaterialMorphData> _materialMorphDatas;
     private readonly List<BoneMorphData> _boneMorphDatas;
     private readonly List<GroupMorphData> _groupMorphDatas;
+
+    private Vector3D<float>[] positions = Array.Empty<Vector3D<float>>();
+    private Vector3D<float>[] normals = Array.Empty<Vector3D<float>>();
+    private Vector2D<float>[] uvs = Array.Empty<Vector2D<float>>();
+    private VertexBoneInfo[] vertexBoneInfos = Array.Empty<VertexBoneInfo>();
+
+    private uint[] indices = Array.Empty<uint>();
 
     private Vector3D<float>[] updatePositions = Array.Empty<Vector3D<float>>();
     private Vector3D<float>[] updateNormals = Array.Empty<Vector3D<float>>();
@@ -222,11 +224,6 @@ public class PmxModel : MMDModel
 
     public PmxModel()
     {
-        _positions = new List<Vector3D<float>>();
-        _normals = new List<Vector3D<float>>();
-        _uvs = new List<Vector2D<float>>();
-        _vertexBoneInfos = new List<VertexBoneInfo>();
-        _indices = new List<uint>();
         _materials = new List<MMDMaterial>();
         _meshes = new List<MMDMesh>();
         _nodes = new List<PmxNode>();
@@ -253,14 +250,20 @@ public class PmxModel : MMDModel
         string dir = Path.GetDirectoryName(path)!;
 
         // 坐标点、法线、UV、骨骼信息
-        foreach (PmxVertex vertex in pmx.Vertices)
+        Array.Resize(ref positions, pmx.Vertices.Length);
+        Array.Resize(ref normals, pmx.Vertices.Length);
+        Array.Resize(ref uvs, pmx.Vertices.Length);
+        Array.Resize(ref vertexBoneInfos, pmx.Vertices.Length);
+        for (int i = 0; i < pmx.Vertices.Length; i++)
         {
+            PmxVertex vertex = pmx.Vertices[i];
+
             Vector3D<float> position = vertex.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f);
             Vector3D<float> normal = vertex.Normal * new Vector3D<float>(1.0f, 1.0f, -1.0f);
             Vector2D<float> uv = new(vertex.UV.X, -vertex.UV.Y);
-            _positions.Add(position);
-            _normals.Add(normal);
-            _uvs.Add(uv);
+            positions[i] = position;
+            normals[i] = normal;
+            uvs[i] = uv;
 
             VertexBoneInfo vertexBoneInfo = new();
 
@@ -320,21 +323,24 @@ public class PmxModel : MMDModel
                     break;
             }
 
-            _vertexBoneInfos.Add(vertexBoneInfo);
+            vertexBoneInfos[i] = vertexBoneInfo;
         }
 
-        Array.Resize(ref updatePositions, _positions.Count);
-        Array.Resize(ref updateNormals, _normals.Count);
-        Array.Resize(ref updateUVs, _uvs.Count);
-        Array.Resize(ref morphPositions, _positions.Count);
-        Array.Resize(ref morphUVs, _uvs.Count);
+        Array.Resize(ref updatePositions, positions.Length);
+        Array.Resize(ref updateNormals, normals.Length);
+        Array.Resize(ref updateUVs, uvs.Length);
+        Array.Resize(ref morphPositions, positions.Length);
+        Array.Resize(ref morphUVs, uvs.Length);
 
         // 面信息
-        foreach (PmxFace face in pmx.Faces)
+        Array.Resize(ref indices, pmx.Faces.Length * 3);
+        for (int i = 0; i < pmx.Faces.Length; i++)
         {
-            _indices.Add(face.Vertices[2]);
-            _indices.Add(face.Vertices[1]);
-            _indices.Add(face.Vertices[0]);
+            PmxFace face = pmx.Faces[i];
+
+            indices[i * 3 + 0] = face.Vertices[2];
+            indices[i * 3 + 1] = face.Vertices[1];
+            indices[i * 3 + 2] = face.Vertices[0];
         }
 
         // 纹理
@@ -719,68 +725,47 @@ public class PmxModel : MMDModel
 
     public override int GetVertexCount()
     {
-        return _positions.Count;
+        return positions.Length;
     }
 
     public override unsafe Vector3D<float>* GetPositions()
     {
-        fixed (Vector3D<float>* ptr = _positions.ToArray())
-        {
-            return ptr;
-        }
+        return positions.GetData();
     }
 
     public override unsafe Vector3D<float>* GetNormals()
     {
-        fixed (Vector3D<float>* ptr = _normals.ToArray())
-        {
-            return ptr;
-        }
+        return normals.GetData();
     }
 
     public override unsafe Vector2D<float>* GetUVs()
     {
-        fixed (Vector2D<float>* ptr = _uvs.ToArray())
-        {
-            return ptr;
-        }
+        return uvs.GetData();
     }
 
     public override unsafe Vector3D<float>* GetUpdatePositions()
     {
-        fixed (Vector3D<float>* ptr = updatePositions)
-        {
-            return ptr;
-        }
+        return updatePositions.GetData();
     }
 
     public override unsafe Vector3D<float>* GetUpdateNormals()
     {
-        fixed (Vector3D<float>* ptr = updateNormals)
-        {
-            return ptr;
-        }
+        return updateNormals.GetData();
     }
 
     public override unsafe Vector2D<float>* GetUpdateUVs()
     {
-        fixed (Vector2D<float>* ptr = updateUVs)
-        {
-            return ptr;
-        }
+        return updateUVs.GetData();
     }
 
     public override int GetIndexCount()
     {
-        return _indices.Count;
+        return indices.Length;
     }
 
     public override unsafe uint* GetIndices()
     {
-        fixed (uint* ptr = _indices.ToArray())
-        {
-            return ptr;
-        }
+        return indices.GetData();
     }
 
     public override MMDMaterial[] GetMaterials()
@@ -1019,9 +1004,9 @@ public class PmxModel : MMDModel
             transforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
         }
 
-        int partitionSize = (int)Math.Ceiling((double)_positions.Count / Environment.ProcessorCount);
+        int partitionSize = (int)Math.Ceiling((double)positions.Length / Environment.ProcessorCount);
 
-        Parallel.ForEach(Partitioner.Create(0, _positions.Count, partitionSize), range =>
+        Parallel.ForEach(Partitioner.Create(0, positions.Length, partitionSize), range =>
         {
             for (int i = range.Item1; i < range.Item2; i++)
             {
@@ -1032,11 +1017,6 @@ public class PmxModel : MMDModel
 
     public override void Destroy()
     {
-        _positions.Clear();
-        _normals.Clear();
-        _uvs.Clear();
-        _vertexBoneInfos.Clear();
-        _indices.Clear();
         _materials.Clear();
         _meshes.Clear();
         _nodes.Clear();
@@ -1048,6 +1028,13 @@ public class PmxModel : MMDModel
         _materialMorphDatas.Clear();
         _boneMorphDatas.Clear();
         _groupMorphDatas.Clear();
+
+        positions = Array.Empty<Vector3D<float>>();
+        normals = Array.Empty<Vector3D<float>>();
+        uvs = Array.Empty<Vector2D<float>>();
+        vertexBoneInfos = Array.Empty<VertexBoneInfo>();
+
+        indices = Array.Empty<uint>();
 
         updatePositions = Array.Empty<Vector3D<float>>();
         updateNormals = Array.Empty<Vector3D<float>>();
@@ -1221,12 +1208,12 @@ public class PmxModel : MMDModel
 
     private void Update(int i)
     {
-        Vector3D<float> position = _positions[i];
-        Vector3D<float> normal = _normals[i];
-        Vector2D<float> uv = _uvs[i];
+        Vector3D<float> position = positions[i];
+        Vector3D<float> normal = normals[i];
+        Vector2D<float> uv = uvs[i];
         Vector3D<float> morphPos = morphPositions[i];
         Vector4D<float> morphUV = morphUVs[i];
-        VertexBoneInfo vtxInfo = _vertexBoneInfos[i];
+        VertexBoneInfo vtxInfo = vertexBoneInfos[i];
 
         Matrix4X4<float> m = Matrix4X4<float>.Identity;
 

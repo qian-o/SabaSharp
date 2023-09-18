@@ -13,28 +13,28 @@ public enum SkinningType
 }
 #endregion
 
-#region Classes
-public class SDEF
+#region Structs
+public unsafe struct SDEF
 {
-    public int[] BoneIndices { get; } = new int[2];
+    public fixed int BoneIndices[2];
 
-    public float BoneWeight { get; set; }
+    public float BoneWeight;
 
-    public Vector3D<float> C { get; set; }
+    public Vector3D<float> C;
 
-    public Vector3D<float> R0 { get; set; }
+    public Vector3D<float> R0;
 
-    public Vector3D<float> R1 { get; set; }
+    public Vector3D<float> R1;
 }
 #endregion
 
-public class VertexBoneInfo
+public unsafe struct VertexBoneInfo
 {
-    public SkinningType SkinningType { get; set; }
+    public SkinningType SkinningType;
 
-    public int[] BoneIndices { get; } = new int[4];
+    public fixed int BoneIndices[4];
 
-    public float[] BoneWeights { get; } = new float[4];
+    public fixed float BoneWeights[4];
 
-    public SDEF SDEF { get; } = new SDEF();
+    public SDEF SDEF;
 }
