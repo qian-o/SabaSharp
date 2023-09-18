@@ -11,6 +11,8 @@ public class Scene1 : Game
 {
     private MikuMikuDance mmd = null!;
     private double saveTime = 0.0;
+    private float animTime = 0.0f;
+    private float elapsed = 0.0f;
 
     protected override void Load()
     {
@@ -30,10 +32,8 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        mmd.Update((float)saveTime, (float)obj);
+        mmd.Update(animTime, elapsed);
         mmd.Draw(camera, Width, Height);
-
-        saveTime += obj;
     }
 
     protected override void RenderImGui(double obj)
@@ -53,5 +53,19 @@ public class Scene1 : Game
         MikuMikuDance.LightDir = lightDir.ToGeneric();
 
         ImGui.End();
+    }
+
+    protected override void Update(double obj)
+    {
+        float time = (float)(Time - saveTime);
+        if (elapsed > 1.0f / 30.0f)
+        {
+            elapsed = 1.0f / 30.0f;
+        }
+
+        animTime += time;
+        elapsed = time;
+
+        saveTime = Time;
     }
 }
