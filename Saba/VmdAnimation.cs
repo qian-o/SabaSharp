@@ -1,5 +1,5 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace Saba;
 
@@ -19,14 +19,14 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
 
         if (_keys.Count == 0)
         {
-            Object.AnimTranslate = Vector3D<float>.Zero;
-            Object.AnimRotate = Quaternion<float>.Identity;
+            Object.AnimTranslate = Vector3.Zero;
+            Object.AnimRotate = Quaternion.Identity;
 
             return;
         }
 
-        Vector3D<float> vt;
-        Quaternion<float> q;
+        Vector3 vt;
+        Quaternion q;
         int keyIndex = _keys.FindIndex(StartKeyIndex, item => item.Time > t);
         if (keyIndex == -1)
         {
@@ -53,8 +53,8 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
                 float tz_y = key0.TzBezier.EvalY(tz_x);
                 float rot_y = key0.RotBezier.EvalY(rot_x);
 
-                vt = MathHelper.Lerp(key0.Translate, key1.Translate, new Vector3D<float>(tx_y, ty_y, tz_y));
-                q = Quaternion<float>.Slerp(key0.Rotate, key1.Rotate, rot_y);
+                vt = MathHelper.Lerp(key0.Translate, key1.Translate, new Vector3(tx_y, ty_y, tz_y));
+                q = Quaternion.Slerp(key0.Rotate, key1.Rotate, rot_y);
 
                 StartKeyIndex = keyIndex;
             }
@@ -67,11 +67,11 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
         }
         else
         {
-            Vector3D<float> baseT = Object.BaseAnimTranslate;
-            Quaternion<float> baseQ = Object.BaseAnimRotate;
+            Vector3 baseT = Object.BaseAnimTranslate;
+            Quaternion baseQ = Object.BaseAnimRotate;
 
-            Object.AnimTranslate = Vector3D.Lerp(baseT, vt, weight);
-            Object.AnimRotate = Quaternion<float>.Slerp(baseQ, q, weight);
+            Object.AnimTranslate = Vector3.Lerp(baseT, vt, weight);
+            Object.AnimRotate = Quaternion.Slerp(baseQ, q, weight);
         }
     }
 }

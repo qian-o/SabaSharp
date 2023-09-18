@@ -2,8 +2,9 @@
 using SabaViewer.Helpers;
 using SabaViewer.Shaders;
 using SabaViewer.Tools;
-using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
+using System.Drawing;
+using System.Numerics;
 
 namespace SabaViewer;
 
@@ -30,13 +31,13 @@ public unsafe class MikuMikuDance : IDisposable
     private uint mmdEdgeVAO;
     private uint mmdGroundShadowVAO;
 
-    public static Vector3D<float> LightColor { get; set; } = new(1.0f, 1.0f, 1.0f);
+    public static Vector3 LightColor { get; set; } = new(1.0f, 1.0f, 1.0f);
 
-    public static Vector4D<float> ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
+    public static Vector4 ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
 
-    public static Vector3D<float> LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
+    public static Vector3 LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
-    public Matrix4X4<float> Transform { get; set; } = Matrix4X4<float>.Identity;
+    public Matrix4x4 Transform { get; set; } = Matrix4x4.Identity;
 
     public MikuMikuDance(GL gl)
     {
@@ -47,7 +48,7 @@ public unsafe class MikuMikuDance : IDisposable
         _materials = new();
         _textures = new();
         _defaultTexture = new Texture2D(_gl);
-        _defaultTexture.WriteColor(new Vector3D<byte>(255));
+        _defaultTexture.WriteColor(Color.White);
     }
 
     public void LoadModel(string modelPath, string? vmdPath = null)
@@ -80,17 +81,17 @@ public unsafe class MikuMikuDance : IDisposable
 
         posVBO = _gl.GenBuffer();
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3D<float>) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         norVBO = _gl.GenBuffer();
         _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3D<float>) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         uvVBO = _gl.GenBuffer();
         _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector2D<float>) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector2) * vtxCount), null, GLEnum.DynamicDraw);
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         // Setup indices
@@ -106,15 +107,15 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.BindVertexArray(mmdVAO);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
         _gl.EnableVertexAttribArray(_mmdShader.InPos);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.VertexAttribPointer(_mmdShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
         _gl.EnableVertexAttribArray(_mmdShader.InNor);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.VertexAttribPointer(_mmdShader.InUV, 2, GLEnum.Float, false, (uint)sizeof(Vector2D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdShader.InUV, 2, GLEnum.Float, false, (uint)sizeof(Vector2), (void*)0);
         _gl.EnableVertexAttribArray(_mmdShader.InUV);
 
         _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
@@ -126,11 +127,11 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.BindVertexArray(mmdEdgeVAO);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdEdgeShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdEdgeShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
         _gl.EnableVertexAttribArray(_mmdEdgeShader.InPos);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.VertexAttribPointer(_mmdEdgeShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdEdgeShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
         _gl.EnableVertexAttribArray(_mmdEdgeShader.InNor);
 
         _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
@@ -142,7 +143,7 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.BindVertexArray(mmdGroundShadowVAO);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdGroundShadowShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3D<float>), (void*)0);
+        _gl.VertexAttribPointer(_mmdGroundShadowShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
         _gl.EnableVertexAttribArray(_mmdGroundShadowShader.InPos);
 
         _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
@@ -193,15 +194,15 @@ public unsafe class MikuMikuDance : IDisposable
         int vtxCount = model.GetVertexCount();
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetUpdatePositions());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3) * vtxCount), model.GetUpdatePositions());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3D<float>) * vtxCount), model.GetUpdateNormals());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector3) * vtxCount), model.GetUpdateNormals());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 
         _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector2D<float>) * vtxCount), model.GetUpdateUVs());
+        _gl.BufferSubData(GLEnum.ArrayBuffer, 0, (uint)(sizeof(Vector2) * vtxCount), model.GetUpdateUVs());
         _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
     }
 
@@ -343,7 +344,7 @@ public unsafe class MikuMikuDance : IDisposable
         }
 
         // Draw edge
-        Vector2D<float> screenSize = new(screenWidth, screenHeight);
+        Vector2 screenSize = new(screenWidth, screenHeight);
         foreach (MMDMesh mesh in meshes)
         {
             MMDMaterial mmdMat = mesh.Material;
@@ -380,8 +381,8 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.Enable(GLEnum.PolygonOffsetFill);
         _gl.PolygonOffset(-1.0f, -1.0f);
 
-        Matrix4X4<float> shadow = Matrix4X4.CreateShadow(-LightDir, new Plane<float>(0.0f, 1.0f, 0.0f, 0.0f));
-        Matrix4X4<float> shadowMatrix = Transform * shadow * camera.View * camera.Projection;
+        Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
+        Matrix4x4 shadowMatrix = Transform * shadow * camera.View * camera.Projection;
 
         if (ShadowColor.W < 1.0f)
         {

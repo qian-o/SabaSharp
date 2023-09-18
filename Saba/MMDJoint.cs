@@ -1,7 +1,7 @@
 ﻿using BulletSharp;
-using Evergine.Mathematics;
 using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
+using BtVector3 = Evergine.Mathematics.Vector3;
 
 namespace Saba;
 
@@ -11,27 +11,27 @@ public class MMDJoint : IDisposable
 
     public MMDJoint(PmxJoint pmxJoint, MMDRigidBody rigidBodyA, MMDRigidBody rigidBodyB)
     {
-        Matrix4X4<float> t0 = Matrix4X4.CreateFromYawPitchRoll(pmxJoint.Rotate.Y, pmxJoint.Rotate.X, pmxJoint.Rotate.Z) * Matrix4X4.CreateTranslation(pmxJoint.Translate);
+        Matrix4x4 t0 = Matrix4x4.CreateFromYawPitchRoll(pmxJoint.Rotate.Y, pmxJoint.Rotate.X, pmxJoint.Rotate.Z) * Matrix4x4.CreateTranslation(pmxJoint.Translate);
 
-        Matrix4X4<float> t1 = rigidBodyA.RigidBody.WorldTransform.ToMatrix4X4().Invert();
-        Matrix4X4<float> t2 = rigidBodyB.RigidBody.WorldTransform.ToMatrix4X4().Invert();
+        Matrix4x4 t1 = rigidBodyA.RigidBody.WorldTransform.ToMatrix4x4().Invert();
+        Matrix4x4 t2 = rigidBodyB.RigidBody.WorldTransform.ToMatrix4x4().Invert();
         t1 = t0 * t1;
         t2 = t0 * t2;
 
-        Generic6DofSpringConstraint constraint = new(rigidBodyA.RigidBody, rigidBodyB.RigidBody, t1.ToBtTransform(), t2.ToBtTransform(), true)
+        Generic6DofSpringConstraint constraint = new(rigidBodyA.RigidBody, rigidBodyB.RigidBody, t1.ToBtMatrix4x4(), t2.ToBtMatrix4x4(), true)
         {
-            LinearLowerLimit = new Vector3(pmxJoint.TranslateLowerLimit.X,
-                                           pmxJoint.TranslateLowerLimit.Y,
-                                           pmxJoint.TranslateLowerLimit.Z),
-            LinearUpperLimit = new Vector3(pmxJoint.TranslateUpperLimit.X,
-                                           pmxJoint.TranslateUpperLimit.Y,
-                                           pmxJoint.TranslateUpperLimit.Z),
-            AngularLowerLimit = new Vector3(pmxJoint.RotateLowerLimit.X,
-                                            pmxJoint.RotateLowerLimit.Y,
-                                            pmxJoint.RotateLowerLimit.Z),
-            AngularUpperLimit = new Vector3(pmxJoint.RotateUpperLimit.X,
-                                            pmxJoint.RotateUpperLimit.Y,
-                                            pmxJoint.RotateUpperLimit.Z)
+            LinearLowerLimit = new BtVector3(pmxJoint.TranslateLowerLimit.X,
+                                             pmxJoint.TranslateLowerLimit.Y,
+                                             pmxJoint.TranslateLowerLimit.Z),
+            LinearUpperLimit = new BtVector3(pmxJoint.TranslateUpperLimit.X,
+                                             pmxJoint.TranslateUpperLimit.Y,
+                                             pmxJoint.TranslateUpperLimit.Z),
+            AngularLowerLimit = new BtVector3(pmxJoint.RotateLowerLimit.X,
+                                              pmxJoint.RotateLowerLimit.Y,
+                                              pmxJoint.RotateLowerLimit.Z),
+            AngularUpperLimit = new BtVector3(pmxJoint.RotateUpperLimit.X,
+                                              pmxJoint.RotateUpperLimit.Y,
+                                              pmxJoint.RotateUpperLimit.Z)
         };
 
         if (pmxJoint.SpringTranslate.X != 0.0f)

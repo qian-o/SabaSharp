@@ -1,4 +1,4 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
 namespace Saba;
 
@@ -20,11 +20,11 @@ public unsafe struct SDEF
 
     public float BoneWeight;
 
-    public Vector3D<float> C;
+    public Vector3 C;
 
-    public Vector3D<float> R0;
+    public Vector3 R0;
 
-    public Vector3D<float> R1;
+    public Vector3 R1;
 }
 #endregion
 

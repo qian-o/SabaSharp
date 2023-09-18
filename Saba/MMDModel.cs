@@ -1,4 +1,4 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
 namespace Saba;
 
@@ -20,17 +20,17 @@ public unsafe abstract class MMDModel : IDisposable
 
     public abstract int GetVertexCount();
 
-    public abstract Vector3D<float>* GetPositions();
+    public abstract Vector3* GetPositions();
 
-    public abstract Vector3D<float>* GetNormals();
+    public abstract Vector3* GetNormals();
 
-    public abstract Vector2D<float>* GetUVs();
+    public abstract Vector2* GetUVs();
 
-    public abstract Vector3D<float>* GetUpdatePositions();
+    public abstract Vector3* GetUpdatePositions();
 
-    public abstract Vector3D<float>* GetUpdateNormals();
+    public abstract Vector3* GetUpdateNormals();
 
-    public abstract Vector2D<float>* GetUpdateUVs();
+    public abstract Vector2* GetUpdateUVs();
 
     public abstract int GetIndexCount();
 

@@ -1,5 +1,5 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace Saba;
 
@@ -16,9 +16,9 @@ public abstract class VmdAnimationKey
 
 public class VmdBezier
 {
-    public Vector2D<float> Cp1 { get; set; }
+    public Vector2 Cp1 { get; set; }
 
-    public Vector2D<float> Cp2 { get; set; }
+    public Vector2 Cp2 { get; set; }
 
     public VmdBezier(byte[] cp)
     {
@@ -27,8 +27,8 @@ public class VmdBezier
         int x1 = cp[8];
         int y1 = cp[12];
 
-        Cp1 = new Vector2D<float>(x0 / 127.0f, y0 / 127.0f);
-        Cp2 = new Vector2D<float>(x1 / 127.0f, y1 / 127.0f);
+        Cp1 = new Vector2(x0 / 127.0f, y0 / 127.0f);
+        Cp2 = new Vector2(x1 / 127.0f, y1 / 127.0f);
     }
 
     public float EvalX(float t)
@@ -55,9 +55,9 @@ public class VmdBezier
         return t3 * y[3] + 3 * t2 * it * y[2] + 3 * t * it2 * y[1] + it3 * y[0];
     }
 
-    public Vector2D<float> Eval(float t)
+    public Vector2 Eval(float t)
     {
-        return new Vector2D<float>(EvalX(t), EvalY(t));
+        return new Vector2(EvalX(t), EvalY(t));
     }
 
     public float FindBezierX(float time)
@@ -87,9 +87,9 @@ public class VmdBezier
 
 public class VmdNodeAnimationKey : VmdAnimationKey
 {
-    public Vector3D<float> Translate { get; }
+    public Vector3 Translate { get; }
 
-    public Quaternion<float> Rotate { get; }
+    public Quaternion Rotate { get; }
 
     public VmdBezier TxBezier { get; }
 
@@ -101,11 +101,11 @@ public class VmdNodeAnimationKey : VmdAnimationKey
 
     public VmdNodeAnimationKey(VmdMotion motion) : base((int)motion.Frame)
     {
-        Translate = motion.Translate * new Vector3D<float>(1.0f, 1.0f, -1.0f);
+        Translate = motion.Translate * new Vector3(1.0f, 1.0f, -1.0f);
 
-        Matrix3X3<float> rot0 = Matrix3X3.CreateFromQuaternion(motion.Quaternion);
-        Matrix3X3<float> rot1 = rot0.InvZ();
-        Rotate = Quaternion<float>.CreateFromRotationMatrix(rot1);
+        Matrix4x4 rot0 = Matrix4x4.CreateFromQuaternion(motion.Quaternion);
+        Matrix4x4 rot1 = rot0.InvZ();
+        Rotate = Quaternion.CreateFromRotationMatrix(rot1);
 
         TxBezier = new VmdBezier(motion.Interpolation[0..]);
         TyBezier = new VmdBezier(motion.Interpolation[1..]);

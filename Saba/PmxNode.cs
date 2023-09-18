@@ -1,4 +1,4 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 
 namespace Saba;
 
@@ -18,9 +18,9 @@ public class PmxNode : MMDNode
 
     public float AppendWeight { get; set; }
 
-    public Vector3D<float> AppendTranslate { get; set; }
+    public Vector3 AppendTranslate { get; set; }
 
-    public Quaternion<float> AppendRotate { get; set; }
+    public Quaternion AppendRotate { get; set; }
 
     public MMDIkSolver? IkSolver { get; set; }
 
@@ -38,7 +38,7 @@ public class PmxNode : MMDNode
 
         if (IsAppendRotate)
         {
-            Quaternion<float> appendRotate;
+            Quaternion appendRotate;
             if (IsAppendLocal)
             {
                 appendRotate = AppendNode.AnimateRotate;
@@ -60,12 +60,12 @@ public class PmxNode : MMDNode
                 appendRotate = AppendNode.IkRotate * appendRotate;
             }
 
-            AppendRotate = Quaternion<float>.Slerp(Quaternion<float>.Identity, appendRotate, AppendWeight);
+            AppendRotate = Quaternion.Slerp(Quaternion.Identity, appendRotate, AppendWeight);
         }
 
         if (IsAppendTranslate)
         {
-            Vector3D<float> appendTranslate;
+            Vector3 appendTranslate;
             if (IsAppendLocal)
             {
                 appendTranslate = AppendNode.Translate - AppendNode.InitTranslate;
@@ -90,8 +90,8 @@ public class PmxNode : MMDNode
 
     protected override void OnBeginUpdateTransform()
     {
-        AppendTranslate = Vector3D<float>.Zero;
-        AppendRotate = Quaternion<float>.Identity;
+        AppendTranslate = Vector3.Zero;
+        AppendRotate = Quaternion.Identity;
     }
 
     protected override void OnEndUpdateTransform()
@@ -101,13 +101,13 @@ public class PmxNode : MMDNode
 
     protected override void OnUpdateLocalTransform()
     {
-        Vector3D<float> t = AnimateTranslate;
+        Vector3 t = AnimateTranslate;
         if (IsAppendTranslate)
         {
             t += AppendTranslate;
         }
 
-        Quaternion<float> r = AnimateRotate;
+        Quaternion r = AnimateRotate;
         if (EnableIK)
         {
             r = IkRotate * r;
@@ -117,8 +117,8 @@ public class PmxNode : MMDNode
             r *= AppendRotate;
         }
 
-        Vector3D<float> s = Scale;
+        Vector3 s = Scale;
 
-        Local = Matrix4X4.CreateScale(s) * Matrix4X4.CreateFromQuaternion(r) * Matrix4X4.CreateTranslation(t);
+        Local = Matrix4x4.CreateScale(s) * Matrix4x4.CreateFromQuaternion(r) * Matrix4x4.CreateTranslation(t);
     }
 }

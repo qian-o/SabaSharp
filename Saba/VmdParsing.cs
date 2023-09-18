@@ -1,5 +1,5 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace Saba;
 
@@ -32,9 +32,9 @@ public class VmdMotion
 
     public uint Frame { get; }
 
-    public Vector3D<float> Translate { get; }
+    public Vector3 Translate { get; }
 
-    public Quaternion<float> Quaternion { get; }
+    public Quaternion Quaternion { get; }
 
     public byte[] Interpolation { get; }
 
@@ -42,7 +42,7 @@ public class VmdMotion
     {
         BoneName = binaryReader.ReadString(15, BinaryReaderExtensions.ShiftJIS);
         Frame = binaryReader.ReadUInt32();
-        Translate = binaryReader.ReadVector3D();
+        Translate = binaryReader.ReadVector3();
         Quaternion = binaryReader.ReadQuaternion();
         Interpolation = binaryReader.ReadBytes(64);
     }
@@ -70,9 +70,9 @@ public class VmdCamera
 
     public float Distance { get; }
 
-    public Vector3D<float> Interest { get; }
+    public Vector3 Interest { get; }
 
-    public Vector3D<float> Rotate { get; }
+    public Vector3 Rotate { get; }
 
     public byte[] Interpolation { get; }
 
@@ -84,8 +84,8 @@ public class VmdCamera
     {
         Frame = binaryReader.ReadUInt32();
         Distance = binaryReader.ReadSingle();
-        Interest = binaryReader.ReadVector3D();
-        Rotate = binaryReader.ReadVector3D();
+        Interest = binaryReader.ReadVector3();
+        Rotate = binaryReader.ReadVector3();
         Interpolation = binaryReader.ReadBytes(24);
         ViewAngle = binaryReader.ReadUInt32();
         IsPerspective = binaryReader.ReadBoolean();
@@ -96,15 +96,15 @@ public class VmdLight
 {
     public uint Frame { get; }
 
-    public Vector3D<float> Color { get; }
+    public Vector3 Color { get; }
 
-    public Vector3D<float> Position { get; }
+    public Vector3 Position { get; }
 
     public VmdLight(BinaryReader binaryReader)
     {
         Frame = binaryReader.ReadUInt32();
-        Color = binaryReader.ReadVector3D();
-        Position = binaryReader.ReadVector3D();
+        Color = binaryReader.ReadVector3();
+        Position = binaryReader.ReadVector3();
     }
 }
 

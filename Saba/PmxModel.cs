@@ -1,6 +1,6 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
 using System.Collections.Concurrent;
+using System.Numerics;
 using static Saba.PmxMorph;
 
 namespace Saba;
@@ -31,7 +31,7 @@ public unsafe class PmxModel : MMDModel
     {
         public int Index { get; set; }
 
-        public Vector3D<float> Position { get; set; }
+        public Vector3 Position { get; set; }
     }
 
     private class PositionMorphData
@@ -43,7 +43,7 @@ public unsafe class PmxModel : MMDModel
     {
         public int Index { get; set; }
 
-        public Vector4D<float> UV { get; set; }
+        public Vector4 UV { get; set; }
     }
 
     private class UVMorphData
@@ -53,25 +53,25 @@ public unsafe class PmxModel : MMDModel
 
     private class MaterialFactor
     {
-        public Vector3D<float> Diffuse { get; set; }
+        public Vector3 Diffuse { get; set; }
 
         public float Alpha { get; set; }
 
-        public Vector3D<float> Specular { get; set; }
+        public Vector3 Specular { get; set; }
 
         public float SpecularPower { get; set; }
 
-        public Vector3D<float> Ambient { get; set; }
+        public Vector3 Ambient { get; set; }
 
-        public Vector4D<float> EdgeColor { get; set; }
+        public Vector4 EdgeColor { get; set; }
 
         public float EdgeSize { get; set; }
 
-        public Vector4D<float> TextureCoefficient { get; set; }
+        public Vector4 TextureCoefficient { get; set; }
 
-        public Vector4D<float> SphereTextureCoefficient { get; set; }
+        public Vector4 SphereTextureCoefficient { get; set; }
 
-        public Vector4D<float> ToonTextureCoefficient { get; set; }
+        public Vector4 ToonTextureCoefficient { get; set; }
 
         public MaterialFactor()
         {
@@ -79,7 +79,7 @@ public unsafe class PmxModel : MMDModel
 
         public MaterialFactor(MaterialMorph pmxMat)
         {
-            Diffuse = pmxMat.Diffuse.ToVector3D();
+            Diffuse = pmxMat.Diffuse.ToVector3();
             Alpha = pmxMat.Diffuse.W;
             Specular = pmxMat.Specular;
             SpecularPower = pmxMat.SpecularPower;
@@ -93,16 +93,16 @@ public unsafe class PmxModel : MMDModel
 
         public void Mul(MaterialFactor val, float weight)
         {
-            Diffuse = Vector3D.Lerp(Diffuse, Diffuse * val.Diffuse, weight);
+            Diffuse = Vector3.Lerp(Diffuse, Diffuse * val.Diffuse, weight);
             Alpha = MathHelper.Lerp(Alpha, Alpha * val.Alpha, weight);
-            Specular = Vector3D.Lerp(Specular, Specular * val.Specular, weight);
+            Specular = Vector3.Lerp(Specular, Specular * val.Specular, weight);
             SpecularPower = MathHelper.Lerp(SpecularPower, SpecularPower * val.SpecularPower, weight);
-            Ambient = Vector3D.Lerp(Ambient, Ambient * val.Ambient, weight);
-            EdgeColor = Vector4D.Lerp(EdgeColor, EdgeColor * val.EdgeColor, weight);
+            Ambient = Vector3.Lerp(Ambient, Ambient * val.Ambient, weight);
+            EdgeColor = Vector4.Lerp(EdgeColor, EdgeColor * val.EdgeColor, weight);
             EdgeSize = MathHelper.Lerp(EdgeSize, EdgeSize * val.EdgeSize, weight);
-            TextureCoefficient = Vector4D.Lerp(TextureCoefficient, TextureCoefficient * val.TextureCoefficient, weight);
-            SphereTextureCoefficient = Vector4D.Lerp(SphereTextureCoefficient, SphereTextureCoefficient * val.SphereTextureCoefficient, weight);
-            ToonTextureCoefficient = Vector4D.Lerp(ToonTextureCoefficient, ToonTextureCoefficient * val.ToonTextureCoefficient, weight);
+            TextureCoefficient = Vector4.Lerp(TextureCoefficient, TextureCoefficient * val.TextureCoefficient, weight);
+            SphereTextureCoefficient = Vector4.Lerp(SphereTextureCoefficient, SphereTextureCoefficient * val.SphereTextureCoefficient, weight);
+            ToonTextureCoefficient = Vector4.Lerp(ToonTextureCoefficient, ToonTextureCoefficient * val.ToonTextureCoefficient, weight);
         }
 
         public void Add(MaterialFactor val, float weight)
@@ -123,16 +123,16 @@ public unsafe class PmxModel : MMDModel
         {
             MaterialFactor materialFactor = new()
             {
-                Diffuse = Vector3D<float>.One,
+                Diffuse = Vector3.One,
                 Alpha = 1.0f,
-                Specular = Vector3D<float>.One,
+                Specular = Vector3.One,
                 SpecularPower = 1.0f,
-                Ambient = Vector3D<float>.One,
-                EdgeColor = Vector4D<float>.One,
+                Ambient = Vector3.One,
+                EdgeColor = Vector4.One,
                 EdgeSize = 1.0f,
-                TextureCoefficient = Vector4D<float>.One,
-                SphereTextureCoefficient = Vector4D<float>.One,
-                ToonTextureCoefficient = Vector4D<float>.One
+                TextureCoefficient = Vector4.One,
+                SphereTextureCoefficient = Vector4.One,
+                ToonTextureCoefficient = Vector4.One
             };
 
             return materialFactor;
@@ -142,16 +142,16 @@ public unsafe class PmxModel : MMDModel
         {
             MaterialFactor materialFactor = new()
             {
-                Diffuse = Vector3D<float>.Zero,
+                Diffuse = Vector3.Zero,
                 Alpha = 0.0f,
-                Specular = Vector3D<float>.Zero,
+                Specular = Vector3.Zero,
                 SpecularPower = 0.0f,
-                Ambient = Vector3D<float>.Zero,
-                EdgeColor = Vector4D<float>.Zero,
+                Ambient = Vector3.Zero,
+                EdgeColor = Vector4.Zero,
                 EdgeSize = 0.0f,
-                TextureCoefficient = Vector4D<float>.Zero,
-                SphereTextureCoefficient = Vector4D<float>.Zero,
-                ToonTextureCoefficient = Vector4D<float>.Zero
+                TextureCoefficient = Vector4.Zero,
+                SphereTextureCoefficient = Vector4.Zero,
+                ToonTextureCoefficient = Vector4.Zero
             };
 
             return materialFactor;
@@ -167,9 +167,9 @@ public unsafe class PmxModel : MMDModel
     {
         public MMDNode Node { get; }
 
-        public Vector3D<float> Position { get; set; }
+        public Vector3 Position { get; set; }
 
-        public Quaternion<float> Rotate { get; set; }
+        public Quaternion Rotate { get; set; }
 
         public BoneMorph(MMDNode node)
         {
@@ -200,21 +200,21 @@ public unsafe class PmxModel : MMDModel
     private readonly List<BoneMorphData> _boneMorphDatas;
     private readonly List<GroupMorphData> _groupMorphDatas;
 
-    private Vector3D<float>[] positions = Array.Empty<Vector3D<float>>();
-    private Vector3D<float>[] normals = Array.Empty<Vector3D<float>>();
-    private Vector2D<float>[] uvs = Array.Empty<Vector2D<float>>();
+    private Vector3[] positions = Array.Empty<Vector3>();
+    private Vector3[] normals = Array.Empty<Vector3>();
+    private Vector2[] uvs = Array.Empty<Vector2>();
     private VertexBoneInfo[] vertexBoneInfos = Array.Empty<VertexBoneInfo>();
 
     private uint[] indices = Array.Empty<uint>();
 
-    private Vector3D<float>[] updatePositions = Array.Empty<Vector3D<float>>();
-    private Vector3D<float>[] updateNormals = Array.Empty<Vector3D<float>>();
-    private Vector2D<float>[] updateUVs = Array.Empty<Vector2D<float>>();
+    private Vector3[] updatePositions = Array.Empty<Vector3>();
+    private Vector3[] updateNormals = Array.Empty<Vector3>();
+    private Vector2[] updateUVs = Array.Empty<Vector2>();
 
-    private Matrix4X4<float>[] transforms = Array.Empty<Matrix4X4<float>>();
+    private Matrix4x4[] transforms = Array.Empty<Matrix4x4>();
 
-    private Vector3D<float>[] morphPositions = Array.Empty<Vector3D<float>>();
-    private Vector4D<float>[] morphUVs = Array.Empty<Vector4D<float>>();
+    private Vector3[] morphPositions = Array.Empty<Vector3>();
+    private Vector4[] morphUVs = Array.Empty<Vector4>();
 
     private MMDMaterial[] initMaterials = Array.Empty<MMDMaterial>();
     private MaterialFactor[] mulMaterialFactors = Array.Empty<MaterialFactor>();
@@ -258,9 +258,9 @@ public unsafe class PmxModel : MMDModel
         {
             PmxVertex vertex = pmx.Vertices[i];
 
-            Vector3D<float> position = vertex.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-            Vector3D<float> normal = vertex.Normal * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-            Vector2D<float> uv = new(vertex.UV.X, -vertex.UV.Y);
+            Vector3 position = vertex.Position * new Vector3(1.0f, 1.0f, -1.0f);
+            Vector3 normal = vertex.Normal * new Vector3(1.0f, 1.0f, -1.0f);
+            Vector2 uv = new(vertex.UV.X, -vertex.UV.Y);
             positions[i] = position;
             normals[i] = normal;
             uvs[i] = uv;
@@ -298,14 +298,14 @@ public unsafe class PmxModel : MMDModel
                         float w0 = vertex.BoneWeights[0];
                         float w1 = 1.0f - vertex.BoneWeights[0];
 
-                        Vector3D<float> center = vertex.SdefC * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-                        Vector3D<float> r0 = vertex.SdefR0 * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-                        Vector3D<float> r1 = vertex.SdefR1 * new Vector3D<float>(1.0f, 1.0f, -1.0f);
-                        Vector3D<float> rw = (r0 * w0) + (r1 * w1);
+                        Vector3 center = vertex.SdefC * new Vector3(1.0f, 1.0f, -1.0f);
+                        Vector3 r0 = vertex.SdefR0 * new Vector3(1.0f, 1.0f, -1.0f);
+                        Vector3 r1 = vertex.SdefR1 * new Vector3(1.0f, 1.0f, -1.0f);
+                        Vector3 rw = (r0 * w0) + (r1 * w1);
                         r0 = center + r0 - rw;
                         r1 = center + r1 - rw;
-                        Vector3D<float> cr0 = (center + r0) * 0.5f;
-                        Vector3D<float> cr1 = (center + r1) * 0.5f;
+                        Vector3 cr0 = (center + r0) * 0.5f;
+                        Vector3 cr1 = (center + r1) * 0.5f;
 
                         vertexBoneInfo.SDEF.BoneIndices[0] = vertex.BoneIndices[0];
                         vertexBoneInfo.SDEF.BoneIndices[1] = vertex.BoneIndices[1];
@@ -365,7 +365,7 @@ public unsafe class PmxModel : MMDModel
             MMDMaterial mat = new()
             {
                 Name = material.Name,
-                Diffuse = material.Diffuse.ToVector3D(),
+                Diffuse = material.Diffuse.ToVector3(),
                 Alpha = material.Diffuse.W,
                 Specular = material.Specular,
                 SpecularPower = material.SpecularPower,
@@ -480,18 +480,18 @@ public unsafe class PmxModel : MMDModel
 
                 parent.AddChild(node);
 
-                Vector3D<float> localPos = bone.Position - parentBone.Position;
+                Vector3 localPos = bone.Position - parentBone.Position;
                 localPos.Z *= -1.0f;
                 node.Translate = localPos;
             }
             else
             {
-                Vector3D<float> localPos = bone.Position;
+                Vector3 localPos = bone.Position;
                 localPos.Z *= -1.0f;
                 node.Translate = localPos;
             }
 
-            Matrix4X4<float> init = Matrix4X4.CreateTranslation(bone.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f));
+            Matrix4x4 init = Matrix4x4.CreateTranslation(bone.Position * new Vector3(1.0f, 1.0f, -1.0f));
 
             node.Global = init;
             node.CalculateInverseInitTransform();
@@ -545,8 +545,8 @@ public unsafe class PmxModel : MMDModel
                     PmxNode linkNode = _nodes[ikLink.BoneIndex];
                     if (ikLink.EnableLimit)
                     {
-                        Vector3D<float> limitMax = ikLink.LimitMin * new Vector3D<float>(-1.0f);
-                        Vector3D<float> limitMin = ikLink.LimitMax * new Vector3D<float>(-1.0f);
+                        Vector3 limitMax = ikLink.LimitMin * new Vector3(-1.0f);
+                        Vector3 limitMin = ikLink.LimitMax * new Vector3(-1.0f);
 
                         solver.AddIkChain(linkNode, true, limitMin, limitMax);
                     }
@@ -583,7 +583,7 @@ public unsafe class PmxModel : MMDModel
                     PositionMorph morphVtx = new()
                     {
                         Index = vtx.VertexIndex,
-                        Position = vtx.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f)
+                        Position = vtx.Position * new Vector3(1.0f, 1.0f, -1.0f)
                     };
 
                     morphData.MorphVertices.Add(morphVtx);
@@ -627,14 +627,14 @@ public unsafe class PmxModel : MMDModel
                 {
                     BoneMorph boneMorph = new(_nodes[pmxBoneMorph.BoneIndex])
                     {
-                        Position = pmxBoneMorph.Position * new Vector3D<float>(1.0f, 1.0f, -1.0f)
+                        Position = pmxBoneMorph.Position * new Vector3(1.0f, 1.0f, -1.0f)
                     };
 
-                    Matrix3X3<float> invZ = Matrix3X3.CreateScale(new Vector3D<float>(1.0f, 1.0f, -1.0f));
-                    Matrix3X3<float> rot0 = Matrix3X3.CreateFromQuaternion(pmxBoneMorph.Quaternion);
-                    Matrix3X3<float> rot1 = invZ * rot0 * invZ;
+                    Matrix4x4 invZ = Matrix4x4.CreateScale(new Vector3(1.0f, 1.0f, -1.0f));
+                    Matrix4x4 rot0 = Matrix4x4.CreateFromQuaternion(pmxBoneMorph.Quaternion);
+                    Matrix4x4 rot1 = invZ * rot0 * invZ;
 
-                    boneMorph.Rotate = Quaternion<float>.CreateFromRotationMatrix(rot1);
+                    boneMorph.Rotate = Quaternion.CreateFromRotationMatrix(rot1);
 
                     boneMorphData.BoneMorphs.Add(boneMorph);
                 }
@@ -728,32 +728,32 @@ public unsafe class PmxModel : MMDModel
         return positions.Length;
     }
 
-    public override unsafe Vector3D<float>* GetPositions()
+    public override unsafe Vector3* GetPositions()
     {
         return positions.GetData();
     }
 
-    public override unsafe Vector3D<float>* GetNormals()
+    public override unsafe Vector3* GetNormals()
     {
         return normals.GetData();
     }
 
-    public override unsafe Vector2D<float>* GetUVs()
+    public override unsafe Vector2* GetUVs()
     {
         return uvs.GetData();
     }
 
-    public override unsafe Vector3D<float>* GetUpdatePositions()
+    public override unsafe Vector3* GetUpdatePositions()
     {
         return updatePositions.GetData();
     }
 
-    public override unsafe Vector3D<float>* GetUpdateNormals()
+    public override unsafe Vector3* GetUpdateNormals()
     {
         return updateNormals.GetData();
     }
 
-    public override unsafe Vector2D<float>* GetUpdateUVs()
+    public override unsafe Vector2* GetUpdateUVs()
     {
         return updateUVs.GetData();
     }
@@ -784,8 +784,8 @@ public unsafe class PmxModel : MMDModel
 
         foreach (PmxNode node in _nodes)
         {
-            node.AnimTranslate = Vector3D<float>.Zero;
-            node.AnimRotate = Quaternion<float>.Identity;
+            node.AnimTranslate = Vector3.Zero;
+            node.AnimRotate = Quaternion.Identity;
         }
 
         BeginAnimation();
@@ -841,9 +841,9 @@ public unsafe class PmxModel : MMDModel
             node.BeginUpdateTransform();
         }
 
-        Array.Fill(morphPositions, Vector3D<float>.Zero);
+        Array.Fill(morphPositions, Vector3.Zero);
 
-        Array.Fill(morphUVs, Vector4D<float>.Zero);
+        Array.Fill(morphUVs, Vector4.Zero);
     }
 
     public override void EndAnimation()
@@ -1026,21 +1026,21 @@ public unsafe class PmxModel : MMDModel
         _boneMorphDatas.Clear();
         _groupMorphDatas.Clear();
 
-        positions = Array.Empty<Vector3D<float>>();
-        normals = Array.Empty<Vector3D<float>>();
-        uvs = Array.Empty<Vector2D<float>>();
+        positions = Array.Empty<Vector3>();
+        normals = Array.Empty<Vector3>();
+        uvs = Array.Empty<Vector2>();
         vertexBoneInfos = Array.Empty<VertexBoneInfo>();
 
         indices = Array.Empty<uint>();
 
-        updatePositions = Array.Empty<Vector3D<float>>();
-        updateNormals = Array.Empty<Vector3D<float>>();
-        updateUVs = Array.Empty<Vector2D<float>>();
+        updatePositions = Array.Empty<Vector3>();
+        updateNormals = Array.Empty<Vector3>();
+        updateUVs = Array.Empty<Vector2>();
 
-        transforms = Array.Empty<Matrix4X4<float>>();
+        transforms = Array.Empty<Matrix4x4>();
 
-        morphPositions = Array.Empty<Vector3D<float>>();
-        morphUVs = Array.Empty<Vector4D<float>>();
+        morphPositions = Array.Empty<Vector3>();
+        morphUVs = Array.Empty<Vector4>();
 
         initMaterials = Array.Empty<MMDMaterial>();
 
@@ -1195,10 +1195,10 @@ public unsafe class PmxModel : MMDModel
         {
             MMDNode node = _nodes.Find(item => item == boneMorph.Node)!;
 
-            Vector3D<float> t = Vector3D.Lerp(Vector3D<float>.Zero, boneMorph.Position, weight);
+            Vector3 t = Vector3.Lerp(Vector3.Zero, boneMorph.Position, weight);
             node.Translate += t;
 
-            Quaternion<float> q = Quaternion<float>.Slerp(node.Rotate, boneMorph.Rotate, weight);
+            Quaternion q = Quaternion.Slerp(node.Rotate, boneMorph.Rotate, weight);
             node.Rotate = q;
         }
     }
@@ -1207,19 +1207,19 @@ public unsafe class PmxModel : MMDModel
     {
         int length = end - begin;
 
-        Vector3D<float>* position = positions.GetData() + begin;
-        Vector3D<float>* normal = normals.GetData() + begin;
-        Vector2D<float>* uv = uvs.GetData() + begin;
-        Vector3D<float>* morphPos = morphPositions.GetData() + begin;
-        Vector4D<float>* morphUV = morphUVs.GetData() + begin;
+        Vector3* position = positions.GetData() + begin;
+        Vector3* normal = normals.GetData() + begin;
+        Vector2* uv = uvs.GetData() + begin;
+        Vector3* morphPos = morphPositions.GetData() + begin;
+        Vector4* morphUV = morphUVs.GetData() + begin;
         VertexBoneInfo* vtxInfo = vertexBoneInfos.GetData() + begin;
-        Vector3D<float>* updatePosition = updatePositions.GetData() + begin;
-        Vector3D<float>* updateNormal = updateNormals.GetData() + begin;
-        Vector2D<float>* updateUV = updateUVs.GetData() + begin;
+        Vector3* updatePosition = updatePositions.GetData() + begin;
+        Vector3* updateNormal = updateNormals.GetData() + begin;
+        Vector2* updateUV = updateUVs.GetData() + begin;
 
         for (int i = 0; i < length; i++)
         {
-            Matrix4X4<float> m = Matrix4X4<float>.Identity;
+            Matrix4x4 m = Matrix4x4.Identity;
 
             switch (vtxInfo->SkinningType)
             {
@@ -1242,19 +1242,19 @@ public unsafe class PmxModel : MMDModel
                         int i1 = vtxInfo->SDEF.BoneIndices[1];
                         float w0 = vtxInfo->SDEF.BoneWeight;
                         float w1 = 1.0f - vtxInfo->SDEF.BoneWeight;
-                        Vector3D<float> center = vtxInfo->SDEF.C;
-                        Vector3D<float> cr0 = vtxInfo->SDEF.R0;
-                        Vector3D<float> cr1 = vtxInfo->SDEF.R1;
-                        Quaternion<float> q0 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i0].Global);
-                        Quaternion<float> q1 = Quaternion<float>.CreateFromRotationMatrix(_nodes[i1].Global);
-                        Matrix4X4<float> m0 = transforms[i0];
-                        Matrix4X4<float> m1 = transforms[i1];
+                        Vector3 center = vtxInfo->SDEF.C;
+                        Vector3 cr0 = vtxInfo->SDEF.R0;
+                        Vector3 cr1 = vtxInfo->SDEF.R1;
+                        Quaternion q0 = Quaternion.CreateFromRotationMatrix(_nodes[i0].Global);
+                        Quaternion q1 = Quaternion.CreateFromRotationMatrix(_nodes[i1].Global);
+                        Matrix4x4 m0 = transforms[i0];
+                        Matrix4x4 m1 = transforms[i1];
 
-                        Vector3D<float> pos = *position + *morphPos;
-                        Matrix4X4<float> rot_mat = Matrix4X4.CreateFromQuaternion(Quaternion<float>.Slerp(q0, q1, w1));
+                        Vector3 pos = *position + *morphPos;
+                        Matrix4x4 rot_mat = Matrix4x4.CreateFromQuaternion(Quaternion.Slerp(q0, q1, w1));
 
-                        *updatePosition = Vector3D.Transform(pos - center, rot_mat) + Vector3D.Transform(cr0, m0) * w0 + Vector3D.Transform(cr1, m1) * w1;
-                        *updateNormal = Vector3D.Transform(*normal, rot_mat);
+                        *updatePosition = Vector3.Transform(pos - center, rot_mat) + Vector3.Transform(cr0, m0) * w0 + Vector3.Transform(cr1, m1) * w1;
+                        *updateNormal = Vector3.Transform(*normal, rot_mat);
                     }
                     break;
                 case SkinningType.DualQuaternion:
@@ -1264,11 +1264,11 @@ public unsafe class PmxModel : MMDModel
 
             if (vtxInfo->SkinningType != SkinningType.SDEF)
             {
-                *updatePosition = Vector3D.Transform(*position + *morphPos, m);
-                *updateNormal = Vector3D.Normalize(Vector3D.Transform(*normal, m));
+                *updatePosition = Vector3.Transform(*position + *morphPos, m);
+                *updateNormal = Vector3.Normalize(Vector3.Transform(*normal, m));
             }
 
-            *updateUV = *uv + new Vector2D<float>((*morphUV).X, (*morphUV).Y);
+            *updateUV = *uv + new Vector2((*morphUV).X, (*morphUV).Y);
 
             position++;
             normal++;
