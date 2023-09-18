@@ -137,13 +137,27 @@ public abstract unsafe class Game
 
             imGuiController!.Update((float)obj);
 
+            ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+
+            ImGui.Begin("Host", ImGuiWindowFlags.NoDocking
+                                | ImGuiWindowFlags.NoTitleBar
+                                | ImGuiWindowFlags.NoCollapse
+                                | ImGuiWindowFlags.NoResize
+                                | ImGuiWindowFlags.NoMove
+                                | ImGuiWindowFlags.NoBringToFrontOnFocus
+                                | ImGuiWindowFlags.NoNavFocus
+                                | ImGuiWindowFlags.NoBackground);
+            ImGui.DockSpace(ImGui.GetID("DockSpace"), Vector2.Zero, ImGuiDockNodeFlags.PassthruCentralNode);
+            ImGui.End();
+
             ImGui.Begin(renderer);
             ImGui.Value("FPS", ImGui.GetIO().Framerate);
+            ImGui.End();
 
             ImGui.Begin("Camera Settings");
-
             ImGui.DragFloat("Camera Speed", ref cameraSpeed, 0.5f, 0.5f, 20.0f);
             ImGui.DragFloat("Camera Sensitivity", ref cameraSensitivity, 0.2f, 0.2f, 10.0f);
+            ImGui.End();
 
             RenderImGui(obj);
 
