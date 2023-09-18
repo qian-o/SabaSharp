@@ -8,18 +8,19 @@ namespace SabaViewer.Windows;
 public class Scene1 : Game
 {
     private MikuMikuDance mmd = null!;
+    private Vector3 translate = new(0.0f, 0.0f, -2.6f);
+    private Vector3 scale = new(0.2f, 0.2f, 0.2f);
+
     private double saveTime = 0.0;
     private float animTime = 0.0f;
     private float elapsed = 0.0f;
+
     private bool isPlaying = false;
     private bool enablePhysical = true;
 
     protected override void Load()
     {
-        mmd = new MikuMikuDance(gl)
-        {
-            Transform = Matrix4x4.CreateScale(0.2f, 0.2f, 0.2f)
-        };
+        mmd = new MikuMikuDance(gl);
 
         mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx",
                       "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd");
@@ -57,6 +58,13 @@ public class Scene1 : Game
         ImGui_Button("Enable physical", () => enablePhysical = !enablePhysical);
 
         ImGui.End();
+
+        ImGui.Begin("Transform");
+        
+        ImGui.DragFloat3("Translate", ref translate, 0.01f);
+        ImGui.DragFloat3("Scale", ref scale, 0.01f);
+
+        ImGui.End();
     }
 
     protected override void Update(double obj)
@@ -82,6 +90,8 @@ public class Scene1 : Game
         }
 
         saveTime = Time;
+
+        mmd.Transform = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translate);
     }
 
     private static void ImGui_Button(string label, Action action)
