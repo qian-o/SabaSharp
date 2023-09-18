@@ -1,4 +1,4 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
 using System.Text;
 
 namespace Saba.Helpers;
@@ -87,22 +87,22 @@ internal static class BinaryReaderExtensions
         return array;
     }
 
-    public static Vector2D<float> ReadVector2D(this BinaryReader binaryReader)
+    public static Vector2 ReadVector2(this BinaryReader binaryReader)
     {
         return new(binaryReader.ReadSingle(), binaryReader.ReadSingle());
     }
 
-    public static Vector3D<float> ReadVector3D(this BinaryReader binaryReader)
+    public static Vector3 ReadVector3(this BinaryReader binaryReader)
     {
         return new(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
     }
 
-    public static Vector4D<float> ReadVector4D(this BinaryReader binaryReader)
+    public static Vector4 ReadVector4(this BinaryReader binaryReader)
     {
         return new(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
     }
 
-    public static Quaternion<float> ReadQuaternion(this BinaryReader binaryReader)
+    public static Quaternion ReadQuaternion(this BinaryReader binaryReader)
     {
         return new(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
     }

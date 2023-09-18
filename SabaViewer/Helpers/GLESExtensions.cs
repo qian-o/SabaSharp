@@ -1,5 +1,6 @@
 ﻿using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
+using System.Numerics;
 
 namespace SabaViewer.Helpers;
 
@@ -68,17 +69,17 @@ public static unsafe class GLESExtensions
         gl.Uniform1(name, Convert.ToSingle(data));
     }
 
-    public static void SetUniform(this GL gl, int name, Vector2D<float> data)
+    public static void SetUniform(this GL gl, int name, Vector2 data)
     {
         gl.Uniform2(name, 1, (float*)&data);
     }
 
-    public static void SetUniform(this GL gl, int name, Vector3D<float> data)
+    public static void SetUniform(this GL gl, int name, Vector3 data)
     {
         gl.Uniform3(name, 1, (float*)&data);
     }
 
-    public static void SetUniform(this GL gl, int name, Vector4D<float> data)
+    public static void SetUniform(this GL gl, int name, Vector4 data)
     {
         gl.Uniform4(name, 1, (float*)&data);
     }
@@ -93,16 +94,16 @@ public static unsafe class GLESExtensions
         gl.UniformMatrix3(name, 1, false, (float*)&data);
     }
 
-    public static void SetUniform(this GL gl, int name, Matrix4X4<float> data)
+    public static void SetUniform(this GL gl, int name, Matrix4x4 data)
     {
         gl.UniformMatrix4(name, 1, false, (float*)&data);
     }
 
-    public static void SetUniform(this GL gl, int name, IEnumerable<Matrix4X4<float>> data)
+    public static void SetUniform(this GL gl, int name, IEnumerable<Matrix4x4> data)
     {
-        Matrix4X4<float>[] matrixArray = data.ToArray();
+        Matrix4x4[] matrixArray = data.ToArray();
 
-        fixed (Matrix4X4<float>* matrix = matrixArray)
+        fixed (Matrix4x4* matrix = matrixArray)
         {
             gl.UniformMatrix4(name, (uint)matrixArray.Length, false, (float*)matrix);
         }

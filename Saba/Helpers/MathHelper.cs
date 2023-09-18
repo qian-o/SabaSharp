@@ -1,6 +1,6 @@
-﻿using Silk.NET.Maths;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Numerics;
 
 namespace Saba.Helpers;
 
@@ -1156,13 +1156,13 @@ public static class MathHelper
         return start + t * (end - start);
     }
 
-    public static Vector3D<float> Lerp(Vector3D<float> a, Vector3D<float> b, Vector3D<float> c)
+    public static Vector3 Lerp(Vector3 a, Vector3 b, Vector3 c)
     {
         float x = Lerp(a.X, b.X, c.X);
         float y = Lerp(a.Y, b.Y, c.Y);
         float z = Lerp(a.Z, b.Z, c.Z);
 
-        return new Vector3D<float>(x, y, z);
+        return new Vector3(x, y, z);
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿using BulletSharp;
-using Evergine.Mathematics;
 using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
+using BtVector3 = Evergine.Mathematics.Vector3;
 using MathHelper = Saba.Helpers.MathHelper;
 
 namespace Saba;
@@ -21,7 +21,7 @@ public class MMDRigidBody : IDisposable
     private readonly CollisionShape _shape;
     private readonly MMDMotionState? _activeMotionState;
     private readonly MMDMotionState? _kinematicMotionState;
-    private readonly Matrix4X4<float> _offsetMat;
+    private readonly Matrix4x4 _offsetMat;
 
     public MMDNode? Node { get; }
 
@@ -61,7 +61,7 @@ public class MMDRigidBody : IDisposable
         }
 
         float mass = 0.0f;
-        Vector3 localInertia = Vector3.Zero;
+        BtVector3 localInertia = BtVector3.Zero;
 
         if (pmxRigidBody.Op != PmxOperation.Static)
         {
@@ -73,13 +73,13 @@ public class MMDRigidBody : IDisposable
             _shape.CalculateLocalInertia(mass, out localInertia);
         }
 
-        Matrix4X4<float> rx = Matrix4X4.CreateRotationX(pmxRigidBody.Rotate.X, new Vector3D<float>(1.0f, 0.0f, 0.0f));
-        Matrix4X4<float> ry = Matrix4X4.CreateRotationY(pmxRigidBody.Rotate.Y, new Vector3D<float>(0.0f, 1.0f, 0.0f));
-        Matrix4X4<float> rz = Matrix4X4.CreateRotationZ(pmxRigidBody.Rotate.Z, new Vector3D<float>(0.0f, 0.0f, 1.0f));
-        Matrix4X4<float> rotMat = rz * rx * ry;
-        Matrix4X4<float> translateMat = Matrix4X4.CreateTranslation(pmxRigidBody.Translate);
+        Matrix4x4 rx = Matrix4x4.CreateRotationX(pmxRigidBody.Rotate.X, new Vector3(1.0f, 0.0f, 0.0f));
+        Matrix4x4 ry = Matrix4x4.CreateRotationY(pmxRigidBody.Rotate.Y, new Vector3(0.0f, 1.0f, 0.0f));
+        Matrix4x4 rz = Matrix4x4.CreateRotationZ(pmxRigidBody.Rotate.Z, new Vector3(0.0f, 0.0f, 1.0f));
+        Matrix4x4 rotMat = rz * rx * ry;
+        Matrix4x4 translateMat = Matrix4x4.CreateTranslation(pmxRigidBody.Translate);
 
-        Matrix4X4<float> rbMat = (rotMat * translateMat).InvZ();
+        Matrix4x4 rbMat = (rotMat * translateMat).InvZ();
 
         MMDNode kinematicNode = node ?? model.GetNodes().First();
 
@@ -171,8 +171,8 @@ public class MMDRigidBody : IDisposable
             cache.CleanProxyFromPairs(RigidBody.BroadphaseHandle, dispatcher);
         }
 
-        RigidBody.AngularVelocity = Vector3.Zero;
-        RigidBody.LinearVelocity = Vector3.Zero;
+        RigidBody.AngularVelocity = BtVector3.Zero;
+        RigidBody.LinearVelocity = BtVector3.Zero;
         RigidBody.ClearForces();
     }
 
@@ -189,7 +189,7 @@ public class MMDRigidBody : IDisposable
         {
             if (Node.Parent is MMDNode parent)
             {
-                Matrix4X4<float> local = Node.Global * parent.Global.Invert();
+                Matrix4x4 local = Node.Global * parent.Global.Invert();
 
                 Node.Local = local;
             }
@@ -200,9 +200,9 @@ public class MMDRigidBody : IDisposable
         }
     }
 
-    public Matrix4X4<float> GetTransform()
+    public Matrix4x4 GetTransform()
     {
-        return RigidBody.CenterOfMassTransform.ToMatrix4X4().InvZ();
+        return RigidBody.CenterOfMassTransform.ToMatrix4x4().InvZ();
     }
 
     public void Dispose()

@@ -1,5 +1,5 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace Saba;
 
@@ -15,55 +15,55 @@ public abstract class MMDNode
 
     public List<MMDNode> Children { get; } = new();
 
-    public Vector3D<float> Translate { get; set; }
+    public Vector3 Translate { get; set; }
 
-    public Quaternion<float> Rotate { get; set; }
+    public Quaternion Rotate { get; set; }
 
-    public Vector3D<float> Scale { get; set; }
+    public Vector3 Scale { get; set; }
 
-    public Vector3D<float> AnimTranslate { get; set; }
+    public Vector3 AnimTranslate { get; set; }
 
-    public Vector3D<float> AnimateTranslate => AnimTranslate + Translate;
+    public Vector3 AnimateTranslate => AnimTranslate + Translate;
 
-    public Quaternion<float> AnimRotate { get; set; }
+    public Quaternion AnimRotate { get; set; }
 
-    public Quaternion<float> AnimateRotate => AnimRotate * Rotate;
+    public Quaternion AnimateRotate => AnimRotate * Rotate;
 
-    public Vector3D<float> BaseAnimTranslate { get; set; }
+    public Vector3 BaseAnimTranslate { get; set; }
 
-    public Quaternion<float> BaseAnimRotate { get; set; }
+    public Quaternion BaseAnimRotate { get; set; }
 
-    public Quaternion<float> IkRotate { get; set; }
+    public Quaternion IkRotate { get; set; }
 
-    public Matrix4X4<float> Local { get; set; }
+    public Matrix4x4 Local { get; set; }
 
-    public Matrix4X4<float> Global { get; set; }
+    public Matrix4x4 Global { get; set; }
 
-    public Matrix4X4<float> InverseInit { get; set; }
+    public Matrix4x4 InverseInit { get; set; }
 
-    public Vector3D<float> InitTranslate { get; set; }
+    public Vector3 InitTranslate { get; set; }
 
-    public Quaternion<float> InitRotate { get; set; }
+    public Quaternion InitRotate { get; set; }
 
-    public Vector3D<float> InitScale { get; set; }
+    public Vector3 InitScale { get; set; }
 
     protected MMDNode()
     {
         Name = string.Empty;
-        Translate = Vector3D<float>.Zero;
-        Rotate = Quaternion<float>.Identity;
-        Scale = Vector3D<float>.One;
-        AnimTranslate = Vector3D<float>.Zero;
-        AnimRotate = Quaternion<float>.Identity;
-        BaseAnimTranslate = Vector3D<float>.Zero;
-        BaseAnimRotate = Quaternion<float>.Identity;
-        IkRotate = Quaternion<float>.Identity;
-        Local = Matrix4X4<float>.Identity;
-        Global = Matrix4X4<float>.Identity;
-        InverseInit = Matrix4X4<float>.Identity;
-        InitTranslate = Vector3D<float>.Zero;
-        InitRotate = Quaternion<float>.Identity;
-        InitScale = Vector3D<float>.One;
+        Translate = Vector3.Zero;
+        Rotate = Quaternion.Identity;
+        Scale = Vector3.One;
+        AnimTranslate = Vector3.Zero;
+        AnimRotate = Quaternion.Identity;
+        BaseAnimTranslate = Vector3.Zero;
+        BaseAnimRotate = Quaternion.Identity;
+        IkRotate = Quaternion.Identity;
+        Local = Matrix4x4.Identity;
+        Global = Matrix4x4.Identity;
+        InverseInit = Matrix4x4.Identity;
+        InitTranslate = Vector3.Zero;
+        InitRotate = Quaternion.Identity;
+        InitScale = Vector3.One;
     }
 
     public void SaveInitialTRS()
@@ -94,8 +94,8 @@ public abstract class MMDNode
 
     public void ClearBaseAnimation()
     {
-        AnimTranslate = Vector3D<float>.Zero;
-        AnimRotate = Quaternion<float>.Identity;
+        AnimTranslate = Vector3.Zero;
+        AnimRotate = Quaternion.Identity;
     }
 
     public void AddChild(MMDNode child)
@@ -109,7 +109,7 @@ public abstract class MMDNode
     {
         LoadInitialTRS();
 
-        IkRotate = Quaternion<float>.Identity;
+        IkRotate = Quaternion.Identity;
 
         OnBeginUpdateTransform();
     }
@@ -166,13 +166,13 @@ public abstract class MMDNode
 
     protected virtual void OnUpdateLocalTransform()
     {
-        Matrix4X4<float> t = Matrix4X4.CreateTranslation(AnimateTranslate);
-        Matrix4X4<float> r = Matrix4X4.CreateFromQuaternion(AnimateRotate);
-        Matrix4X4<float> s = Matrix4X4.CreateScale(Scale);
+        Matrix4x4 t = Matrix4x4.CreateTranslation(AnimateTranslate);
+        Matrix4x4 r = Matrix4x4.CreateFromQuaternion(AnimateRotate);
+        Matrix4x4 s = Matrix4x4.CreateScale(Scale);
 
         if (EnableIK)
         {
-            r *= Matrix4X4.CreateFromQuaternion(IkRotate);
+            r *= Matrix4x4.CreateFromQuaternion(IkRotate);
         }
 
         Local = s * r * t;

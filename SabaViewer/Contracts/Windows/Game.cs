@@ -5,6 +5,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
 using Silk.NET.OpenGLES.Extensions.ImGui;
 using Silk.NET.Windowing;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace SabaViewer.Contracts.Windows;
@@ -53,7 +54,7 @@ public abstract unsafe class Game
             imGuiController = new ImGuiController(gl = _window.CreateOpenGLES(), _window, inputContext = _window.CreateInput());
             camera = new Camera
             {
-                Position = new Vector3D<float>(0.0f, 2.0f, 3.0f),
+                Position = new Vector3(0.0f, 2.0f, 3.0f),
                 Fov = 45.0f
             };
             renderer = Marshal.PtrToStringAnsi((nint)gl.GetString(GLEnum.Renderer))!;

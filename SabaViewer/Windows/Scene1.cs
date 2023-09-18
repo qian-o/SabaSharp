@@ -1,7 +1,5 @@
 ﻿using ImGuiNET;
-using Saba.Helpers;
 using SabaViewer.Contracts.Windows;
-using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 
@@ -20,7 +18,7 @@ public class Scene1 : Game
     {
         mmd = new MikuMikuDance(gl)
         {
-            Transform = Matrix4X4.CreateScale(0.2f, 0.2f, 0.2f)
+            Transform = Matrix4x4.CreateScale(0.2f, 0.2f, 0.2f)
         };
 
         mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx",
@@ -42,17 +40,17 @@ public class Scene1 : Game
     {
         ImGui.Begin("MMD");
 
-        Vector3 lightColor = MikuMikuDance.LightColor.ToSystem();
+        Vector3 lightColor = MikuMikuDance.LightColor;
         ImGui.ColorEdit3(nameof(MikuMikuDance.LightColor), ref lightColor);
-        MikuMikuDance.LightColor = lightColor.ToGeneric();
+        MikuMikuDance.LightColor = lightColor;
 
-        Vector4 shadowColor = MikuMikuDance.ShadowColor.ToSystem();
+        Vector4 shadowColor = MikuMikuDance.ShadowColor;
         ImGui.ColorEdit4(nameof(MikuMikuDance.ShadowColor), ref shadowColor);
-        MikuMikuDance.ShadowColor = shadowColor.ToGeneric();
+        MikuMikuDance.ShadowColor = shadowColor;
 
-        Vector3 lightDir = MikuMikuDance.LightDir.ToSystem();
+        Vector3 lightDir = MikuMikuDance.LightDir;
         ImGui.DragFloat3(nameof(MikuMikuDance.LightDir), ref lightDir, 0.05f);
-        MikuMikuDance.LightDir = lightDir.ToGeneric();
+        MikuMikuDance.LightDir = lightDir;
 
         ImGui_Button("Play / Pause", () => isPlaying = !isPlaying);
 

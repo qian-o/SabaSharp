@@ -1,13 +1,13 @@
 ﻿using Saba.Helpers;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace SabaViewer.Tools;
 
 public class Camera
 {
-    private Vector3D<float> front = -Vector3D<float>.UnitZ;
-    private Vector3D<float> up = Vector3D<float>.UnitY;
-    private Vector3D<float> right = Vector3D<float>.UnitX;
+    private Vector3 front = -Vector3.UnitZ;
+    private Vector3 up = Vector3.UnitY;
+    private Vector3 right = Vector3.UnitX;
     private float pitch;
     private float yaw = -MathHelper.PiOver2;
     private float fov = MathHelper.PiOver2;
@@ -16,13 +16,13 @@ public class Camera
 
     public int Height { get; set; }
 
-    public Vector3D<float> Position { get; set; } = new(0.0f, 0.0f, 0.0f);
+    public Vector3 Position { get; set; } = new(0.0f, 0.0f, 0.0f);
 
-    public Vector3D<float> Front => front;
+    public Vector3 Front => front;
 
-    public Vector3D<float> Up => up;
+    public Vector3 Up => up;
 
-    public Vector3D<float> Right => right;
+    public Vector3 Right => right;
 
     public float Pitch
     {
@@ -55,9 +55,9 @@ public class Camera
         }
     }
 
-    public Matrix4X4<float> View => Matrix4X4.CreateLookAt(Position, Position + Front, Up);
+    public Matrix4x4 View => Matrix4x4.CreateLookAt(Position, Position + Front, Up);
 
-    public Matrix4X4<float> Projection => Matrix4X4.CreatePerspectiveFieldOfView(fov, (float)Width / Height, 0.1f, 1000.0f);
+    public Matrix4x4 Projection => Matrix4x4.CreatePerspectiveFieldOfView(fov, (float)Width / Height, 0.1f, 1000.0f);
 
     private void UpdateVectors()
     {
@@ -65,9 +65,9 @@ public class Camera
         front.Y = MathF.Sin(pitch);
         front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
 
-        front = Vector3D.Normalize(front);
+        front = Vector3.Normalize(front);
 
-        right = Vector3D.Normalize(Vector3D.Cross(front, Vector3D<float>.UnitY));
-        up = Vector3D.Normalize(Vector3D.Cross(right, front));
+        right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
+        up = Vector3.Normalize(Vector3.Cross(right, front));
     }
 }
