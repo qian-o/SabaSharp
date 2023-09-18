@@ -64,6 +64,8 @@ public unsafe class MikuMikuDance : IDisposable
 
             animation.SyncPhysics(0.0f);
         }
+
+        model.Update();
     }
 
     public void Setup()

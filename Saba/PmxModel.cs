@@ -1,5 +1,6 @@
 ﻿using Saba.Helpers;
 using Silk.NET.Maths;
+using System.Collections.Concurrent;
 using static Saba.PmxMorph;
 
 namespace Saba;
@@ -1018,7 +1019,15 @@ public class PmxModel : MMDModel
             transforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
         }
 
-        Parallel.For(0, _positions.Count, Update);
+        int partitionSize = (int)Math.Ceiling((double)_positions.Count / Environment.ProcessorCount);
+
+        Parallel.ForEach(Partitioner.Create(0, _positions.Count, partitionSize), range =>
+        {
+            for (int i = range.Item1; i < range.Item2; i++)
+            {
+                Update(i);
+            }
+        });
     }
 
     public override void Destroy()

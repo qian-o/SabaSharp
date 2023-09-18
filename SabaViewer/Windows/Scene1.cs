@@ -13,6 +13,8 @@ public class Scene1 : Game
     private double saveTime = 0.0;
     private float animTime = 0.0f;
     private float elapsed = 0.0f;
+    private bool isPlaying = false;
+    private bool enablePhysical = true;
 
     protected override void Load()
     {
@@ -52,6 +54,10 @@ public class Scene1 : Game
         ImGui.DragFloat3(nameof(MikuMikuDance.LightDir), ref lightDir, 0.05f);
         MikuMikuDance.LightDir = lightDir.ToGeneric();
 
+        ImGui_Button("Play / Pause", () => isPlaying = !isPlaying);
+
+        ImGui_Button("Enable physical", () => enablePhysical = !enablePhysical);
+
         ImGui.End();
     }
 
@@ -63,9 +69,28 @@ public class Scene1 : Game
             elapsed = 1.0f / 30.0f;
         }
 
-        animTime += time;
-        elapsed = time;
+        if (isPlaying)
+        {
+            animTime += time;
+        }
+
+        if (enablePhysical)
+        {
+            elapsed = time;
+        }
+        else
+        {
+            elapsed = 0.0f;
+        }
 
         saveTime = Time;
+    }
+
+    private static void ImGui_Button(string label, Action action)
+    {
+        if (ImGui.Button(label))
+        {
+            action();
+        }
     }
 }
