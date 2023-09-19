@@ -32,11 +32,15 @@ public abstract unsafe class Game
     protected float cameraSensitivity = 0.2f;
     #endregion
 
-    public int Width => _window.Size.X;
+    public int Width { get; private set; }
 
-    public int Height => _window.Size.Y;
+    public int Height { get; private set; }
 
     public double Time => _window.Time;
+
+    public bool IsWindowHovered { get; private set; }
+
+    public Frame? Frame { get; private set; }
 
     public Game()
     {
@@ -64,91 +68,95 @@ public abstract unsafe class Game
 
             Load();
         };
-        _window.Resize += Resize;
-        _window.FramebufferResize += (obj) => { gl.Viewport(obj); FramebufferResize(obj); };
+        _window.Resize += (obj) => { gl.Viewport(obj); WindowResize(obj); };
         _window.Update += (obj) =>
         {
-            if (mouse.IsButtonPressed(MouseButton.Middle))
+            if (IsWindowHovered)
             {
-                Vector2D<float> vector = new(mouse.Position.X, mouse.Position.Y);
-
-                if (firstMove)
+                if (mouse.IsButtonPressed(MouseButton.Middle))
                 {
-                    lastPos = vector;
+                    Vector2D<float> vector = new(mouse.Position.X, mouse.Position.Y);
 
-                    firstMove = false;
+                    if (firstMove)
+                    {
+                        lastPos = vector;
+
+                        firstMove = false;
+                    }
+                    else
+                    {
+                        float deltaX = vector.X - lastPos.X;
+                        float deltaY = vector.Y - lastPos.Y;
+
+                        camera.Yaw += deltaX * cameraSensitivity;
+                        camera.Pitch += -deltaY * cameraSensitivity;
+
+                        lastPos = vector;
+                    }
                 }
                 else
                 {
-                    float deltaX = vector.X - lastPos.X;
-                    float deltaY = vector.Y - lastPos.Y;
+                    firstMove = true;
+                }
 
-                    camera.Yaw += deltaX * cameraSensitivity;
-                    camera.Pitch += -deltaY * cameraSensitivity;
+                if (keyboard.IsKeyPressed(Key.W))
+                {
+                    camera.Position += camera.Front * cameraSpeed * (float)obj;
+                }
 
-                    lastPos = vector;
+                if (keyboard.IsKeyPressed(Key.A))
+                {
+                    camera.Position -= camera.Right * cameraSpeed * (float)obj;
+                }
+
+                if (keyboard.IsKeyPressed(Key.S))
+                {
+                    camera.Position -= camera.Front * cameraSpeed * (float)obj;
+                }
+
+                if (keyboard.IsKeyPressed(Key.D))
+                {
+                    camera.Position += camera.Right * cameraSpeed * (float)obj;
+                }
+
+                if (keyboard.IsKeyPressed(Key.Q))
+                {
+                    camera.Position -= camera.Up * cameraSpeed * (float)obj;
+                }
+
+                if (keyboard.IsKeyPressed(Key.E))
+                {
+                    camera.Position += camera.Up * cameraSpeed * (float)obj;
                 }
             }
-            else
-            {
-                firstMove = true;
-            }
 
-            if (keyboard.IsKeyPressed(Key.W))
-            {
-                camera.Position += camera.Front * cameraSpeed * (float)obj;
-            }
-
-            if (keyboard.IsKeyPressed(Key.A))
-            {
-                camera.Position -= camera.Right * cameraSpeed * (float)obj;
-            }
-
-            if (keyboard.IsKeyPressed(Key.S))
-            {
-                camera.Position -= camera.Front * cameraSpeed * (float)obj;
-            }
-
-            if (keyboard.IsKeyPressed(Key.D))
-            {
-                camera.Position += camera.Right * cameraSpeed * (float)obj;
-            }
-
-            if (keyboard.IsKeyPressed(Key.Q))
-            {
-                camera.Position -= camera.Up * cameraSpeed * (float)obj;
-            }
-
-            if (keyboard.IsKeyPressed(Key.E))
-            {
-                camera.Position += camera.Up * cameraSpeed * (float)obj;
-            }
-
-            camera.Width = _window.Size.X;
-            camera.Height = _window.Size.Y;
+            camera.Width = Width;
+            camera.Height = Height;
 
             Update(obj);
         };
         _window.Render += (obj) =>
         {
+            Frame ??= new Frame(gl);
+            Frame.Create(Width, Height);
+
             gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, Frame.Id);
+            gl.Viewport(0, 0, (uint)Width, (uint)Height);
+
             Render(obj);
+
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            gl.Viewport(0, 0, (uint)_window.Size.X, (uint)_window.Size.Y);
 
             imGuiController!.Update((float)obj);
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-            ImGui.Begin("Host", ImGuiWindowFlags.NoDocking
-                                | ImGuiWindowFlags.NoTitleBar
-                                | ImGuiWindowFlags.NoCollapse
-                                | ImGuiWindowFlags.NoResize
-                                | ImGuiWindowFlags.NoMove
-                                | ImGuiWindowFlags.NoBringToFrontOnFocus
-                                | ImGuiWindowFlags.NoNavFocus
-                                | ImGuiWindowFlags.NoBackground);
-            ImGui.DockSpace(ImGui.GetID("DockSpace"), Vector2.Zero, ImGuiDockNodeFlags.PassthruCentralNode);
-            ImGui.End();
+            ImGui.DockSpaceOverViewport();
+
+            DrawHost();
 
             ImGui.Begin(renderer);
             ImGui.Value("FPS", ImGui.GetIO().Framerate);
@@ -172,7 +180,7 @@ public abstract unsafe class Game
 
     protected virtual void Load() { }
 
-    protected virtual void Resize(Vector2D<int> obj) { }
+    protected virtual void WindowResize(Vector2D<int> obj) { }
 
     protected virtual void FramebufferResize(Vector2D<int> obj) { }
 
@@ -183,4 +191,28 @@ public abstract unsafe class Game
     protected virtual void RenderImGui(double obj) { }
 
     protected virtual void Closing() { }
+
+    private void DrawHost()
+    {
+        ImGui.Begin("Main");
+
+        IsWindowHovered = ImGui.IsWindowHovered();
+
+        Vector2 size = ImGui.GetContentRegionAvail();
+
+        int newWidth = Convert.ToInt32(size.X);
+        int newHeight = Convert.ToInt32(size.Y);
+
+        if (newWidth - Width != 0 || newHeight - Height != 0)
+        {
+            Width = newWidth;
+            Height = newHeight;
+
+            FramebufferResize(new Vector2D<int>(newWidth, newHeight));
+        }
+
+        ImGui.Image((nint)Frame!.Framebuffer, size, new Vector2(0.0f, 1.0f), new Vector2(1.0f, 0.0f));
+
+        ImGui.End();
+    }
 }
