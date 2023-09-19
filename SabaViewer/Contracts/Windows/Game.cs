@@ -137,18 +137,18 @@ public abstract unsafe class Game
         };
         _window.Render += (obj) =>
         {
+            gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
             Frame ??= new Frame(gl);
             Frame.Create(Width, Height);
-
-            gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, Frame.Id);
             gl.Viewport(0, 0, (uint)Width, (uint)Height);
 
             Render(obj);
 
-            gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             gl.Viewport(0, 0, (uint)_window.Size.X, (uint)_window.Size.Y);
+            gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
             imGuiController!.Update((float)obj);
 

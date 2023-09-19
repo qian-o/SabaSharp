@@ -60,7 +60,7 @@ public class Scene1 : Game
         ImGui.End();
 
         ImGui.Begin("Transform");
-        
+
         ImGui.DragFloat3("Translate", ref translate, 0.01f);
         ImGui.DragFloat3("Scale", ref scale, 0.01f);
 
