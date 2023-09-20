@@ -12,13 +12,6 @@ public class Scene1 : Game
     private Vector3 translate = new(0.0f, 0.0f, -2.6f);
     private Vector3 scale = new(0.2f, 0.2f, 0.2f);
 
-    private double saveTime = 0.0;
-    private float animTime = 0.0f;
-    private float elapsed = 0.0f;
-
-    private bool isPlaying = false;
-    private bool enablePhysical = true;
-
     protected override void Load()
     {
         mmd = new MikuMikuDance(gl);
@@ -34,7 +27,6 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        mmd.Update(animTime, elapsed);
         mmd.Draw(camera, Width, Height);
     }
 
@@ -54,9 +46,9 @@ public class Scene1 : Game
         ImGui.DragFloat3(nameof(MikuMikuDance.LightDir), ref lightDir, 0.05f);
         MikuMikuDance.LightDir = lightDir;
 
-        ImGui_Button("Play / Pause", () => isPlaying = !isPlaying);
+        ImGui_Button("Play / Pause", () => mmd.IsPlaying = !mmd.IsPlaying);
 
-        ImGui_Button("Enable physical", () => enablePhysical = !enablePhysical);
+        ImGui_Button("Enable physical", () => mmd.EnablePhysical = !mmd.EnablePhysical);
 
         ImGui.End();
 
@@ -70,29 +62,9 @@ public class Scene1 : Game
 
     protected override void Update(double obj)
     {
-        float time = (float)(Time - saveTime);
-        if (elapsed > 1.0f / 30.0f)
-        {
-            elapsed = 1.0f / 30.0f;
-        }
-
-        if (isPlaying)
-        {
-            animTime += time;
-        }
-
-        if (enablePhysical)
-        {
-            elapsed = time;
-        }
-        else
-        {
-            elapsed = 0.0f;
-        }
-
-        saveTime = Time;
-
         mmd.Transform = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translate);
+
+        mmd.Update((float)Time);
     }
 
     private static void ImGui_Button(string label, Action action)

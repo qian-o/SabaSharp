@@ -32,6 +32,10 @@ public unsafe class MikuMikuDance : IDisposable
     private uint mmdEdgeVAO;
     private uint mmdGroundShadowVAO;
 
+    private float saveTime = 0.0f;
+    private float animTime = 0.0f;
+    private float elapsed = 0.0f;
+
     public static Vector3 LightColor { get; set; } = new(1.0f, 1.0f, 1.0f);
 
     public static Vector4 ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
@@ -39,6 +43,10 @@ public unsafe class MikuMikuDance : IDisposable
     public static Vector3 LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
     public Matrix4x4 Transform { get; set; } = Matrix4x4.Identity;
+
+    public bool IsPlaying { get; set; } = false;
+
+    public bool EnablePhysical { get; set; } = true;
 
     public MikuMikuDance(GL gl)
     {
@@ -175,8 +183,34 @@ public unsafe class MikuMikuDance : IDisposable
         }
     }
 
-    public void Update(float animTime, float elapsed)
+    public void Update(float time)
     {
+        // compute elapsed time
+        {
+            float elapsedTime = time - saveTime;
+
+            if (elapsedTime > 1.0f / 30.0f)
+            {
+                elapsedTime = 1.0f / 30.0f;
+            }
+
+            if (IsPlaying)
+            {
+                animTime += elapsedTime;
+            }
+
+            if (EnablePhysical)
+            {
+                elapsed = elapsedTime;
+            }
+            else
+            {
+                elapsed = 0.0f;
+            }
+
+            saveTime = time;
+        }
+
         if (model is null)
         {
             return;
