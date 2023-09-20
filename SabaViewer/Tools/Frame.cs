@@ -1,10 +1,13 @@
 ﻿using Silk.NET.OpenGLES;
+using Silk.NET.OpenGLES.Extensions.EXT;
 
 namespace SabaViewer.Tools;
 
 public unsafe class Frame : IDisposable
 {
     private readonly GL _gl;
+    private readonly ExtMultisampledRenderToTexture _extMRT;
+    private readonly uint _samples;
 
     public uint Id { get; }
 
@@ -16,9 +19,11 @@ public unsafe class Frame : IDisposable
 
     public int Height { get; private set; }
 
-    public Frame(GL gl)
+    public Frame(GL gl, int? samples)
     {
         _gl = gl;
+        _gl.TryGetExtension(out _extMRT);
+        _samples = samples != null ? (uint)samples : 1;
 
         Id = _gl.GenFramebuffer();
         Framebuffer = _gl.GenTexture();
@@ -47,11 +52,11 @@ public unsafe class Frame : IDisposable
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
         _gl.BindRenderbuffer(GLEnum.Renderbuffer, DepthRenderBuffer);
-        _gl.RenderbufferStorage(GLEnum.Renderbuffer, GLEnum.Depth24Stencil8, (uint)Width, (uint)Height);
+        _extMRT.RenderbufferStorageMultisample((EXT)GLEnum.Renderbuffer, _samples, (EXT)GLEnum.Depth24Stencil8, (uint)Width, (uint)Height);
         _gl.BindRenderbuffer(GLEnum.Renderbuffer, 0);
 
         _gl.BindFramebuffer(GLEnum.Framebuffer, Id);
-        _gl.FramebufferTexture2D(GLEnum.Framebuffer, GLEnum.ColorAttachment0, GLEnum.Texture2D, Framebuffer, 0);
+        _extMRT.FramebufferTexture2DMultisample((EXT)GLEnum.Framebuffer, (EXT)GLEnum.ColorAttachment0, (EXT)GLEnum.Texture2D, Framebuffer, 0, _samples);
         _gl.FramebufferRenderbuffer(GLEnum.Framebuffer, GLEnum.DepthStencilAttachment, GLEnum.Renderbuffer, DepthRenderBuffer);
         _gl.BindFramebuffer(GLEnum.Framebuffer, 0);
     }

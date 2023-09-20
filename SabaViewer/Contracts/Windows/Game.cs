@@ -139,7 +139,7 @@ public abstract unsafe class Game
         {
             gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-            Frame ??= new Frame(gl);
+            Frame ??= new Frame(gl, _window.Samples);
             Frame.Create(Width, Height);
 
             gl.BindFramebuffer(FramebufferTarget.Framebuffer, Frame.Id);
