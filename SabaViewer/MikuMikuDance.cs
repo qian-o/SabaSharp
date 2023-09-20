@@ -1,4 +1,5 @@
 ﻿using Saba;
+using Saba.Helpers;
 using SabaViewer.Helpers;
 using SabaViewer.Shaders;
 using SabaViewer.Tools;
@@ -54,7 +55,7 @@ public unsafe class MikuMikuDance : IDisposable
     public void LoadModel(string modelPath, string? vmdPath = null)
     {
         model = new PmxModel();
-        model.Load(modelPath, "Resources/MMD/");
+        model.Load(modelPath, "Resources/MMD/".FormatFilePath());
 
         model.InitializeAnimation();
 

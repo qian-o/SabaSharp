@@ -347,7 +347,7 @@ public unsafe class PmxModel : MMDModel
         List<string> texturePaths = new();
         foreach (PmxTexture texture in pmx.Textures)
         {
-            string texPath = Path.Combine(dir, texture.Name);
+            string texPath = Path.Combine(dir, texture.Name.FormatFilePath());
             if (File.Exists(texPath))
             {
                 texturePaths.Add(texPath);

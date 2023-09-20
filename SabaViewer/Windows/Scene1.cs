@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Saba.Helpers;
 using SabaViewer.Contracts.Windows;
 using Silk.NET.OpenGLES;
 using System.Numerics;
@@ -22,8 +23,8 @@ public class Scene1 : Game
     {
         mmd = new MikuMikuDance(gl);
 
-        mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx",
-                      "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd");
+        mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
+                      "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd".FormatFilePath());
 
         mmd.Setup();
     }
