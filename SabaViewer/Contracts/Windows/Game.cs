@@ -171,7 +171,7 @@ public abstract unsafe class Game
 
             imGuiController.Render();
         };
-        _window.Closing += Closing;
+        _window.Closing += () => { Frame?.Dispose(); Closing(); };
     }
 
     public void Run() => _window.Run();

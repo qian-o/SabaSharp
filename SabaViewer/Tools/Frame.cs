@@ -67,6 +67,8 @@ public unsafe class Frame : IDisposable
         _gl.DeleteTexture(Framebuffer);
         _gl.DeleteRenderbuffer(DepthRenderBuffer);
 
+        _extMRT.Dispose();
+
         GC.SuppressFinalize(this);
     }
 }
