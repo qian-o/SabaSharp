@@ -48,17 +48,17 @@ public unsafe class Frame : IDisposable
         Height = height;
 
         _gl.BindTexture(GLEnum.Texture2D, Framebuffer);
-        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)GLEnum.Rgba, (uint)Width, (uint)Height, 0, GLEnum.Rgba, GLEnum.UnsignedByte, null);
+        _gl.TexImage2D(GLEnum.Texture2D, 0, (int)GLEnum.Rgb, (uint)Width, (uint)Height, 0, GLEnum.Rgb, GLEnum.UnsignedByte, null);
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
         _gl.BindRenderbuffer(GLEnum.Renderbuffer, DepthRenderBuffer);
         if (_extMRT != null)
         {
-            _extMRT.RenderbufferStorageMultisample((EXT)GLEnum.Renderbuffer, _samples, (EXT)GLEnum.Depth24Stencil8, (uint)Width, (uint)Height);
+            _extMRT.RenderbufferStorageMultisample((EXT)GLEnum.Renderbuffer, _samples, (EXT)GLEnum.Depth32fStencil8, (uint)Width, (uint)Height);
         }
         else
         {
-            _gl.RenderbufferStorage(GLEnum.Renderbuffer, GLEnum.Depth24Stencil8, (uint)Width, (uint)Height);
+            _gl.RenderbufferStorage(GLEnum.Renderbuffer, GLEnum.Depth32fStencil8, (uint)Width, (uint)Height);
         }
         _gl.BindRenderbuffer(GLEnum.Renderbuffer, 0);
 
