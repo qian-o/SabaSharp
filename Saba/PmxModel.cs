@@ -1002,7 +1002,9 @@ public unsafe class PmxModel : MMDModel
         {
             for (int i = range.Item1; i < range.Item2; i++)
             {
-                updateTransforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
+                PmxNode node = _nodes[i];
+
+                updateTransforms[i] = node.InverseInit * node.Global;
             }
         });
 
