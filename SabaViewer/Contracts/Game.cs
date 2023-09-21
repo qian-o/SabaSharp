@@ -8,7 +8,7 @@ using Silk.NET.Windowing;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace SabaViewer.Contracts.Windows;
+namespace SabaViewer.Contracts;
 
 public abstract unsafe class Game
 {
@@ -19,7 +19,6 @@ public abstract unsafe class Game
     protected ImGuiController imGuiController = null!;
     protected Camera camera = null!;
     protected string renderer = string.Empty;
-    protected bool isFirstFrame = true;
 
     #region Input
     protected IMouse mouse = null!;
@@ -167,20 +166,9 @@ public abstract unsafe class Game
             ImGui.Begin("Settings");
             ImGui.DragFloat("Camera Speed", ref cameraSpeed, 0.5f, 0.5f, 20.0f);
             ImGui.DragFloat("Camera Sensitivity", ref cameraSensitivity, 0.2f, 0.2f, 10.0f);
-            if (ImGui.Button("Save Layout"))
-            {
-                ImGui.SaveIniSettingsToDisk("layout.ini");
-            }
             ImGui.End();
 
             RenderImGui(obj);
-
-            if (isFirstFrame)
-            {
-                ImGui.LoadIniSettingsFromDisk("layout.ini");
-
-                isFirstFrame = false;
-            }
 
             imGuiController.Render();
         };

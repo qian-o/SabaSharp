@@ -1,16 +1,17 @@
 ﻿using ImGuiNET;
 using Saba.Helpers;
-using SabaViewer.Contracts.Windows;
+using SabaViewer.Contracts;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 
-namespace SabaViewer.Windows;
+namespace SabaViewer;
 
 public class Scene1 : Game
 {
     private MikuMikuDance mmd = null!;
     private Vector3 translate = new(0.0f, 0.0f, -2.6f);
     private Vector3 scale = new(0.2f, 0.2f, 0.2f);
+    private bool isFirstFrame = true;
 
     protected override void Load()
     {
@@ -58,6 +59,13 @@ public class Scene1 : Game
         ImGui.DragFloat3("Scale", ref scale, 0.01f);
 
         ImGui.End();
+
+        if (isFirstFrame)
+        {
+            ImGui.LoadIniSettingsFromDisk("layout.ini");
+
+            isFirstFrame = false;
+        }
     }
 
     protected override void Update(double obj)
