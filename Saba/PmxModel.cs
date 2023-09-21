@@ -210,8 +210,7 @@ public unsafe class PmxModel : MMDModel
     private Vector3[] updatePositions = Array.Empty<Vector3>();
     private Vector3[] updateNormals = Array.Empty<Vector3>();
     private Vector2[] updateUVs = Array.Empty<Vector2>();
-
-    private Matrix4x4[] transforms = Array.Empty<Matrix4x4>();
+    private Matrix4x4[] updateTransforms = Array.Empty<Matrix4x4>();
 
     private Vector3[] morphPositions = Array.Empty<Vector3>();
     private Vector4[] morphUVs = Array.Empty<Vector4>();
@@ -514,7 +513,7 @@ public unsafe class PmxModel : MMDModel
             node.SaveInitialTRS();
         }
 
-        Array.Resize(ref transforms, _nodes.Count);
+        Array.Resize(ref updateTransforms, _nodes.Count);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -999,14 +998,15 @@ public unsafe class PmxModel : MMDModel
     public override void Update()
     {
         // スキンメッシュに使用する変形マトリクスを事前計算
-        for (int i = 0; i < _nodes.Count; i++)
+        Parallel.ForEach(Partitioner.Create(0, _nodes.Count), range =>
         {
-            transforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
-        }
+            for (int i = range.Item1; i < range.Item2; i++)
+            {
+                updateTransforms[i] = _nodes[i].InverseInit * _nodes[i].Global;
+            }
+        });
 
-        int partitionSize = (int)Math.Ceiling((double)positions.Length / Environment.ProcessorCount);
-
-        Parallel.ForEach(Partitioner.Create(0, positions.Length, partitionSize), range =>
+        Parallel.ForEach(Partitioner.Create(0, positions.Length), range =>
         {
             Update(range.Item1, range.Item2);
         });
@@ -1036,8 +1036,7 @@ public unsafe class PmxModel : MMDModel
         updatePositions = Array.Empty<Vector3>();
         updateNormals = Array.Empty<Vector3>();
         updateUVs = Array.Empty<Vector2>();
-
-        transforms = Array.Empty<Matrix4x4>();
+        updateTransforms = Array.Empty<Matrix4x4>();
 
         morphPositions = Array.Empty<Vector3>();
         morphUVs = Array.Empty<Vector4>();
@@ -1213,6 +1212,7 @@ public unsafe class PmxModel : MMDModel
         Vector3* morphPos = morphPositions.GetData() + begin;
         Vector4* morphUV = morphUVs.GetData() + begin;
         VertexBoneInfo* vtxInfo = vertexBoneInfos.GetData() + begin;
+        Matrix4x4* transforms = updateTransforms.GetData();
         Vector3* updatePosition = updatePositions.GetData() + begin;
         Vector3* updateNormal = updateNormals.GetData() + begin;
         Vector2* updateUV = updateUVs.GetData() + begin;
