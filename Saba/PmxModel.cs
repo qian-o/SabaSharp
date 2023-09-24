@@ -997,16 +997,13 @@ public unsafe class PmxModel : MMDModel
 
     public override void Update()
     {
-        // スキンメッシュに使用する変形マトリクスを事前計算
-        Parallel.ForEach(Partitioner.Create(0, _nodes.Count), range =>
+        Matrix4x4* transforms = updateTransforms.GetData();
+        foreach (PmxNode node in _nodes)
         {
-            for (int i = range.Item1; i < range.Item2; i++)
-            {
-                PmxNode node = _nodes[i];
+            *transforms = node.InverseInit * node.Global;
 
-                updateTransforms[i] = node.InverseInit * node.Global;
-            }
-        });
+            transforms++;
+        }
 
         Parallel.ForEach(Partitioner.Create(0, positions.Length), range =>
         {
