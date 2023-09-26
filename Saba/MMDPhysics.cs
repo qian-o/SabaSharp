@@ -42,7 +42,7 @@ public class MMDPhysics : IDisposable
         RigidBodyConstructionInfo groundInfo = new(0.0f, _groundMS, _groundShape, Vector3.Zero);
         _groundRB = new RigidBody(groundInfo);
 
-        DynamicsWorld.AddRigidBody(_groundRB, 1 << 0, 65534);
+        DynamicsWorld.AddRigidBody(_groundRB, CollisionFilterGroups.AllFilter, CollisionFilterGroups.AllFilter);
     }
 
     public void Update(float time)
