@@ -1,4 +1,5 @@
 ﻿using Saba.Helpers;
+using Silk.NET.OpenCL;
 using System.Collections.Concurrent;
 using System.Numerics;
 using static Saba.PmxMorph;
@@ -222,6 +223,17 @@ public unsafe class PmxModel : MMDModel
     private MMDPhysicsManager? physicsManager;
 
     private Kernel? kernel;
+    private nint positionsBuffer;
+    private nint normalsBuffer;
+    private nint uvsBuffer;
+    private nint morphPositionsBuffer;
+    private nint morphUVsBuffer;
+    private nint vertexBoneInfosBuffer;
+    private nint transformsBuffer;
+    private nint globalTransformsBuffer;
+    private nint updatePositionsBuffer;
+    private nint updateNormalsBuffer;
+    private nint updateUVsBuffer;
 
     public PmxModel()
     {
@@ -687,7 +699,36 @@ public unsafe class PmxModel : MMDModel
             }
         }
 
-        kernel = Kernel.Create(File.ReadAllText("skinned_animation.cl"), "run", new string[] { "-cl-mad-enable" });
+        kernel = Kernel.Create(File.ReadAllText("skinned_animation.cl"), "Run", new string[] { "-cl-mad-enable" });
+
+        if (kernel != null)
+        {
+            uint length = (uint)positions.Length;
+
+            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly);
+            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly);
+            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly);
+            morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly);
+            morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.WriteOnly);
+            vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.WriteOnly);
+            transformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.WriteOnly);
+            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.WriteOnly);
+            updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly);
+            updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly);
+            updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly);
+
+            kernel.SetArgument(0, positionsBuffer);
+            kernel.SetArgument(1, normalsBuffer);
+            kernel.SetArgument(2, uvsBuffer);
+            kernel.SetArgument(3, morphPositionsBuffer);
+            kernel.SetArgument(4, morphUVsBuffer);
+            kernel.SetArgument(5, vertexBoneInfosBuffer);
+            kernel.SetArgument(6, transformsBuffer);
+            kernel.SetArgument(7, globalTransformsBuffer);
+            kernel.SetArgument(8, updatePositionsBuffer);
+            kernel.SetArgument(9, updateNormalsBuffer);
+            kernel.SetArgument(10, updateUVsBuffer);
+        }
 
         ResetPhysics();
 
@@ -1009,10 +1050,35 @@ public unsafe class PmxModel : MMDModel
             transforms++;
         }
 
-        Parallel.ForEach(Partitioner.Create(0, positions.Length), range =>
+        if (kernel != null)
         {
-            Update(range.Item1, range.Item2);
-        });
+            uint length = (uint)positions.Length;
+
+            kernel.WriteBuffer<Vector3>(positionsBuffer, length, positions.GetData());
+            kernel.WriteBuffer<Vector3>(normalsBuffer, length, normals.GetData());
+            kernel.WriteBuffer<Vector2>(uvsBuffer, length, uvs.GetData());
+            kernel.WriteBuffer<Vector3>(morphPositionsBuffer, length, morphPositions.GetData());
+            kernel.WriteBuffer<Vector4>(morphUVsBuffer, length, morphUVs.GetData());
+            kernel.WriteBuffer<VertexBoneInfo>(vertexBoneInfosBuffer, length, vertexBoneInfos.GetData());
+            kernel.WriteBuffer<Matrix4x4>(transformsBuffer, (uint)_nodes.Count, updateTransforms.GetData());
+            kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)_nodes.Count, _nodes.Select(item => item.Global).ToArray().GetData());
+            kernel.WriteBuffer<Vector3>(updatePositionsBuffer, length, updatePositions.GetData());
+            kernel.WriteBuffer<Vector3>(updateNormalsBuffer, length, updateNormals.GetData());
+            kernel.WriteBuffer<Vector2>(updateUVsBuffer, length, updateUVs.GetData());
+
+            kernel.Run(1, length);
+
+            kernel.ReadBuffer<Vector3>(updatePositionsBuffer, length, updatePositions.GetData());
+            kernel.ReadBuffer<Vector3>(updateNormalsBuffer, length, updateNormals.GetData());
+            kernel.ReadBuffer<Vector2>(updateUVsBuffer, length, updateUVs.GetData());
+        }
+        else
+        {
+            Parallel.ForEach(Partitioner.Create(0, positions.Length), range =>
+            {
+                Update(range.Item1, range.Item2);
+            });
+        }
     }
 
     public override void Destroy()

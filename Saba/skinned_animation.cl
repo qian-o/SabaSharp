@@ -176,7 +176,7 @@ Vector3 Vector3_Transform_Matrix4x4(Vector3 position, Matrix4x4 matrix) {
                        (position.X * matrix.M12) + (position.Y * matrix.M22) +
                            (position.Z * matrix.M32) + matrix.M42,
                        (position.X * matrix.M13) + (position.Y * matrix.M23) +
-                           (position.Z * matrix.M33));
+                           (position.Z * matrix.M33) + matrix.M43);
 }
 
 Quaternion Quaternion_Slerp(Quaternion quaternion1, Quaternion quaternion2,
