@@ -221,6 +221,8 @@ public unsafe class PmxModel : MMDModel
 
     private MMDPhysicsManager? physicsManager;
 
+    private Kernel? kernel;
+
     public PmxModel()
     {
         _materials = new List<MMDMaterial>();
@@ -685,6 +687,8 @@ public unsafe class PmxModel : MMDModel
             }
         }
 
+        kernel = Kernel.Create(File.ReadAllText("skinned_animation.cl"), "run", new string[] { "-cl-mad-enable" });
+
         ResetPhysics();
 
         Update();
@@ -1043,6 +1047,8 @@ public unsafe class PmxModel : MMDModel
         initMaterials = Array.Empty<MMDMaterial>();
 
         physicsManager?.Dispose();
+
+        kernel?.Dispose();
     }
 
     public override void Dispose()
