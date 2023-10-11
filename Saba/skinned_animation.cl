@@ -343,7 +343,7 @@ kernel void Run(global const Vector3 *positions, global const Vector3 *normals,
                 global const Vector4 *morphUVs,
                 global const VertexBoneInfo *vertexBoneInfos,
                 global const Matrix4x4 *globalTransforms,
-                global const Matrix4x4 *transforms,
+                global const Matrix4x4 *updateTransforms,
                 global Vector3 *updatePositions, global Vector3 *updateNormals,
                 global Vector2 *updateUVs) {
 
@@ -359,22 +359,22 @@ kernel void Run(global const Vector3 *positions, global const Vector3 *normals,
   Matrix4x4 m;
 
   if (vtxInfo.SkinningType == Weight1) {
-    m = transforms[vtxInfo.BoneIndices[0]];
+    m = updateTransforms[vtxInfo.BoneIndices[0]];
   } else if (vtxInfo.SkinningType == Weight2) {
-    Matrix4x4 m1 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[0]],
-                                            vtxInfo.BoneWeights[0]);
-    Matrix4x4 m2 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[1]],
-                                            vtxInfo.BoneWeights[1]);
+    Matrix4x4 m1 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[0]], vtxInfo.BoneWeights[0]);
+    Matrix4x4 m2 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[1]], vtxInfo.BoneWeights[1]);
     m = Matrix4x4_Add_Matrix4x4(m1, m2);
   } else if (vtxInfo.SkinningType == Weight4) {
-    Matrix4x4 m1 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[0]],
-                                            vtxInfo.BoneWeights[0]);
-    Matrix4x4 m2 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[1]],
-                                            vtxInfo.BoneWeights[1]);
-    Matrix4x4 m3 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[2]],
-                                            vtxInfo.BoneWeights[2]);
-    Matrix4x4 m4 = Matrix4x4_Multiply_Float(transforms[vtxInfo.BoneIndices[3]],
-                                            vtxInfo.BoneWeights[3]);
+    Matrix4x4 m1 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[0]], vtxInfo.BoneWeights[0]);
+    Matrix4x4 m2 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[1]], vtxInfo.BoneWeights[1]);
+    Matrix4x4 m3 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[2]], vtxInfo.BoneWeights[2]);
+    Matrix4x4 m4 = Matrix4x4_Multiply_Float(
+        updateTransforms[vtxInfo.BoneIndices[3]], vtxInfo.BoneWeights[3]);
     m = Matrix4x4_Add_Matrix4x4(
         Matrix4x4_Add_Matrix4x4(Matrix4x4_Add_Matrix4x4(m1, m2), m3), m4);
   } else if (vtxInfo.SkinningType == SDEF) {
@@ -387,8 +387,8 @@ kernel void Run(global const Vector3 *positions, global const Vector3 *normals,
     Vector3 cr1 = vtxInfo.BoneSDEF.R1;
     Quaternion q0 = CreateFromRotationMatrix(globalTransforms[i0]);
     Quaternion q1 = CreateFromRotationMatrix(globalTransforms[i1]);
-    Matrix4x4 m0 = transforms[i0];
-    Matrix4x4 m1 = transforms[i1];
+    Matrix4x4 m0 = updateTransforms[i0];
+    Matrix4x4 m1 = updateTransforms[i1];
 
     Vector3 pos = Vector3_Add_Vector3(position, morphPos);
     Matrix4x4 rot_mat = CreateFromQuaternion(Quaternion_Slerp(q0, q1, w1));

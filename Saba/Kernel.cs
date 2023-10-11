@@ -32,10 +32,11 @@ public unsafe class Kernel : IDisposable
     /// <typeparam name="T">Type</typeparam>
     /// <param name="size">size</param>
     /// <param name="flags">flags</param>
+    /// <param name="host">host</param>
     /// <returns></returns>
-    public nint CreateBuffer<T>(uint size, MemFlags flags) where T : unmanaged
+    public nint CreateBuffer<T>(uint size, MemFlags flags, void* host = null) where T : unmanaged
     {
-        nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(size * sizeof(T)), null, null);
+        nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(size * sizeof(T)), host, null);
 
         _buffers.Add(buffer_id);
 
