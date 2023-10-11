@@ -186,6 +186,8 @@ public unsafe class Kernel : IDisposable
         }
 
         kernel = cl.CreateKernel(program, method, null);
+        if (kernel == 0)
+            return null;
 
         return new Kernel(cl, platform, device, context, queue, program, kernel);
     }
