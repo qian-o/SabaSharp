@@ -1072,28 +1072,26 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
-            kernel.UnmapBuffer(morphPositionsBuffer, morphPositionsPtr);
-
-            morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
-            kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
-
-            updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, MapFlags.WriteInvalidateRegion);
-            kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
-
-            globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, MapFlags.WriteInvalidateRegion);
-            kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
-
             kernel.Run(1, length);
 
+            morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
+            morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
+            updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, MapFlags.WriteInvalidateRegion);
+            globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, MapFlags.WriteInvalidateRegion);
             updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
-            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
-
             updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
-            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
-
             updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
+
+            kernel.Flush();
+            kernel.Finish();
+
+            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
+            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
             kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
+            kernel.UnmapBuffer(morphPositionsBuffer, morphPositionsPtr);
+            kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
+            kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
+            kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
         }
         else
         {

@@ -67,7 +67,7 @@ public unsafe class Kernel : IDisposable
     /// <returns></returns>
     public T* MapBuffer<T>(nint buffer, uint length, MapFlags flags) where T : unmanaged
     {
-        return (T*)_cl.EnqueueMapBuffer(_queue, buffer, true, flags, 0, (uint)(length * sizeof(T)), 0, null, null, null);
+        return (T*)_cl.EnqueueMapBuffer(_queue, buffer, false, flags, 0, (uint)(length * sizeof(T)), 0, null, null, null);
     }
 
     /// <summary>
@@ -78,6 +78,22 @@ public unsafe class Kernel : IDisposable
     public void UnmapBuffer(nint buffer, void* ptr)
     {
         _cl.EnqueueUnmapMemObject(_queue, buffer, ptr, 0, null, null);
+    }
+
+    /// <summary>
+    /// Flush
+    /// </summary>
+    public void Flush()
+    {
+        State(_cl.Flush(_queue));
+    }
+
+    /// <summary>
+    /// Finish
+    /// </summary>
+    public void Finish()
+    {
+        State(_cl.Finish(_queue));
     }
 
     /// <summary>
@@ -115,8 +131,6 @@ public unsafe class Kernel : IDisposable
         int state = _cl.EnqueueNdrangeKernel(_queue, _kernel, dim, null, size, null, 0, null, null);
 
         State(state);
-
-        State(_cl.Flush(_queue));
     }
 
     public void Dispose()
