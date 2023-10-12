@@ -717,10 +717,6 @@ public unsafe class PmxModel : MMDModel
 
         if (kernel != null)
         {
-            updatePositions.Dispose();
-            updateNormals.Dispose();
-            updateUVs.Dispose();
-
             uint length = (uint)positions.Length;
 
             positionsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
@@ -731,9 +727,9 @@ public unsafe class PmxModel : MMDModel
             morphUVsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
             updateTransformsBuffer = kernel.CreateBuffer((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
             globalTransformsBuffer = kernel.CreateBuffer((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
-            updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
-            updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
-            updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
+            updatePositionsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updatePositions.Buffer);
+            updateNormalsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updateNormals.Buffer);
+            updateUVsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updateUVs.Buffer);
 
             kernel.SetArgument(0, positionsBuffer);
             kernel.SetArgument(1, normalsBuffer);
@@ -807,31 +803,16 @@ public unsafe class PmxModel : MMDModel
 
     public override unsafe Vector3* GetUpdatePositions()
     {
-        if (kernel != null)
-        {
-            return updatePositionsPtr;
-        }
-
         return updatePositions.Buffer;
     }
 
     public override unsafe Vector3* GetUpdateNormals()
     {
-        if (kernel != null)
-        {
-            return updateNormalsPtr;
-        }
-
         return updateNormals.Buffer;
     }
 
     public override unsafe Vector2* GetUpdateUVs()
     {
-        if (kernel != null)
-        {
-            return updateUVsPtr;
-        }
-
         return updateUVs.Buffer;
     }
 
@@ -1103,15 +1084,16 @@ public unsafe class PmxModel : MMDModel
             globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, MapFlags.WriteInvalidateRegion);
             kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
 
-            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
-            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
-            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
-
             kernel.Run(1, length);
 
             updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
+            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
+
             updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
+            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
+
             updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
+            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
         }
         else
         {
