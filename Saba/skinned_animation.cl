@@ -338,14 +338,13 @@ Matrix4x4 CreateFromQuaternion(Quaternion quaternion) {
   return result;
 }
 
-kernel void Run(global const Vector3 *positions, global const Vector3 *normals,
-                global const Vector2 *uvs, global const Vector3 *morphPositions,
-                global const Vector4 *morphUVs,
-                global const VertexBoneInfo *vertexBoneInfos,
-                global const Matrix4x4 *updateTransforms,
-                global const Matrix4x4 *globalTransforms,
-                global Vector3 *updatePositions, global Vector3 *updateNormals,
-                global Vector2 *updateUVs) {
+kernel void
+Run(global const Vector3 *positions, global const Vector3 *normals,
+    global const Vector2 *uvs, global const VertexBoneInfo *vertexBoneInfos,
+    global const Vector3 *morphPositions, global const Vector4 *morphUVs,
+    global const Matrix4x4 *updateTransforms,
+    global const Matrix4x4 *globalTransforms, global Vector3 *updatePositions,
+    global Vector3 *updateNormals, global Vector2 *updateUVs) {
 
   int i = get_global_id(0);
 

@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace Saba;
@@ -26,7 +26,21 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public void Fill(T value)
     {
-        Unsafe.Write(_buffer, value);
+        T* a = _buffer;
+
+        Parallel.ForEach(Partitioner.Create(0, _length), range =>
+        {
+            int length = range.Item2 - range.Item1;
+
+            T* b = a + range.Item1;
+
+            for (int i = 0; i < length; i++)
+            {
+                *b = value;
+
+                b++;
+            }
+        });
     }
 
     public readonly void Dispose()
