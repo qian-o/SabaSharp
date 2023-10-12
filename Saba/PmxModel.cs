@@ -201,20 +201,20 @@ public unsafe class PmxModel : MMDModel
     private readonly List<BoneMorphData> _boneMorphDatas;
     private readonly List<GroupMorphData> _groupMorphDatas;
 
-    private Vector3[] positions = Array.Empty<Vector3>();
-    private Vector3[] normals = Array.Empty<Vector3>();
-    private Vector2[] uvs = Array.Empty<Vector2>();
-    private VertexBoneInfo[] vertexBoneInfos = Array.Empty<VertexBoneInfo>();
+    private FixedArray<Vector3> positions;
+    private FixedArray<Vector3> normals;
+    private FixedArray<Vector2> uvs;
+    private FixedArray<VertexBoneInfo> vertexBoneInfos;
 
-    private uint[] indices = Array.Empty<uint>();
+    private FixedArray<uint> indices;
 
-    private Vector3[] updatePositions = Array.Empty<Vector3>();
-    private Vector3[] updateNormals = Array.Empty<Vector3>();
-    private Vector2[] updateUVs = Array.Empty<Vector2>();
-    private Vector<Matrix4x4> updateTransforms;
+    private FixedArray<Vector3> updatePositions;
+    private FixedArray<Vector3> updateNormals;
+    private FixedArray<Vector2> updateUVs;
+    private FixedArray<Matrix4x4> updateTransforms;
 
-    private Vector3[] morphPositions = Array.Empty<Vector3>();
-    private Vector4[] morphUVs = Array.Empty<Vector4>();
+    private FixedArray<Vector3> morphPositions;
+    private FixedArray<Vector4> morphUVs;
 
     private MMDMaterial[] initMaterials = Array.Empty<MMDMaterial>();
     private MaterialFactor[] mulMaterialFactors = Array.Empty<MaterialFactor>();
@@ -263,10 +263,10 @@ public unsafe class PmxModel : MMDModel
         string dir = Path.GetDirectoryName(path)!;
 
         // 坐标点、法线、UV、骨骼信息
-        Array.Resize(ref positions, pmx.Vertices.Length);
-        Array.Resize(ref normals, pmx.Vertices.Length);
-        Array.Resize(ref uvs, pmx.Vertices.Length);
-        Array.Resize(ref vertexBoneInfos, pmx.Vertices.Length);
+        positions = new FixedArray<Vector3>(pmx.Vertices.Length);
+        normals = new FixedArray<Vector3>(pmx.Vertices.Length);
+        uvs = new FixedArray<Vector2>(pmx.Vertices.Length);
+        vertexBoneInfos = new FixedArray<VertexBoneInfo>(pmx.Vertices.Length);
         for (int i = 0; i < pmx.Vertices.Length; i++)
         {
             PmxVertex vertex = pmx.Vertices[i];
@@ -339,14 +339,14 @@ public unsafe class PmxModel : MMDModel
             vertexBoneInfos[i] = vertexBoneInfo;
         }
 
-        Array.Resize(ref updatePositions, positions.Length);
-        Array.Resize(ref updateNormals, normals.Length);
-        Array.Resize(ref updateUVs, uvs.Length);
-        Array.Resize(ref morphPositions, positions.Length);
-        Array.Resize(ref morphUVs, uvs.Length);
+        updatePositions = new FixedArray<Vector3>(positions.Length);
+        updateNormals = new FixedArray<Vector3>(normals.Length);
+        updateUVs = new FixedArray<Vector2>(uvs.Length);
+        morphPositions = new FixedArray<Vector3>(positions.Length);
+        morphUVs = new FixedArray<Vector4>(uvs.Length);
 
         // 面信息
-        Array.Resize(ref indices, pmx.Faces.Length * 3);
+        indices = new FixedArray<uint>(pmx.Faces.Length * 3);
         for (int i = 0; i < pmx.Faces.Length; i++)
         {
             PmxFace face = pmx.Faces[i];
@@ -527,7 +527,7 @@ public unsafe class PmxModel : MMDModel
             node.SaveInitialTRS();
         }
 
-        updateTransforms = new Vector<Matrix4x4>(_nodes.Count);
+        updateTransforms = new FixedArray<Matrix4x4>(_nodes.Count);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -705,14 +705,14 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.GetData());
-            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.GetData());
-            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.GetData());
-            morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.GetData());
-            morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.GetData());
-            vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.GetData());
+            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
+            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
+            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
+            morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
+            morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
+            vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.Buffer);
             globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Size, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
+            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
             updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
             updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
             updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
@@ -774,32 +774,32 @@ public unsafe class PmxModel : MMDModel
 
     public override unsafe Vector3* GetPositions()
     {
-        return positions.GetData();
+        return positions.Buffer;
     }
 
     public override unsafe Vector3* GetNormals()
     {
-        return normals.GetData();
+        return normals.Buffer;
     }
 
     public override unsafe Vector2* GetUVs()
     {
-        return uvs.GetData();
+        return uvs.Buffer;
     }
 
     public override unsafe Vector3* GetUpdatePositions()
     {
-        return updatePositions.GetData();
+        return updatePositions.Buffer;
     }
 
     public override unsafe Vector3* GetUpdateNormals()
     {
-        return updateNormals.GetData();
+        return updateNormals.Buffer;
     }
 
     public override unsafe Vector2* GetUpdateUVs()
     {
-        return updateUVs.GetData();
+        return updateUVs.Buffer;
     }
 
     public override int GetIndexCount()
@@ -809,7 +809,7 @@ public unsafe class PmxModel : MMDModel
 
     public override unsafe uint* GetIndices()
     {
-        return indices.GetData();
+        return indices.Buffer;
     }
 
     public override MMDMaterial[] GetMaterials()
@@ -885,9 +885,9 @@ public unsafe class PmxModel : MMDModel
             node.BeginUpdateTransform();
         }
 
-        Array.Fill(morphPositions, Vector3.Zero);
+        morphPositions.Fill(Vector3.Zero);
 
-        Array.Fill(morphUVs, Vector4.Zero);
+        morphUVs.Fill(Vector4.Zero);
     }
 
     public override void EndAnimation()
@@ -1055,13 +1055,13 @@ public unsafe class PmxModel : MMDModel
             uint length = (uint)positions.Length;
 
             kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)_nodes.Count, _nodes.Select(item => item.Global).ToArray().GetData());
-            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Size, updateTransforms.Buffer);
+            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, updateTransforms.Buffer);
 
             kernel.Run(1, length);
 
-            kernel.ReadBuffer<Vector3>(updatePositionsBuffer, length, updatePositions.GetData());
-            kernel.ReadBuffer<Vector3>(updateNormalsBuffer, length, updateNormals.GetData());
-            kernel.ReadBuffer<Vector2>(updateUVsBuffer, length, updateUVs.GetData());
+            kernel.ReadBuffer<Vector3>(updatePositionsBuffer, length, updatePositions.Buffer);
+            kernel.ReadBuffer<Vector3>(updateNormalsBuffer, length, updateNormals.Buffer);
+            kernel.ReadBuffer<Vector2>(updateUVsBuffer, length, updateUVs.Buffer);
         }
         else
         {
@@ -1086,20 +1086,20 @@ public unsafe class PmxModel : MMDModel
         _boneMorphDatas.Clear();
         _groupMorphDatas.Clear();
 
-        positions = Array.Empty<Vector3>();
-        normals = Array.Empty<Vector3>();
-        uvs = Array.Empty<Vector2>();
-        vertexBoneInfos = Array.Empty<VertexBoneInfo>();
+        positions.Dispose();
+        normals.Dispose();
+        uvs.Dispose();
+        vertexBoneInfos.Dispose();
 
-        indices = Array.Empty<uint>();
+        indices.Dispose();
 
-        updatePositions = Array.Empty<Vector3>();
-        updateNormals = Array.Empty<Vector3>();
-        updateUVs = Array.Empty<Vector2>();
+        updatePositions.Dispose();
+        updateNormals.Dispose();
+        updateUVs.Dispose();
         updateTransforms.Dispose();
 
-        morphPositions = Array.Empty<Vector3>();
-        morphUVs = Array.Empty<Vector4>();
+        morphPositions.Dispose();
+        morphUVs.Dispose();
 
         initMaterials = Array.Empty<MMDMaterial>();
 
@@ -1268,16 +1268,16 @@ public unsafe class PmxModel : MMDModel
     {
         int length = end - begin;
 
-        Vector3* position = positions.GetData() + begin;
-        Vector3* normal = normals.GetData() + begin;
-        Vector2* uv = uvs.GetData() + begin;
-        Vector3* morphPos = morphPositions.GetData() + begin;
-        Vector4* morphUV = morphUVs.GetData() + begin;
-        VertexBoneInfo* vtxInfo = vertexBoneInfos.GetData() + begin;
+        Vector3* position = positions.Buffer + begin;
+        Vector3* normal = normals.Buffer + begin;
+        Vector2* uv = uvs.Buffer + begin;
+        Vector3* morphPos = morphPositions.Buffer + begin;
+        Vector4* morphUV = morphUVs.Buffer + begin;
+        VertexBoneInfo* vtxInfo = vertexBoneInfos.Buffer + begin;
         Matrix4x4* transforms = updateTransforms.Buffer;
-        Vector3* updatePosition = updatePositions.GetData() + begin;
-        Vector3* updateNormal = updateNormals.GetData() + begin;
-        Vector2* updateUV = updateUVs.GetData() + begin;
+        Vector3* updatePosition = updatePositions.Buffer + begin;
+        Vector3* updateNormal = updateNormals.Buffer + begin;
+        Vector2* updateUV = updateUVs.Buffer + begin;
 
         for (int i = 0; i < length; i++)
         {
