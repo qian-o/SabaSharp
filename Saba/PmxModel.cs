@@ -710,9 +710,9 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
-            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
-            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
+            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, positions.Buffer);
+            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, normals.Buffer);
+            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, uvs.Buffer);
             morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
             morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
             vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.Buffer);

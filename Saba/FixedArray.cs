@@ -4,8 +4,11 @@ namespace Saba;
 
 public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 {
+    private readonly int _size;
     private readonly int _length;
     private readonly T* _buffer;
+
+    public readonly int Size => _size;
 
     public readonly int Length => _length;
 
@@ -15,6 +18,7 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public FixedArray(int length)
     {
+        _size = length * sizeof(T);
         _length = length;
         _buffer = (T*)Marshal.AllocHGlobal(length * sizeof(T));
     }
