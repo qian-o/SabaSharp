@@ -20,7 +20,7 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
     {
         _size = length * sizeof(T);
         _length = length;
-        _buffer = (T*)Marshal.AllocHGlobal(length * sizeof(T));
+        _buffer = (T*)NativeMemory.AlignedAlloc((uint)(length * sizeof(T)), 4096);
     }
 
     public void Fill(T value)
@@ -36,7 +36,7 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public readonly void Dispose()
     {
-        Marshal.FreeHGlobal((nint)_buffer);
+        NativeMemory.AlignedFree(_buffer);
 
         GC.SuppressFinalize(this);
     }

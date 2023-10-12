@@ -136,6 +136,8 @@ public unsafe class Kernel : IDisposable
         int state = _cl.EnqueueNdrangeKernel(_queue, _kernel, dim, null, size, null, 0, null, null);
 
         State(state);
+
+        State(_cl.Flush(_queue));
     }
 
     public void Dispose()
