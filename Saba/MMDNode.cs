@@ -5,6 +5,9 @@ namespace Saba;
 
 public abstract class MMDNode
 {
+    private readonly FixedArray<Matrix4x4> _globals;
+    private readonly FixedArray<Matrix4x4> _inverseInits;
+
     public int Index { get; set; }
 
     public string Name { get; set; }
@@ -37,9 +40,9 @@ public abstract class MMDNode
 
     public Matrix4x4 Local { get; set; }
 
-    public Matrix4x4 Global { get; set; }
+    public ref Matrix4x4 Global => ref _globals[Index];
 
-    public Matrix4x4 InverseInit { get; set; }
+    public ref Matrix4x4 InverseInit => ref _inverseInits[Index];
 
     public Vector3 InitTranslate { get; set; }
 
@@ -47,8 +50,11 @@ public abstract class MMDNode
 
     public Vector3 InitScale { get; set; }
 
-    protected MMDNode()
+    protected MMDNode(FixedArray<Matrix4x4> globals, FixedArray<Matrix4x4> inverseInits)
     {
+        _globals = globals;
+        _inverseInits = inverseInits;
+
         Name = string.Empty;
         Translate = Vector3.Zero;
         Rotate = Quaternion.Identity;

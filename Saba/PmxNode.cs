@@ -24,7 +24,7 @@ public class PmxNode : MMDNode
 
     public MMDIkSolver? IkSolver { get; set; }
 
-    public PmxNode()
+    public PmxNode(FixedArray<Matrix4x4> globals, FixedArray<Matrix4x4> inverseInits) : base(globals, inverseInits)
     {
         DeformDepth = -1;
     }
