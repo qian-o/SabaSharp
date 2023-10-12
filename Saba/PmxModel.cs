@@ -1085,13 +1085,13 @@ public unsafe class PmxModel : MMDModel
             kernel.Flush();
             kernel.Finish();
 
-            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
-            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
-            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
             kernel.UnmapBuffer(morphPositionsBuffer, morphPositionsPtr);
             kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
             kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
             kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
+            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
+            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
+            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
         }
         else
         {
