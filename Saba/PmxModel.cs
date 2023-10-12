@@ -211,7 +211,7 @@ public unsafe class PmxModel : MMDModel
     private Vector3[] updatePositions = Array.Empty<Vector3>();
     private Vector3[] updateNormals = Array.Empty<Vector3>();
     private Vector2[] updateUVs = Array.Empty<Vector2>();
-    private Matrix4x4[] updateTransforms = Array.Empty<Matrix4x4>();
+    private Vector<Matrix4x4> updateTransforms;
 
     private Vector3[] morphPositions = Array.Empty<Vector3>();
     private Vector4[] morphUVs = Array.Empty<Vector4>();
@@ -527,7 +527,7 @@ public unsafe class PmxModel : MMDModel
             node.SaveInitialTRS();
         }
 
-        Array.Resize(ref updateTransforms, _nodes.Count);
+        updateTransforms = new Vector<Matrix4x4>(_nodes.Count);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -705,14 +705,14 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, positions.GetData());
-            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, normals.GetData());
-            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, uvs.GetData());
+            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.GetData());
+            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.GetData());
+            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.GetData());
             morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.GetData());
             morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.GetData());
             vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.GetData());
             globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
+            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Size, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
             updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
             updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
             updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
@@ -1042,7 +1042,7 @@ public unsafe class PmxModel : MMDModel
 
     public override void Update()
     {
-        Matrix4x4* transforms = updateTransforms.GetData();
+        Matrix4x4* transforms = updateTransforms.Buffer;
         foreach (PmxNode node in _nodes)
         {
             *transforms = node.InverseInit * node.Global;
@@ -1055,7 +1055,7 @@ public unsafe class PmxModel : MMDModel
             uint length = (uint)positions.Length;
 
             kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)_nodes.Count, _nodes.Select(item => item.Global).ToArray().GetData());
-            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)_nodes.Count, updateTransforms.GetData());
+            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Size, updateTransforms.Buffer);
 
             kernel.Run(1, length);
 
@@ -1096,7 +1096,7 @@ public unsafe class PmxModel : MMDModel
         updatePositions = Array.Empty<Vector3>();
         updateNormals = Array.Empty<Vector3>();
         updateUVs = Array.Empty<Vector2>();
-        updateTransforms = Array.Empty<Matrix4x4>();
+        updateTransforms.Dispose();
 
         morphPositions = Array.Empty<Vector3>();
         morphUVs = Array.Empty<Vector4>();
@@ -1274,7 +1274,7 @@ public unsafe class PmxModel : MMDModel
         Vector3* morphPos = morphPositions.GetData() + begin;
         Vector4* morphUV = morphUVs.GetData() + begin;
         VertexBoneInfo* vtxInfo = vertexBoneInfos.GetData() + begin;
-        Matrix4x4* transforms = updateTransforms.GetData();
+        Matrix4x4* transforms = updateTransforms.Buffer;
         Vector3* updatePosition = updatePositions.GetData() + begin;
         Vector3* updateNormal = updateNormals.GetData() + begin;
         Vector2* updateUV = updateUVs.GetData() + begin;
