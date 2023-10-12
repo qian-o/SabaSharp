@@ -724,8 +724,8 @@ public unsafe class PmxModel : MMDModel
             morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
             morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
             vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.Buffer);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.AllocHostPtr | MemFlags.HostWriteOnly);
-            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.AllocHostPtr | MemFlags.HostWriteOnly);
+            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
+            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
             updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
