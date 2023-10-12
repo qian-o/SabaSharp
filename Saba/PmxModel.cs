@@ -723,14 +723,14 @@ public unsafe class PmxModel : MMDModel
 
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
-            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
-            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
-            vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, vertexBoneInfos.Buffer);
-            morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
-            morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
-            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
+            positionsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
+            normalsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
+            uvsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
+            vertexBoneInfosBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, vertexBoneInfos.Buffer);
+            morphPositionsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
+            morphUVsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
+            updateTransformsBuffer = kernel.CreateBuffer((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
+            globalTransformsBuffer = kernel.CreateBuffer((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
             updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);

@@ -26,19 +26,19 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public void Fill(T value)
     {
-        T* a = _buffer;
+        T* buffer = _buffer;
 
         Parallel.ForEach(Partitioner.Create(0, _length), range =>
         {
             int length = range.Item2 - range.Item1;
 
-            T* b = a + range.Item1;
+            T* temp = buffer + range.Item1;
 
             for (int i = 0; i < length; i++)
             {
-                *b = value;
+                *temp = value;
 
-                b++;
+                temp++;
             }
         });
     }

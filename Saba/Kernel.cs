@@ -34,7 +34,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="flags">flags</param>
     /// <param name="host">host</param>
     /// <returns></returns>
-    public nint CreateBuffer<T>(uint length, MemFlags flags, void* host = null) where T : unmanaged
+    public nint CreateBuffer<T>(uint length, MemFlags flags, T* host = null) where T : unmanaged
     {
         nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(length * sizeof(T)), host, null);
 
@@ -55,34 +55,6 @@ public unsafe class Kernel : IDisposable
 
             _buffers.Remove(buffer);
         }
-    }
-
-    /// <summary>
-    /// Write a buffer.
-    /// </summary>
-    /// <typeparam name="T">Type</typeparam>
-    /// <param name="buffer">buffer</param>
-    /// <param name="size">size</param>
-    /// <param name="ptr">ptr</param>
-    public void WriteBuffer<T>(nint buffer, uint size, void* ptr) where T : unmanaged
-    {
-        int state = _cl.EnqueueWriteBuffer(_queue, buffer, true, 0, (uint)(size * sizeof(T)), ptr, 0, null, null);
-
-        State(state);
-    }
-
-    /// <summary>
-    /// Read a buffer.
-    /// </summary>
-    /// <typeparam name="T">Type</typeparam>
-    /// <param name="buffer">buffer</param>
-    /// <param name="size">size</param>
-    /// <param name="ptr">ptr</param>
-    public void ReadBuffer<T>(nint buffer, uint size, void* ptr) where T : unmanaged
-    {
-        int state = _cl.EnqueueReadBuffer(_queue, buffer, true, 0, (uint)(size * sizeof(T)), ptr, 0, null, null);
-
-        State(state);
     }
 
     /// <summary>
