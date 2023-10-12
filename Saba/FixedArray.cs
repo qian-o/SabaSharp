@@ -16,11 +16,11 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public readonly ref T this[int index] => ref _buffer[index];
 
-    public FixedArray(int length)
+    public FixedArray(int length, uint alignment = 16)
     {
         _size = length * sizeof(T);
         _length = length;
-        _buffer = (T*)NativeMemory.AlignedAlloc((uint)(length * sizeof(T)), 4096);
+        _buffer = (T*)NativeMemory.AlignedAlloc((uint)(length * sizeof(T)), alignment);
     }
 
     public void Fill(T value)

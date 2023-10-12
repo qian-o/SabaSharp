@@ -238,6 +238,10 @@ public unsafe class PmxModel : MMDModel
     private nint updateNormalsBuffer;
     private nint updateUVsBuffer;
 
+    private Vector3* updatePositionsPtr;
+    private Vector3* updateNormalsPtr;
+    private Vector2* updateUVsPtr;
+
     public PmxModel()
     {
         _materials = new List<MMDMaterial>();
@@ -708,19 +712,23 @@ public unsafe class PmxModel : MMDModel
 
         if (kernel != null)
         {
+            updatePositions.Dispose();
+            updateNormals.Dispose();
+            updateUVs.Dispose();
+
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, positions.Buffer);
-            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, normals.Buffer);
-            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, uvs.Buffer);
+            positionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
+            normalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
+            uvsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
             morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
             morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
             vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.Buffer);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
-            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)_nodes.Count, MemFlags.ReadOnly | MemFlags.HostWriteOnly);
-            updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
-            updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
-            updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.HostReadOnly);
+            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
+            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
+            updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
+            updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
+            updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
 
             kernel.SetArgument(0, positionsBuffer);
             kernel.SetArgument(1, normalsBuffer);
@@ -794,16 +802,31 @@ public unsafe class PmxModel : MMDModel
 
     public override unsafe Vector3* GetUpdatePositions()
     {
+        if (kernel != null)
+        {
+            return updatePositionsPtr;
+        }
+
         return updatePositions.Buffer;
     }
 
     public override unsafe Vector3* GetUpdateNormals()
     {
+        if (kernel != null)
+        {
+            return updateNormalsPtr;
+        }
+
         return updateNormals.Buffer;
     }
 
     public override unsafe Vector2* GetUpdateUVs()
     {
+        if (kernel != null)
+        {
+            return updateUVsPtr;
+        }
+
         return updateUVs.Buffer;
     }
 
@@ -1063,14 +1086,19 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, updateTransforms.Buffer);
-            kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, globalTransforms.Buffer);
+            //kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, updateTransforms.Buffer);
+            //kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, globalTransforms.Buffer);
 
             kernel.Run(1, length);
 
-            kernel.ReadBuffer<Vector3>(updatePositionsBuffer, length, updatePositions.Buffer);
-            kernel.ReadBuffer<Vector3>(updateNormalsBuffer, length, updateNormals.Buffer);
-            kernel.ReadBuffer<Vector2>(updateUVsBuffer, length, updateUVs.Buffer);
+            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
+            updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
+
+            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
+            updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
+
+            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
+            updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
         }
         else
         {

@@ -44,22 +44,6 @@ public unsafe class Kernel : IDisposable
     }
 
     /// <summary>
-    /// Create a buffer.
-    /// </summary>
-    /// <param name="size">size</param>
-    /// <param name="flags">flags</param>
-    /// <param name="host">host</param>
-    /// <returns></returns>
-    public nint CreateBuffer(uint size, MemFlags flags, void* host = null)
-    {
-        nint buffer_id = _cl.CreateBuffer(_context, flags, size, host, null);
-
-        _buffers.Add(buffer_id);
-
-        return buffer_id;
-    }
-
-    /// <summary>
     /// Delete a buffer.
     /// </summary>
     /// <param name="buffer">buffer</param>
@@ -99,6 +83,29 @@ public unsafe class Kernel : IDisposable
         int state = _cl.EnqueueReadBuffer(_queue, buffer, true, 0, (uint)(size * sizeof(T)), ptr, 0, null, null);
 
         State(state);
+    }
+
+    /// <summary>
+    /// Get a pointer to a buffer.
+    /// </summary>
+    /// <typeparam name="T">Type</typeparam>
+    /// <param name="buffer">buffer</param>
+    /// <param name="length">length</param>
+    /// <param name="flags">flags</param>
+    /// <returns></returns>
+    public T* MapBuffer<T>(nint buffer, uint length, MapFlags flags) where T : unmanaged
+    {
+        return (T*)_cl.EnqueueMapBuffer(_queue, buffer, true, flags, 0, (uint)(length * sizeof(T)), 0, null, null, null);
+    }
+
+    /// <summary>
+    /// Delete a pointer to a buffer.
+    /// </summary>
+    /// <param name="buffer">buffer</param>
+    /// <param name="ptr">ptr</param>
+    public void UnmapBuffer(nint buffer, void* ptr)
+    {
+        _cl.EnqueueUnmapMemObject(_queue, buffer, ptr, 0, null, null);
     }
 
     /// <summary>
