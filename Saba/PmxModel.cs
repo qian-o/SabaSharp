@@ -724,8 +724,8 @@ public unsafe class PmxModel : MMDModel
             morphPositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
             morphUVsBuffer = kernel.CreateBuffer<Vector4>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
             vertexBoneInfosBuffer = kernel.CreateBuffer<VertexBoneInfo>(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, vertexBoneInfos.Buffer);
-            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
-            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
+            updateTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.AllocHostPtr | MemFlags.HostWriteOnly);
+            globalTransformsBuffer = kernel.CreateBuffer<Matrix4x4>((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.AllocHostPtr | MemFlags.HostWriteOnly);
             updatePositionsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateNormalsBuffer = kernel.CreateBuffer<Vector3>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
             updateUVsBuffer = kernel.CreateBuffer<Vector2>(length, MemFlags.WriteOnly | MemFlags.AllocHostPtr);
@@ -1086,8 +1086,8 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            //kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, updateTransforms.Buffer);
-            //kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, globalTransforms.Buffer);
+            kernel.WriteBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, updateTransforms.Buffer);
+            kernel.WriteBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, globalTransforms.Buffer);
 
             kernel.Run(1, length);
 

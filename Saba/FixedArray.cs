@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Saba;
 
@@ -16,7 +17,7 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public readonly ref T this[int index] => ref _buffer[index];
 
-    public FixedArray(int length, uint alignment = 16)
+    public FixedArray(int length, uint alignment = 4096)
     {
         _size = length * sizeof(T);
         _length = length;
@@ -25,13 +26,7 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public void Fill(T value)
     {
-        T* buffer = _buffer;
-        for (int i = 0; i < Length; i++)
-        {
-            *buffer = value;
-
-            buffer++;
-        }
+        Unsafe.Write(_buffer, value);
     }
 
     public readonly void Dispose()
