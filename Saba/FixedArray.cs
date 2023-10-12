@@ -22,10 +22,10 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
     public void Fill(T value)
     {
         T* buffer = _buffer;
-
         for (int i = 0; i < Length; i++)
         {
             *buffer = value;
+
             buffer++;
         }
     }
