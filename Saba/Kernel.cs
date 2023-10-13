@@ -38,7 +38,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="flags">flags</param>
     /// <param name="host">host</param>
     /// <returns></returns>
-    public nint CreateBuffer<T>(uint length, MemFlags flags, T* host = null) where T : unmanaged
+    public nint CreateBuffer<T>(uint length, T* host = null, MemFlags flags = MemFlags.ReadWrite) where T : unmanaged
     {
         nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(length * sizeof(T)), host, null);
 

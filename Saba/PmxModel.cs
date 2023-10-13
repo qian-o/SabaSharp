@@ -226,14 +226,17 @@ public unsafe class PmxModel : MMDModel
     private MMDPhysicsManager? physicsManager;
 
     private Kernel? kernel;
+
     private nint positionsBuffer;
     private nint normalsBuffer;
     private nint uvsBuffer;
     private nint vertexBoneInfosBuffer;
+
     private nint morphPositionsBuffer;
     private nint morphUVsBuffer;
     private nint updateTransformsBuffer;
     private nint globalTransformsBuffer;
+
     private nint updatePositionsBuffer;
     private nint updateNormalsBuffer;
     private nint updateUVsBuffer;
@@ -726,26 +729,36 @@ public unsafe class PmxModel : MMDModel
         {
             uint length = (uint)positions.Length;
 
-            positionsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, positions.Buffer);
-            normalsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, normals.Buffer);
-            uvsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, uvs.Buffer);
-            vertexBoneInfosBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.CopyHostPtr, vertexBoneInfos.Buffer);
-            morphPositionsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphPositions.Buffer);
-            morphUVsBuffer = kernel.CreateBuffer(length, MemFlags.ReadOnly | MemFlags.UseHostPtr, morphUVs.Buffer);
-            updateTransformsBuffer = kernel.CreateBuffer((uint)updateTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, updateTransforms.Buffer);
-            globalTransformsBuffer = kernel.CreateBuffer((uint)globalTransforms.Length, MemFlags.ReadOnly | MemFlags.UseHostPtr, globalTransforms.Buffer);
-            updatePositionsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updatePositions.Buffer);
-            updateNormalsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updateNormals.Buffer);
-            updateUVsBuffer = kernel.CreateBuffer(length, MemFlags.WriteOnly | MemFlags.UseHostPtr, updateUVs.Buffer);
+            MemFlags useHostFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostNoAccess;
+
+            MemFlags useHostReadFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostWriteOnly;
+
+            MemFlags useHostWriteFlags = MemFlags.WriteOnly | MemFlags.UseHostPtr | MemFlags.HostReadOnly;
+
+            positionsBuffer = kernel.CreateBuffer(length, positions.Buffer, useHostFlags);
+            normalsBuffer = kernel.CreateBuffer(length, normals.Buffer, useHostFlags);
+            uvsBuffer = kernel.CreateBuffer(length, uvs.Buffer, useHostFlags);
+            vertexBoneInfosBuffer = kernel.CreateBuffer(length, vertexBoneInfos.Buffer, useHostFlags);
+
+            morphPositionsBuffer = kernel.CreateBuffer(length, morphPositions.Buffer, useHostReadFlags);
+            morphUVsBuffer = kernel.CreateBuffer(length, morphUVs.Buffer, useHostReadFlags);
+            updateTransformsBuffer = kernel.CreateBuffer((uint)updateTransforms.Length, updateTransforms.Buffer, useHostReadFlags);
+            globalTransformsBuffer = kernel.CreateBuffer((uint)globalTransforms.Length, globalTransforms.Buffer, useHostReadFlags);
+
+            updatePositionsBuffer = kernel.CreateBuffer(length, updatePositions.Buffer, useHostWriteFlags);
+            updateNormalsBuffer = kernel.CreateBuffer(length, updateNormals.Buffer, useHostWriteFlags);
+            updateUVsBuffer = kernel.CreateBuffer(length, updateUVs.Buffer, useHostWriteFlags);
 
             kernel.SetArgument(0, positionsBuffer);
             kernel.SetArgument(1, normalsBuffer);
             kernel.SetArgument(2, uvsBuffer);
             kernel.SetArgument(3, vertexBoneInfosBuffer);
+
             kernel.SetArgument(4, morphPositionsBuffer);
             kernel.SetArgument(5, morphUVsBuffer);
             kernel.SetArgument(6, updateTransformsBuffer);
             kernel.SetArgument(7, globalTransformsBuffer);
+
             kernel.SetArgument(8, updatePositionsBuffer);
             kernel.SetArgument(9, updateNormalsBuffer);
             kernel.SetArgument(10, updateUVsBuffer);
@@ -1085,6 +1098,7 @@ public unsafe class PmxModel : MMDModel
             morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
             updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, MapFlags.WriteInvalidateRegion);
             globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, MapFlags.WriteInvalidateRegion);
+            
             updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
             updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
             updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
@@ -1096,6 +1110,7 @@ public unsafe class PmxModel : MMDModel
             kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
             kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
             kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
+
             kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
             kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
             kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
