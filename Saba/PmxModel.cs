@@ -1098,7 +1098,7 @@ public unsafe class PmxModel : MMDModel
             morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
             updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, updateTransforms.Length, MapFlags.WriteInvalidateRegion);
             globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, globalTransforms.Length, MapFlags.WriteInvalidateRegion);
-            
+
             updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
             updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
             updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
