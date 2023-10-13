@@ -12,22 +12,25 @@ public unsafe class Kernel : IDisposable
     private readonly nint _queue;
     private readonly nint _program;
     private readonly nint _kernel;
-    private readonly uint _alignment;
     private readonly List<nint> _buffers;
 
-    public uint Alignment => _alignment;
+    public double Version { get; }
 
-    internal Kernel(CL cl, nint platform, nint device, uint alignment, nint context, nint queue, nint program, nint kernel)
+    public uint Alignment { get; }
+
+    internal Kernel(CL cl, nint platform, nint device, nint context, nint queue, nint program, nint kernel)
     {
         _cl = cl;
         _platform = platform;
         _device = device;
-        _alignment = alignment;
         _context = context;
         _queue = queue;
         _program = program;
         _kernel = kernel;
         _buffers = new();
+
+        Version = GetVersion(cl, device);
+        Alignment = GetAlignment(cl, device);
     }
 
     /// <summary>
@@ -173,14 +176,13 @@ public unsafe class Kernel : IDisposable
         nint program;
         nint kernel;
 
-        if (cl.GetPlatformIDs(1, &platform, null) != 0)
+        (platform, device) = GetHighestVersion(cl);
+
+        if (platform == 0)
             return null;
 
-        if (cl.GetDeviceIDs(platform, DeviceType.Gpu, 1, &device, null) != 0)
+        if (device == 0)
             return null;
-
-        uint alignment;
-        cl.GetDeviceInfo(device, DeviceInfo.MemBaseAddrAlign, sizeof(uint), &alignment, null);
 
         context = cl.CreateContext(null, 1, device, null, null, null);
         if (context == 0)
@@ -208,7 +210,7 @@ public unsafe class Kernel : IDisposable
         if (kernel == 0)
             return null;
 
-        return new Kernel(cl, platform, device, alignment, context, queue, program, kernel);
+        return new Kernel(cl, platform, device, context, queue, program, kernel);
     }
 
     /// <summary>
@@ -221,5 +223,122 @@ public unsafe class Kernel : IDisposable
         {
             Console.WriteLine(errorCode);
         }
+    }
+
+    /// <summary>
+    /// Get the highest version platform and device.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <returns></returns>
+    private static (nint Platform, nint Device) GetHighestVersion(CL cl)
+    {
+        uint* num_platforms = stackalloc uint[1];
+        cl.GetPlatformIDs(0, null, num_platforms);
+
+        nint* platform_ids = stackalloc nint[(int)*num_platforms];
+        cl.GetPlatformIDs(*num_platforms, platform_ids, null);
+
+        nint highest_platform = 0;
+        nint highest_device = 0;
+        double highest_version = 0.0;
+        for (int i = 0; i < *num_platforms; i++)
+        {
+            nint platform = platform_ids[i];
+
+            uint num_devices = GetMaxDevices(cl, platform);
+
+            nint[] device_ids = GetDevices(cl, platform, num_devices);
+
+            for (int j = 0; j < num_devices; j++)
+            {
+                nint device = device_ids[j];
+
+                double version = GetVersion(cl, device);
+
+                if (version > highest_version)
+                {
+                    if (highest_version > 0.0)
+                    {
+                        cl.ReleaseDevice(highest_device);
+                    }
+
+                    highest_platform = platform;
+                    highest_device = device;
+                    highest_version = version;
+                }
+                else
+                {
+                    cl.ReleaseDevice(device);
+                }
+            }
+        }
+
+        return (highest_platform, highest_device);
+    }
+
+    /// <summary>
+    /// Get the maximum number of devices.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <param name="platform">platform</param>
+    /// <returns></returns>
+    private static uint GetMaxDevices(CL cl, nint platform)
+    {
+        uint* num_devices = stackalloc uint[1];
+        cl.GetDeviceIDs(platform, DeviceType.Gpu, 0, null, num_devices);
+
+        return *num_devices;
+    }
+
+    /// <summary>
+    /// Get the devices.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <param name="platform">platform</param>
+    /// <param name="num_devices">num_devices</param>
+    /// <returns></returns>
+    private static nint[] GetDevices(CL cl, nint platform, uint num_devices)
+    {
+        nint[] device_ids = new nint[(int)num_devices];
+
+        fixed (nint* ptr = device_ids)
+        {
+            cl.GetDeviceIDs(platform, DeviceType.Gpu, num_devices, ptr, null);
+        }
+
+        return device_ids;
+    }
+
+    /// <summary>
+    /// Get the version.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <param name="device">device</param>
+    /// <returns></returns>
+    private static double GetVersion(CL cl, nint device)
+    {
+        byte* version = stackalloc byte[1024];
+        cl.GetDeviceInfo(device, DeviceInfo.Version, 1024, version, null);
+
+        string version_string = new((sbyte*)version);
+
+        int index = version_string.IndexOf(' ');
+        version_string = version_string.Substring(index + 1, 3);
+
+        return Convert.ToDouble(version_string);
+    }
+
+    /// <summary>
+    /// Get the alignment.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <param name="device">device</param>
+    /// <returns></returns>
+    private static uint GetAlignment(CL cl, nint device)
+    {
+        uint* alignment = stackalloc uint[1];
+        cl.GetDeviceInfo(device, DeviceInfo.MemBaseAddrAlign, sizeof(uint), alignment, null);
+
+        return *alignment;
     }
 }
