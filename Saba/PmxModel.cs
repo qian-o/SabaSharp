@@ -727,7 +727,7 @@ public unsafe class PmxModel : MMDModel
 
         if (kernel != null)
         {
-            uint length = (uint)positions.Length;
+            int length = positions.Length;
 
             MemFlags useHostFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostNoAccess;
 
@@ -742,8 +742,8 @@ public unsafe class PmxModel : MMDModel
 
             morphPositionsBuffer = kernel.CreateBuffer(length, morphPositions.Buffer, useHostReadFlags);
             morphUVsBuffer = kernel.CreateBuffer(length, morphUVs.Buffer, useHostReadFlags);
-            updateTransformsBuffer = kernel.CreateBuffer((uint)updateTransforms.Length, updateTransforms.Buffer, useHostReadFlags);
-            globalTransformsBuffer = kernel.CreateBuffer((uint)globalTransforms.Length, globalTransforms.Buffer, useHostReadFlags);
+            updateTransformsBuffer = kernel.CreateBuffer(updateTransforms.Length, updateTransforms.Buffer, useHostReadFlags);
+            globalTransformsBuffer = kernel.CreateBuffer(globalTransforms.Length, globalTransforms.Buffer, useHostReadFlags);
 
             updatePositionsBuffer = kernel.CreateBuffer(length, updatePositions.Buffer, useHostWriteFlags);
             updateNormalsBuffer = kernel.CreateBuffer(length, updateNormals.Buffer, useHostWriteFlags);
@@ -1090,14 +1090,14 @@ public unsafe class PmxModel : MMDModel
 
         if (kernel != null)
         {
-            uint length = (uint)positions.Length;
+            int length = positions.Length;
 
             kernel.Run(1, length);
 
             morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
             morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
-            updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, (uint)updateTransforms.Length, MapFlags.WriteInvalidateRegion);
-            globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, (uint)globalTransforms.Length, MapFlags.WriteInvalidateRegion);
+            updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, updateTransforms.Length, MapFlags.WriteInvalidateRegion);
+            globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, globalTransforms.Length, MapFlags.WriteInvalidateRegion);
             
             updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
             updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);

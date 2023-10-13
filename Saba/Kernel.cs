@@ -38,7 +38,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="flags">flags</param>
     /// <param name="host">host</param>
     /// <returns></returns>
-    public nint CreateBuffer<T>(uint length, T* host = null, MemFlags flags = MemFlags.ReadWrite) where T : unmanaged
+    public nint CreateBuffer<T>(int length, T* host = null, MemFlags flags = MemFlags.ReadWrite) where T : unmanaged
     {
         nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(length * sizeof(T)), host, null);
 
@@ -69,7 +69,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="length">length</param>
     /// <param name="flags">flags</param>
     /// <returns></returns>
-    public T* MapBuffer<T>(nint buffer, uint length, MapFlags flags) where T : unmanaged
+    public T* MapBuffer<T>(nint buffer, int length, MapFlags flags) where T : unmanaged
     {
         return (T*)_cl.EnqueueMapBuffer(_queue, buffer, false, flags, 0, (uint)(length * sizeof(T)), 0, null, null, null);
     }
@@ -130,9 +130,9 @@ public unsafe class Kernel : IDisposable
     /// </summary>
     /// <param name="dim">dim</param>
     /// <param name="size">size</param>
-    public void Run(uint dim, uint size)
+    public void Run(uint dim, int size)
     {
-        int state = _cl.EnqueueNdrangeKernel(_queue, _kernel, dim, null, size, null, 0, null, null);
+        int state = _cl.EnqueueNdrangeKernel(_queue, _kernel, dim, null, (uint)size, null, 0, null, null);
 
         State(state);
     }
