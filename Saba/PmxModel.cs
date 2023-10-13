@@ -274,11 +274,20 @@ public unsafe class PmxModel : MMDModel
 
         string dir = Path.GetDirectoryName(path)!;
 
+        // Create Kernel
+        uint alignment = 4096;
+        if (Kernel.Create(File.ReadAllText("skinned_animation.cl"), "Run", new string[] { "-cl-mad-enable" }) is Kernel temp)
+        {
+            kernel = temp;
+
+            alignment = kernel.Alignment;
+        }
+
         // 坐标点、法线、UV、骨骼信息
-        positions = new FixedArray<Vector3>(pmx.Vertices.Length);
-        normals = new FixedArray<Vector3>(pmx.Vertices.Length);
-        uvs = new FixedArray<Vector2>(pmx.Vertices.Length);
-        vertexBoneInfos = new FixedArray<VertexBoneInfo>(pmx.Vertices.Length);
+        positions = new FixedArray<Vector3>(pmx.Vertices.Length, alignment);
+        normals = new FixedArray<Vector3>(pmx.Vertices.Length, alignment);
+        uvs = new FixedArray<Vector2>(pmx.Vertices.Length, alignment);
+        vertexBoneInfos = new FixedArray<VertexBoneInfo>(pmx.Vertices.Length, alignment);
         for (int i = 0; i < pmx.Vertices.Length; i++)
         {
             PmxVertex vertex = pmx.Vertices[i];
@@ -351,14 +360,14 @@ public unsafe class PmxModel : MMDModel
             vertexBoneInfos[i] = vertexBoneInfo;
         }
 
-        updatePositions = new FixedArray<Vector3>(positions.Length);
-        updateNormals = new FixedArray<Vector3>(normals.Length);
-        updateUVs = new FixedArray<Vector2>(uvs.Length);
-        morphPositions = new FixedArray<Vector3>(positions.Length);
-        morphUVs = new FixedArray<Vector4>(uvs.Length);
+        updatePositions = new FixedArray<Vector3>(positions.Length, alignment);
+        updateNormals = new FixedArray<Vector3>(normals.Length, alignment);
+        updateUVs = new FixedArray<Vector2>(uvs.Length, alignment);
+        morphPositions = new FixedArray<Vector3>(positions.Length, alignment);
+        morphUVs = new FixedArray<Vector4>(uvs.Length, alignment);
 
         // 面信息
-        indices = new FixedArray<uint>(pmx.Faces.Length * 3);
+        indices = new FixedArray<uint>(pmx.Faces.Length * 3, alignment);
         for (int i = 0; i < pmx.Faces.Length; i++)
         {
             PmxFace face = pmx.Faces[i];
@@ -458,8 +467,8 @@ public unsafe class PmxModel : MMDModel
         Array.Resize(ref addMaterialFactors, initMaterials.Length);
 
         // 骨骼信息
-        globalTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length);
-        inverseInitTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length);
+        globalTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length, alignment);
+        inverseInitTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length, alignment);
         foreach (PmxBone bone in pmx.Bones)
         {
             _nodes.Add(new PmxNode(globalTransforms, inverseInitTransforms) { Index = _nodes.Count, Name = bone.Name });
@@ -541,7 +550,7 @@ public unsafe class PmxModel : MMDModel
             node.SaveInitialTRS();
         }
 
-        updateTransforms = new FixedArray<Matrix4x4>(_nodes.Count);
+        updateTransforms = new FixedArray<Matrix4x4>(_nodes.Count, alignment);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -712,8 +721,6 @@ public unsafe class PmxModel : MMDModel
                 physicsManager.AddJoint(joint);
             }
         }
-
-        kernel = Kernel.Create(File.ReadAllText("skinned_animation.cl"), "Run", new string[] { "-cl-mad-enable" });
 
         if (kernel != null)
         {

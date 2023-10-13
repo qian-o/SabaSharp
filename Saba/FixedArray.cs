@@ -5,11 +5,9 @@ namespace Saba;
 
 public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 {
-    private readonly int _size;
     private readonly int _length;
+    private readonly uint _alignment;
     private readonly T* _buffer;
-
-    public readonly int Size => _size;
 
     public readonly int Length => _length;
 
@@ -17,10 +15,16 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public readonly ref T this[int index] => ref _buffer[index];
 
-    public FixedArray(int length, uint alignment = 4096)
+    public FixedArray(int length)
     {
-        _size = length * sizeof(T);
         _length = length;
+        _buffer = (T*)Marshal.AllocHGlobal(length * sizeof(T));
+    }
+
+    public FixedArray(int length, uint alignment)
+    {
+        _length = length;
+        _alignment = alignment;
         _buffer = (T*)NativeMemory.AlignedAlloc((uint)(length * sizeof(T)), alignment);
     }
 
@@ -45,7 +49,14 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
 
     public readonly void Dispose()
     {
-        NativeMemory.AlignedFree(_buffer);
+        if (_alignment > 0)
+        {
+            NativeMemory.AlignedFree(_buffer);
+        }
+        else
+        {
+            Marshal.FreeHGlobal((IntPtr)_buffer);
+        }
 
         GC.SuppressFinalize(this);
     }

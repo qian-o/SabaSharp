@@ -12,13 +12,17 @@ public unsafe class Kernel : IDisposable
     private readonly nint _queue;
     private readonly nint _program;
     private readonly nint _kernel;
+    private readonly uint _alignment;
     private readonly List<nint> _buffers;
 
-    internal Kernel(CL cl, nint platform, nint device, nint context, nint queue, nint program, nint kernel)
+    public uint Alignment => _alignment;
+
+    internal Kernel(CL cl, nint platform, nint device, uint alignment, nint context, nint queue, nint program, nint kernel)
     {
         _cl = cl;
         _platform = platform;
         _device = device;
+        _alignment = alignment;
         _context = context;
         _queue = queue;
         _program = program;
@@ -175,6 +179,9 @@ public unsafe class Kernel : IDisposable
         if (cl.GetDeviceIDs(platform, DeviceType.Gpu, 1, &device, null) != 0)
             return null;
 
+        uint alignment;
+        cl.GetDeviceInfo(device, DeviceInfo.MemBaseAddrAlign, sizeof(uint), &alignment, null);
+
         context = cl.CreateContext(null, 1, device, null, null, null);
         if (context == 0)
             return null;
@@ -201,7 +208,7 @@ public unsafe class Kernel : IDisposable
         if (kernel == 0)
             return null;
 
-        return new Kernel(cl, platform, device, context, queue, program, kernel);
+        return new Kernel(cl, platform, device, alignment, context, queue, program, kernel);
     }
 
     /// <summary>
