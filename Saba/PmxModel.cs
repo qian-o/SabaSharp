@@ -287,10 +287,11 @@ public unsafe class PmxModel : MMDModel
         }
 
         // 坐标点、法线、UV、骨骼信息
-        positions = new FixedArray<Vector3>(pmx.Vertices.Length, alignment);
-        normals = new FixedArray<Vector3>(pmx.Vertices.Length, alignment);
-        uvs = new FixedArray<Vector2>(pmx.Vertices.Length, alignment);
-        vertexBoneInfos = new FixedArray<VertexBoneInfo>(pmx.Vertices.Length, alignment);
+        positions = TryCreateSvmArray<Vector3>(pmx.Vertices.Length, alignment, MemFlags.ReadOnly);
+        normals = TryCreateSvmArray<Vector3>(pmx.Vertices.Length, alignment, MemFlags.ReadOnly);
+        uvs = TryCreateSvmArray<Vector2>(pmx.Vertices.Length, alignment, MemFlags.ReadOnly);
+        vertexBoneInfos = TryCreateSvmArray<VertexBoneInfo>(pmx.Vertices.Length, alignment, MemFlags.ReadOnly);
+
         for (int i = 0; i < pmx.Vertices.Length; i++)
         {
             PmxVertex vertex = pmx.Vertices[i];
@@ -363,11 +364,11 @@ public unsafe class PmxModel : MMDModel
             vertexBoneInfos[i] = vertexBoneInfo;
         }
 
-        updatePositions = new FixedArray<Vector3>(positions.Length, alignment);
-        updateNormals = new FixedArray<Vector3>(normals.Length, alignment);
-        updateUVs = new FixedArray<Vector2>(uvs.Length, alignment);
-        morphPositions = new FixedArray<Vector3>(positions.Length, alignment);
-        morphUVs = new FixedArray<Vector4>(uvs.Length, alignment);
+        updatePositions = TryCreateSvmArray<Vector3>(positions.Length, alignment, MemFlags.WriteOnly);
+        updateNormals = TryCreateSvmArray<Vector3>(normals.Length, alignment, MemFlags.WriteOnly);
+        updateUVs = TryCreateSvmArray<Vector2>(uvs.Length, alignment, MemFlags.WriteOnly);
+        morphPositions = TryCreateSvmArray<Vector3>(positions.Length, alignment, MemFlags.ReadOnly);
+        morphUVs = TryCreateSvmArray<Vector4>(uvs.Length, alignment, MemFlags.ReadOnly);
 
         // 面信息
         indices = new FixedArray<uint>(pmx.Faces.Length * 3, alignment);
@@ -470,7 +471,7 @@ public unsafe class PmxModel : MMDModel
         Array.Resize(ref addMaterialFactors, initMaterials.Length);
 
         // 骨骼信息
-        globalTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length, alignment);
+        globalTransforms = TryCreateSvmArray<Matrix4x4>(pmx.Bones.Length, alignment, MemFlags.ReadOnly);
         inverseInitTransforms = new FixedArray<Matrix4x4>(pmx.Bones.Length, alignment);
         foreach (PmxBone bone in pmx.Bones)
         {
@@ -553,7 +554,7 @@ public unsafe class PmxModel : MMDModel
             node.SaveInitialTRS();
         }
 
-        updateTransforms = new FixedArray<Matrix4x4>(_nodes.Count, alignment);
+        updateTransforms = TryCreateSvmArray<Matrix4x4>(_nodes.Count, alignment, MemFlags.ReadOnly);
         _sortedNodes.AddRange(_nodes.OrderBy(item => item.DeformDepth));
 
         // IK
@@ -729,39 +730,71 @@ public unsafe class PmxModel : MMDModel
         {
             int length = positions.Length;
 
-            MemFlags useHostFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostNoAccess;
+            if (kernel.UseCoarseBuffer)
+            {
+                kernel.MapSvm(positions.Buffer, length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(normals.Buffer, length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(uvs.Buffer, length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(vertexBoneInfos.Buffer, length, MapFlags.WriteInvalidateRegion);
 
-            MemFlags useHostReadFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostWriteOnly;
+                kernel.Flush();
+                kernel.Finish();
 
-            MemFlags useHostWriteFlags = MemFlags.WriteOnly | MemFlags.UseHostPtr | MemFlags.HostReadOnly;
+                kernel.UnmapSvm(positions.Buffer);
+                kernel.UnmapSvm(normals.Buffer);
+                kernel.UnmapSvm(uvs.Buffer);
+                kernel.UnmapSvm(vertexBoneInfos.Buffer);
 
-            positionsBuffer = kernel.CreateBuffer(length, positions.Buffer, useHostFlags);
-            normalsBuffer = kernel.CreateBuffer(length, normals.Buffer, useHostFlags);
-            uvsBuffer = kernel.CreateBuffer(length, uvs.Buffer, useHostFlags);
-            vertexBoneInfosBuffer = kernel.CreateBuffer(length, vertexBoneInfos.Buffer, useHostFlags);
+                kernel.SetSvmArgument(0, positions.Buffer);
+                kernel.SetSvmArgument(1, normals.Buffer);
+                kernel.SetSvmArgument(2, uvs.Buffer);
+                kernel.SetSvmArgument(3, vertexBoneInfos.Buffer);
 
-            morphPositionsBuffer = kernel.CreateBuffer(length, morphPositions.Buffer, useHostReadFlags);
-            morphUVsBuffer = kernel.CreateBuffer(length, morphUVs.Buffer, useHostReadFlags);
-            updateTransformsBuffer = kernel.CreateBuffer(updateTransforms.Length, updateTransforms.Buffer, useHostReadFlags);
-            globalTransformsBuffer = kernel.CreateBuffer(globalTransforms.Length, globalTransforms.Buffer, useHostReadFlags);
+                kernel.SetSvmArgument(4, morphPositions.Buffer);
+                kernel.SetSvmArgument(5, morphUVs.Buffer);
+                kernel.SetSvmArgument(6, updateTransforms.Buffer);
+                kernel.SetSvmArgument(7, globalTransforms.Buffer);
 
-            updatePositionsBuffer = kernel.CreateBuffer(length, updatePositions.Buffer, useHostWriteFlags);
-            updateNormalsBuffer = kernel.CreateBuffer(length, updateNormals.Buffer, useHostWriteFlags);
-            updateUVsBuffer = kernel.CreateBuffer(length, updateUVs.Buffer, useHostWriteFlags);
+                kernel.SetSvmArgument(8, updatePositions.Buffer);
+                kernel.SetSvmArgument(9, updateNormals.Buffer);
+                kernel.SetSvmArgument(10, updateUVs.Buffer);
+            }
+            else
+            {
+                MemFlags useHostFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostNoAccess;
 
-            kernel.SetArgument(0, positionsBuffer);
-            kernel.SetArgument(1, normalsBuffer);
-            kernel.SetArgument(2, uvsBuffer);
-            kernel.SetArgument(3, vertexBoneInfosBuffer);
+                MemFlags useHostReadFlags = MemFlags.ReadOnly | MemFlags.UseHostPtr | MemFlags.HostWriteOnly;
 
-            kernel.SetArgument(4, morphPositionsBuffer);
-            kernel.SetArgument(5, morphUVsBuffer);
-            kernel.SetArgument(6, updateTransformsBuffer);
-            kernel.SetArgument(7, globalTransformsBuffer);
+                MemFlags useHostWriteFlags = MemFlags.WriteOnly | MemFlags.UseHostPtr | MemFlags.HostReadOnly;
 
-            kernel.SetArgument(8, updatePositionsBuffer);
-            kernel.SetArgument(9, updateNormalsBuffer);
-            kernel.SetArgument(10, updateUVsBuffer);
+                positionsBuffer = kernel.CreateBuffer(length, positions.Buffer, useHostFlags);
+                normalsBuffer = kernel.CreateBuffer(length, normals.Buffer, useHostFlags);
+                uvsBuffer = kernel.CreateBuffer(length, uvs.Buffer, useHostFlags);
+                vertexBoneInfosBuffer = kernel.CreateBuffer(length, vertexBoneInfos.Buffer, useHostFlags);
+
+                morphPositionsBuffer = kernel.CreateBuffer(length, morphPositions.Buffer, useHostReadFlags);
+                morphUVsBuffer = kernel.CreateBuffer(length, morphUVs.Buffer, useHostReadFlags);
+                updateTransformsBuffer = kernel.CreateBuffer(updateTransforms.Length, updateTransforms.Buffer, useHostReadFlags);
+                globalTransformsBuffer = kernel.CreateBuffer(globalTransforms.Length, globalTransforms.Buffer, useHostReadFlags);
+
+                updatePositionsBuffer = kernel.CreateBuffer(length, updatePositions.Buffer, useHostWriteFlags);
+                updateNormalsBuffer = kernel.CreateBuffer(length, updateNormals.Buffer, useHostWriteFlags);
+                updateUVsBuffer = kernel.CreateBuffer(length, updateUVs.Buffer, useHostWriteFlags);
+
+                kernel.SetArgument(0, positionsBuffer);
+                kernel.SetArgument(1, normalsBuffer);
+                kernel.SetArgument(2, uvsBuffer);
+                kernel.SetArgument(3, vertexBoneInfosBuffer);
+
+                kernel.SetArgument(4, morphPositionsBuffer);
+                kernel.SetArgument(5, morphUVsBuffer);
+                kernel.SetArgument(6, updateTransformsBuffer);
+                kernel.SetArgument(7, globalTransformsBuffer);
+
+                kernel.SetArgument(8, updatePositionsBuffer);
+                kernel.SetArgument(9, updateNormalsBuffer);
+                kernel.SetArgument(10, updateUVsBuffer);
+            }
         }
 
         ResetPhysics();
@@ -1092,28 +1125,56 @@ public unsafe class PmxModel : MMDModel
         {
             int length = positions.Length;
 
-            kernel.Run(1, length);
+            if (kernel.UseCoarseBuffer)
+            {
+                kernel.Run(1, length);
 
-            morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
-            morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
-            updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, updateTransforms.Length, MapFlags.WriteInvalidateRegion);
-            globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, globalTransforms.Length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(morphPositions.Buffer, length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(morphUVs.Buffer, length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(updateTransforms.Buffer, updateTransforms.Length, MapFlags.WriteInvalidateRegion);
+                kernel.MapSvm(globalTransforms.Buffer, globalTransforms.Length, MapFlags.WriteInvalidateRegion);
 
-            updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
-            updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
-            updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
+                kernel.MapSvm(updatePositions.Buffer, length, MapFlags.Read);
+                kernel.MapSvm(updateNormals.Buffer, length, MapFlags.Read);
+                kernel.MapSvm(updateUVs.Buffer, length, MapFlags.Read);
 
-            kernel.Flush();
-            kernel.Finish();
+                kernel.Flush();
+                kernel.Finish();
 
-            kernel.UnmapBuffer(morphPositionsBuffer, morphPositionsPtr);
-            kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
-            kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
-            kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
+                kernel.UnmapSvm(morphPositions.Buffer);
+                kernel.UnmapSvm(morphUVs.Buffer);
+                kernel.UnmapSvm(updateTransforms.Buffer);
+                kernel.UnmapSvm(globalTransforms.Buffer);
 
-            kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
-            kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
-            kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
+                kernel.UnmapSvm(updatePositions.Buffer);
+                kernel.UnmapSvm(updateNormals.Buffer);
+                kernel.UnmapSvm(updateUVs.Buffer);
+            }
+            else
+            {
+                kernel.Run(1, length);
+
+                morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
+                morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
+                updateTransformsPtr = kernel.MapBuffer<Matrix4x4>(updateTransformsBuffer, updateTransforms.Length, MapFlags.WriteInvalidateRegion);
+                globalTransformsPtr = kernel.MapBuffer<Matrix4x4>(globalTransformsBuffer, globalTransforms.Length, MapFlags.WriteInvalidateRegion);
+
+                updatePositionsPtr = kernel.MapBuffer<Vector3>(updatePositionsBuffer, length, MapFlags.Read);
+                updateNormalsPtr = kernel.MapBuffer<Vector3>(updateNormalsBuffer, length, MapFlags.Read);
+                updateUVsPtr = kernel.MapBuffer<Vector2>(updateUVsBuffer, length, MapFlags.Read);
+
+                kernel.Flush();
+                kernel.Finish();
+
+                kernel.UnmapBuffer(morphPositionsBuffer, morphPositionsPtr);
+                kernel.UnmapBuffer(morphUVsBuffer, morphUVsPtr);
+                kernel.UnmapBuffer(updateTransformsBuffer, updateTransformsPtr);
+                kernel.UnmapBuffer(globalTransformsBuffer, globalTransformsPtr);
+
+                kernel.UnmapBuffer(updatePositionsBuffer, updatePositionsPtr);
+                kernel.UnmapBuffer(updateNormalsBuffer, updateNormalsPtr);
+                kernel.UnmapBuffer(updateUVsBuffer, updateUVsPtr);
+            }
         }
         else
         {
@@ -1168,6 +1229,20 @@ public unsafe class PmxModel : MMDModel
         Destroy();
 
         GC.SuppressFinalize(this);
+    }
+
+    private FixedArray<T> TryCreateSvmArray<T>(int length, uint alignment, MemFlags kernelFlags = MemFlags.None) where T : unmanaged
+    {
+        if (kernel != null && kernel.UseCoarseBuffer)
+        {
+            void destroy(nint buffer) => kernel.FreeSvm((void*)buffer);
+
+            return new FixedArray<T>(kernel.SvmAlloc<T>(length, alignment, kernelFlags), length, destroy);
+        }
+        else
+        {
+            return new FixedArray<T>(length, alignment);
+        }
     }
 
     private void BeginMorphMaterial()

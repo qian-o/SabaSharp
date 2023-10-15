@@ -86,15 +86,15 @@ public unsafe class Kernel : IDisposable
     /// <param name="length">length</param>
     /// <param name="flags">flags</param>
     /// <returns></returns>
-    public T* SvmAlloc<T>(int length, MemFlags flags = MemFlags.None) where T : unmanaged
+    public T* SvmAlloc<T>(int length, uint alignment, MemFlags flags = MemFlags.None) where T : unmanaged
     {
         if (UseCoarseBuffer)
         {
-            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), 0);
+            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), alignment);
         }
         else
         {
-            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), 0);
+            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), alignment);
         }
     }
 
@@ -133,12 +133,13 @@ public unsafe class Kernel : IDisposable
     /// <summary>
     /// Map a SVM buffer.
     /// </summary>
+    /// <typeparam name="T">Type</typeparam>
     /// <param name="ptr">ptr</param>
     /// <param name="length">length</param>
     /// <param name="flags">flags</param>
-    public void MapSvm(void* ptr, int length, MapFlags flags = MapFlags.None)
+    public void MapSvm<T>(T* ptr, int length, MapFlags flags = MapFlags.None) where T : unmanaged
     {
-        _cl.EnqueueSvmmap(_queue, false, flags, ptr, (uint)(length * sizeof(float)), 0, null, null);
+        _cl.EnqueueSvmmap(_queue, false, flags, ptr, (uint)(length * sizeof(T)), 0, null, null);
     }
 
     /// <summary>
