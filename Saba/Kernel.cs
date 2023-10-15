@@ -18,6 +18,8 @@ public unsafe class Kernel : IDisposable
 
     public uint Alignment { get; }
 
+    public bool UseCoarseBuffer { get; }
+
     internal Kernel(CL cl, nint platform, nint device, nint context, nint queue, nint program, nint kernel)
     {
         _cl = cl;
@@ -31,6 +33,19 @@ public unsafe class Kernel : IDisposable
 
         Version = GetVersion(cl, device);
         Alignment = GetAlignment(cl, device);
+
+        // 检测支持的 SVM 类型。
+        // https://www.intel.cn/content/www/cn/zh/developer/articles/technical/opencl-20-shared-virtual-memory-overview.html
+        if (Version >= 2.0)
+        {
+            DeviceSvmCapabilities svm_capabilities;
+            cl.GetDeviceInfo(device, DeviceInfo.SvmCapabilities, sizeof(DeviceSvmCapabilities), &svm_capabilities, null);
+
+            if (svm_capabilities.HasFlag(DeviceSvmCapabilities.CoarseGrainBuffer))
+            {
+                UseCoarseBuffer = true;
+            }
+        }
     }
 
     /// <summary>
@@ -41,7 +56,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="flags">flags</param>
     /// <param name="host">host</param>
     /// <returns></returns>
-    public nint CreateBuffer<T>(int length, T* host = null, MemFlags flags = MemFlags.ReadWrite) where T : unmanaged
+    public nint CreateBuffer<T>(int length, T* host = null, MemFlags flags = MemFlags.None) where T : unmanaged
     {
         nint buffer_id = _cl.CreateBuffer(_context, flags, (uint)(length * sizeof(T)), host, null);
 
@@ -65,6 +80,34 @@ public unsafe class Kernel : IDisposable
     }
 
     /// <summary>
+    /// Allocate a SVM buffer.
+    /// </summary>
+    /// <typeparam name="T">Type</typeparam>
+    /// <param name="length">length</param>
+    /// <param name="flags">flags</param>
+    /// <returns></returns>
+    public T* SvmAlloc<T>(int length, MemFlags flags = MemFlags.None) where T : unmanaged
+    {
+        if (UseCoarseBuffer)
+        {
+            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), 0);
+        }
+        else
+        {
+            return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), 0);
+        }
+    }
+
+    /// <summary>
+    /// Free a SVM buffer.
+    /// </summary>
+    /// <param name="ptr">ptr</param>
+    public void FreeSvm(void* ptr)
+    {
+        _cl.Svmfree(_context, ptr);
+    }
+
+    /// <summary>
     /// Get a pointer to a buffer.
     /// </summary>
     /// <typeparam name="T">Type</typeparam>
@@ -72,7 +115,7 @@ public unsafe class Kernel : IDisposable
     /// <param name="length">length</param>
     /// <param name="flags">flags</param>
     /// <returns></returns>
-    public T* MapBuffer<T>(nint buffer, int length, MapFlags flags) where T : unmanaged
+    public T* MapBuffer<T>(nint buffer, int length, MapFlags flags = MapFlags.None) where T : unmanaged
     {
         return (T*)_cl.EnqueueMapBuffer(_queue, buffer, false, flags, 0, (uint)(length * sizeof(T)), 0, null, null, null);
     }
@@ -85,6 +128,26 @@ public unsafe class Kernel : IDisposable
     public void UnmapBuffer(nint buffer, void* ptr)
     {
         _cl.EnqueueUnmapMemObject(_queue, buffer, ptr, 0, null, null);
+    }
+
+    /// <summary>
+    /// Map a SVM buffer.
+    /// </summary>
+    /// <param name="ptr">ptr</param>
+    /// <param name="length">length</param>
+    /// <param name="flags">flags</param>
+    public void MapSvm(void* ptr, int length, MapFlags flags = MapFlags.None)
+    {
+        _cl.EnqueueSvmmap(_queue, false, flags, ptr, (uint)(length * sizeof(float)), 0, null, null);
+    }
+
+    /// <summary>
+    /// Unmap a SVM buffer.
+    /// </summary>
+    /// <param name="ptr">ptr</param>
+    public void UnmapSvm(void* ptr)
+    {
+        _cl.EnqueueSvmunmap(_queue, ptr, 0, null, null);
     }
 
     /// <summary>
@@ -116,14 +179,13 @@ public unsafe class Kernel : IDisposable
     }
 
     /// <summary>
-    /// Set an argument.
+    /// Set an SVM argument.
     /// </summary>
-    /// <typeparam name="T">Type</typeparam>
     /// <param name="index">index</param>
-    /// <param name="value">value</param>
-    public void SetArgument<T>(uint index, T value) where T : unmanaged
+    /// <param name="ptr">ptr</param>
+    public void SetSvmArgument(uint index, void* ptr)
     {
-        int state = _cl.SetKernelArg(_kernel, index, (uint)sizeof(T), value);
+        int state = _cl.SetKernelArgSvmpointer(_kernel, index, ptr);
 
         State(state);
     }
