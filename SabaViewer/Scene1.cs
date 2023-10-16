@@ -20,6 +20,9 @@ public class Scene1 : Game
         mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
                       "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd".FormatFilePath());
 
+        //mmd.LoadModel("Resources/KizunaAI_ver1.01/kizunaai/kizunaai.pmx".FormatFilePath(),
+        //              "Resources/大喜/动作数据/大喜动作数据2.0配布修正滑步身体穿模等问题.vmd".FormatFilePath());
+
         mmd.Setup();
     }
 
