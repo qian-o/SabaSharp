@@ -8,22 +8,21 @@ namespace SabaViewer;
 
 public class Scene1 : Game
 {
-    private MikuMikuDance mmd = null!;
+    private readonly List<MikuMikuDance> _mikuMikuDances = new();
+
     private Vector3 translate = new(0.0f, 0.0f, -2.6f);
     private Vector3 scale = new(0.2f, 0.2f, 0.2f);
     private bool isFirstFrame = true;
 
     protected override void Load()
     {
-        mmd = new MikuMikuDance(gl);
+        _mikuMikuDances.Add(new MikuMikuDance(gl,
+                                              "Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
+                                              "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd".FormatFilePath()));
 
-        mmd.LoadModel("Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
-                      "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd".FormatFilePath());
-
-        //mmd.LoadModel("Resources/KizunaAI_ver1.01/kizunaai/kizunaai.pmx".FormatFilePath(),
-        //              "Resources/大喜/动作数据/大喜动作数据2.0配布修正滑步身体穿模等问题.vmd".FormatFilePath());
-
-        mmd.Setup();
+        _mikuMikuDances.Add(new MikuMikuDance(gl,
+                                              "Resources/KizunaAI_ver1.01/kizunaai/kizunaai.pmx".FormatFilePath(),
+                                              "Resources/大喜/动作数据/大喜动作数据2.0配布修正滑步身体穿模等问题.vmd".FormatFilePath()));
     }
 
     protected override void Render(double obj)
@@ -31,7 +30,10 @@ public class Scene1 : Game
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
-        mmd.Draw(camera, Width, Height);
+        foreach (MikuMikuDance mmd in _mikuMikuDances)
+        {
+            mmd.Draw(camera, Width, Height);
+        }
     }
 
     protected override void RenderImGui(double obj)
@@ -50,9 +52,9 @@ public class Scene1 : Game
         ImGui.DragFloat3(nameof(MikuMikuDance.LightDir), ref lightDir, 0.05f);
         MikuMikuDance.LightDir = lightDir;
 
-        ImGui_Button("Play / Pause", () => mmd.IsPlaying = !mmd.IsPlaying);
+        ImGui_Button("Play / Pause", () => _mikuMikuDances.ForEach((mmd) => mmd.IsPlaying = !mmd.IsPlaying));
 
-        ImGui_Button("Enable physical", () => mmd.EnablePhysical = !mmd.EnablePhysical);
+        ImGui_Button("Enable physical", () => _mikuMikuDances.ForEach((mmd) => mmd.EnablePhysical = !mmd.EnablePhysical));
 
         ImGui.End();
 
@@ -73,9 +75,18 @@ public class Scene1 : Game
 
     protected override void Update(double obj)
     {
-        mmd.Transform = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateTranslation(translate);
+        float time = (float)Time;
 
-        mmd.Update((float)Time);
+        int index = 0;
+        foreach (MikuMikuDance mmd in _mikuMikuDances)
+        {
+            mmd.Translate = translate + new Vector3(-4.0f * index, 0.0f, -4.0f * index);
+            mmd.Scale = scale;
+
+            mmd.Update(time);
+
+            index++;
+        }
     }
 
     private static void ImGui_Button(string label, Action action)

@@ -42,13 +42,17 @@ public unsafe class MikuMikuDance : IDisposable
 
     public static Vector3 LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
-    public Matrix4x4 Transform { get; set; } = Matrix4x4.Identity;
+    public Vector3 Translate { get; set; } = Vector3.Zero;
+
+    public Vector3 Scale { get; set; } = Vector3.One;
+
+    public Matrix4x4 Transform => Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateTranslation(Translate);
 
     public bool IsPlaying { get; set; } = false;
 
     public bool EnablePhysical { get; set; } = true;
 
-    public MikuMikuDance(GL gl)
+    public MikuMikuDance(GL gl, string modelPath, string? vmdPath = null)
     {
         _gl = gl;
         _mmdShader = new(gl);
@@ -58,129 +62,9 @@ public unsafe class MikuMikuDance : IDisposable
         _textures = new();
         _defaultTexture = new Texture2D(_gl);
         _defaultTexture.WriteColor(Color.White);
-    }
 
-    public void LoadModel(string modelPath, string? vmdPath = null)
-    {
-        model = new PmxModel();
-        model.Load(modelPath, "Resources/MMD/".FormatFilePath());
-
-        model.InitializeAnimation();
-
-        if (!string.IsNullOrEmpty(vmdPath))
-        {
-            animation = new VmdAnimation();
-            animation.Load(vmdPath, model);
-
-            animation.SyncPhysics(0.0f);
-        }
-
-        model.Update();
-    }
-
-    public void Setup()
-    {
-        if (model is null)
-        {
-            return;
-        }
-
-        // Setup vertices
-        int vtxCount = model.GetVertexCount();
-
-        posVBO = _gl.GenBuffer();
-        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
-        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
-
-        norVBO = _gl.GenBuffer();
-        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
-        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
-
-        uvVBO = _gl.GenBuffer();
-        _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector2) * vtxCount), null, GLEnum.DynamicDraw);
-        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
-
-        // Setup indices
-        int idxCount = model.GetIndexCount();
-
-        ibo = _gl.GenBuffer();
-        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
-        _gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(sizeof(uint) * idxCount), model.GetIndices(), GLEnum.StaticDraw);
-        _gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
-
-        // Setup MMD VAO
-        mmdVAO = _gl.GenVertexArray();
-        _gl.BindVertexArray(mmdVAO);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdShader.InPos);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.VertexAttribPointer(_mmdShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdShader.InNor);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
-        _gl.VertexAttribPointer(_mmdShader.InUV, 2, GLEnum.Float, false, (uint)sizeof(Vector2), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdShader.InUV);
-
-        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
-
-        _gl.BindVertexArray(0);
-
-        // Setup MMD Edge VAO
-        mmdEdgeVAO = _gl.GenVertexArray();
-        _gl.BindVertexArray(mmdEdgeVAO);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdEdgeShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdEdgeShader.InPos);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
-        _gl.VertexAttribPointer(_mmdEdgeShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdEdgeShader.InNor);
-
-        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
-
-        _gl.BindVertexArray(0);
-
-        // Setup MMD Ground Shadow VAO
-        mmdGroundShadowVAO = _gl.GenVertexArray();
-        _gl.BindVertexArray(mmdGroundShadowVAO);
-
-        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
-        _gl.VertexAttribPointer(_mmdGroundShadowShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
-        _gl.EnableVertexAttribArray(_mmdGroundShadowShader.InPos);
-
-        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
-
-        _gl.BindVertexArray(0);
-
-        // Setup materials
-        foreach (MMDMaterial mmdMat in model.GetMaterials())
-        {
-            Material mat = new();
-
-            if (!string.IsNullOrEmpty(mmdMat.Texture))
-            {
-                mat.Texture = GetTexture(mmdMat.Texture);
-            }
-
-            if (!string.IsNullOrEmpty(mmdMat.SpTexture))
-            {
-                mat.SpTexture = GetTexture(mmdMat.SpTexture);
-            }
-
-            if (!string.IsNullOrEmpty(mmdMat.ToonTexture))
-            {
-                mat.ToonTexture = GetTexture(mmdMat.ToonTexture);
-            }
-
-            _materials.Add(mmdMat, mat);
-        }
+        LoadModel(modelPath, vmdPath);
+        Setup();
     }
 
     public void Update(float time)
@@ -248,6 +132,8 @@ public unsafe class MikuMikuDance : IDisposable
             return;
         }
 
+        Matrix4x4 transform = Transform;
+
         _gl.Enable(GLEnum.DepthTest);
 
         _gl.Enable(GLEnum.Blend);
@@ -269,8 +155,8 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.UseProgram(_mmdShader.Id);
             _gl.BindVertexArray(mmdVAO);
 
-            _gl.SetUniform(_mmdShader.UniWVP, Transform * camera.View * camera.Projection);
-            _gl.SetUniform(_mmdShader.UniWV, Transform * camera.View);
+            _gl.SetUniform(_mmdShader.UniWVP, transform * camera.View * camera.Projection);
+            _gl.SetUniform(_mmdShader.UniWV, transform * camera.View);
 
             _gl.SetUniform(_mmdShader.UniAmbinet, mmdMat.Ambient);
             _gl.SetUniform(_mmdShader.UniDiffuse, mmdMat.Diffuse);
@@ -397,8 +283,8 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.UseProgram(_mmdEdgeShader.Id);
             _gl.BindVertexArray(mmdEdgeVAO);
 
-            _gl.SetUniform(_mmdEdgeShader.UniWVP, Transform * camera.View * camera.Projection);
-            _gl.SetUniform(_mmdEdgeShader.UniWV, Transform * camera.View);
+            _gl.SetUniform(_mmdEdgeShader.UniWVP, transform * camera.View * camera.Projection);
+            _gl.SetUniform(_mmdEdgeShader.UniWV, transform * camera.View);
             _gl.SetUniform(_mmdEdgeShader.UniScreenSize, screenSize);
             _gl.SetUniform(_mmdEdgeShader.UniEdgeSize, mmdMat.EdgeSize);
             _gl.SetUniform(_mmdEdgeShader.UniEdgeColor, mmdMat.EdgeColor);
@@ -417,7 +303,7 @@ public unsafe class MikuMikuDance : IDisposable
         _gl.PolygonOffset(-1.0f, -1.0f);
 
         Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
-        Matrix4x4 shadowMatrix = Transform * shadow * camera.View * camera.Projection;
+        Matrix4x4 shadowMatrix = transform * shadow * camera.View * camera.Projection;
 
         if (ShadowColor.W < 1.0f)
         {
@@ -491,6 +377,129 @@ public unsafe class MikuMikuDance : IDisposable
         _mmdGroundShadowShader.Dispose();
 
         GC.SuppressFinalize(this);
+    }
+
+    private void LoadModel(string modelPath, string? vmdPath = null)
+    {
+        model = new PmxModel();
+        model.Load(modelPath, "Resources/MMD/".FormatFilePath());
+
+        model.InitializeAnimation();
+
+        if (!string.IsNullOrEmpty(vmdPath))
+        {
+            animation = new VmdAnimation();
+            animation.Load(vmdPath, model);
+
+            animation.SyncPhysics(0.0f);
+        }
+
+        model.Update();
+    }
+
+    private void Setup()
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        // Setup vertices
+        int vtxCount = model.GetVertexCount();
+
+        posVBO = _gl.GenBuffer();
+        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
+
+        norVBO = _gl.GenBuffer();
+        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector3) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
+
+        uvVBO = _gl.GenBuffer();
+        _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
+        _gl.BufferData(GLEnum.ArrayBuffer, (uint)(sizeof(Vector2) * vtxCount), null, GLEnum.DynamicDraw);
+        _gl.BindBuffer(GLEnum.ArrayBuffer, 0);
+
+        // Setup indices
+        int idxCount = model.GetIndexCount();
+
+        ibo = _gl.GenBuffer();
+        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
+        _gl.BufferData(GLEnum.ElementArrayBuffer, (uint)(sizeof(uint) * idxCount), model.GetIndices(), GLEnum.StaticDraw);
+        _gl.BindBuffer(GLEnum.ElementArrayBuffer, 0);
+
+        // Setup MMD VAO
+        mmdVAO = _gl.GenVertexArray();
+        _gl.BindVertexArray(mmdVAO);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
+        _gl.VertexAttribPointer(_mmdShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdShader.InPos);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
+        _gl.VertexAttribPointer(_mmdShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdShader.InNor);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, uvVBO);
+        _gl.VertexAttribPointer(_mmdShader.InUV, 2, GLEnum.Float, false, (uint)sizeof(Vector2), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdShader.InUV);
+
+        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
+
+        _gl.BindVertexArray(0);
+
+        // Setup MMD Edge VAO
+        mmdEdgeVAO = _gl.GenVertexArray();
+        _gl.BindVertexArray(mmdEdgeVAO);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
+        _gl.VertexAttribPointer(_mmdEdgeShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdEdgeShader.InPos);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, norVBO);
+        _gl.VertexAttribPointer(_mmdEdgeShader.InNor, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdEdgeShader.InNor);
+
+        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
+
+        _gl.BindVertexArray(0);
+
+        // Setup MMD Ground Shadow VAO
+        mmdGroundShadowVAO = _gl.GenVertexArray();
+        _gl.BindVertexArray(mmdGroundShadowVAO);
+
+        _gl.BindBuffer(GLEnum.ArrayBuffer, posVBO);
+        _gl.VertexAttribPointer(_mmdGroundShadowShader.InPos, 3, GLEnum.Float, false, (uint)sizeof(Vector3), (void*)0);
+        _gl.EnableVertexAttribArray(_mmdGroundShadowShader.InPos);
+
+        _gl.BindBuffer(GLEnum.ElementArrayBuffer, ibo);
+
+        _gl.BindVertexArray(0);
+
+        // Setup materials
+        foreach (MMDMaterial mmdMat in model.GetMaterials())
+        {
+            Material mat = new();
+
+            if (!string.IsNullOrEmpty(mmdMat.Texture))
+            {
+                mat.Texture = GetTexture(mmdMat.Texture);
+            }
+
+            if (!string.IsNullOrEmpty(mmdMat.SpTexture))
+            {
+                mat.SpTexture = GetTexture(mmdMat.SpTexture);
+            }
+
+            if (!string.IsNullOrEmpty(mmdMat.ToonTexture))
+            {
+                mat.ToonTexture = GetTexture(mmdMat.ToonTexture);
+            }
+
+            _materials.Add(mmdMat, mat);
+        }
     }
 
     private Texture2D GetTexture(string texturePath)
