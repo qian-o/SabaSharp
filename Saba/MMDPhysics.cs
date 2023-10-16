@@ -12,6 +12,7 @@ public class MMDPhysics : IDisposable
     private readonly CollisionShape _groundShape;
     private readonly MotionState _groundMS;
     private readonly RigidBody _groundRB;
+    private readonly OverlapFilterCallback _filterCallback;
 
     public float FPS { get; set; }
 
@@ -42,7 +43,9 @@ public class MMDPhysics : IDisposable
         RigidBodyConstructionInfo groundInfo = new(0.0f, _groundMS, _groundShape, Vector3.Zero);
         _groundRB = new RigidBody(groundInfo);
 
-        DynamicsWorld.AddRigidBody(_groundRB, CollisionFilterGroups.AllFilter, CollisionFilterGroups.AllFilter);
+        DynamicsWorld.AddRigidBody(_groundRB);
+
+        DynamicsWorld.PairCache.SetOverlapFilterCallback(_filterCallback = new MMDFilterCallback(_groundRB.BroadphaseProxy));
     }
 
     public void Update(float time)
