@@ -75,7 +75,6 @@ public class MMDPhysics : IDisposable
 
     public void Dispose()
     {
-        _filterCallback.Dispose();
         _broadphase.Dispose();
         _collisionConfig.Dispose();
         _dispatcher.Dispose();
@@ -83,6 +82,7 @@ public class MMDPhysics : IDisposable
         _groundShape.Dispose();
         _groundMS.Dispose();
         _groundRB.Dispose();
+        _filterCallback.Dispose();
 
         DynamicsWorld.Dispose();
 
