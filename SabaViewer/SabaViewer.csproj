@@ -27,32 +27,32 @@
 		<None Update="layout.ini">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\bottoms.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\bottoms.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\eye.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\eye.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\eye2.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\eye2.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\face.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\face.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\hair1.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\hair1.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\hair2.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\hair2.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\kizunaai.pmx">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\kizunaai.pmx">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\s_hair.bmp">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\s_hair.bmp">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Resources\KizunaAI_ver1.01\KizunaAI_ver1.01\kizunaai\tops.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Update="Resources\KizunaAI_ver1.01\kizunaai\tops.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Resources\MMD\toon01.bmp">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
