@@ -1,5 +1,5 @@
 # SabaSharp
-这是一款基于.NET 7的跨平台MikuMikuDance渲染器，支持Windows、Linux、macOS等系统。
+这是一款基于 .NET 7 的跨平台 MikuMikuDance 渲染器，支持 Windows、Linux、macOS 等系统。
 
 ## 技术实现
 ### 项目参考：[saba](https://github.com/benikabocha/saba)、[Coocoo3D](https://github.com/sselecirPyM/Coocoo3D)
@@ -7,7 +7,7 @@
 
 ### 技术栈：[OpenGL ES](https://github.com/dotnet/Silk.NET)、[OpenCL](https://github.com/dotnet/Silk.NET)、[bullet3](https://github.com/bulletphysics/bullet3)
 bullet3 在.NET框架下有许多优秀的绑定库，我这边选择的 [Evergine.Bullet](https://evergine.com/)。<br>
-OpenCL 的存在是为了计算蒙皮动画，因其大量并行计算使用 GPU 会存在优势，原 saba项目使用的cpu并行，该项目也是支持的。<br>
+OpenCL 的存在是为了计算蒙皮动画，因其大量并行计算使用 GPU 会存在优势，原 saba 项目使用的cpu并行，该项目也是支持的。<br>
 
 未来该项目会根据我学习进度不断扩展 Vulkan、WebGPU、光线追踪、卡通渲染等主流技术，目前来说这些都是零进展（太懒啦）。
 
