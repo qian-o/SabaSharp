@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Evergine.Bullet" Version="2023.9.28.510" />
+		<PackageReference Include="Evergine.Bullet" Version="2023.9.28.511" />
 		<PackageReference Include="Silk.NET.OpenCL" Version="2.17.1" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
 	</ItemGroup>
