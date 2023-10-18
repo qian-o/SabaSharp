@@ -142,198 +142,188 @@ public unsafe class MikuMikuDance : IDisposable
         MMDMesh[] meshes = model.GetMeshes();
 
         // Draw model
-        foreach (MMDMesh mesh in meshes)
         {
-            MMDMaterial mmdMat = mesh.Material;
-            Material mat = _materials[mmdMat];
-
-            if (mmdMat.Alpha == 0.0f)
-            {
-                continue;
-            }
-
             _gl.UseProgram(_mmdShader.Id);
             _gl.BindVertexArray(mmdVAO);
 
             _gl.SetUniform(_mmdShader.UniWVP, transform * camera.View * camera.Projection);
             _gl.SetUniform(_mmdShader.UniWV, transform * camera.View);
 
-            _gl.SetUniform(_mmdShader.UniAmbinet, mmdMat.Ambient);
-            _gl.SetUniform(_mmdShader.UniDiffuse, mmdMat.Diffuse);
-            _gl.SetUniform(_mmdShader.UniSpecular, mmdMat.Specular);
-            _gl.SetUniform(_mmdShader.UniSpecularPower, mmdMat.SpecularPower);
-            _gl.SetUniform(_mmdShader.UniAlpha, mmdMat.Alpha);
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 0);
-            _gl.SetUniform(_mmdShader.UniTex, 0);
-            if (mat.Texture != null)
+            foreach (MMDMesh mesh in meshes)
             {
-                if (!mat.Texture.HasAlpha)
+                MMDMaterial mmdMat = mesh.Material;
+                Material mat = _materials[mmdMat];
+
+                if (mmdMat.Alpha == 0.0f)
                 {
-                    _gl.SetUniform(_mmdShader.UniTexMode, 1);
+                    continue;
+                }
+                _gl.SetUniform(_mmdShader.UniAmbinet, mmdMat.Ambient);
+                _gl.SetUniform(_mmdShader.UniDiffuse, mmdMat.Diffuse);
+                _gl.SetUniform(_mmdShader.UniSpecular, mmdMat.Specular);
+                _gl.SetUniform(_mmdShader.UniSpecularPower, mmdMat.SpecularPower);
+                _gl.SetUniform(_mmdShader.UniAlpha, mmdMat.Alpha);
+
+                _gl.ActiveTexture(TextureUnit.Texture0 + 0);
+                _gl.SetUniform(_mmdShader.UniTex, 0);
+                if (mat.Texture != null)
+                {
+                    if (!mat.Texture.HasAlpha)
+                    {
+                        _gl.SetUniform(_mmdShader.UniTexMode, 1);
+                    }
+                    else
+                    {
+                        _gl.SetUniform(_mmdShader.UniTexMode, 2);
+                    }
+
+                    _gl.SetUniform(_mmdShader.UniTexMulFactor, mmdMat.TextureMulFactor);
+                    _gl.SetUniform(_mmdShader.UniTexAddFactor, mmdMat.TextureAddFactor);
+
+                    _gl.BindTexture(GLEnum.Texture2D, mat.Texture.Id);
                 }
                 else
                 {
-                    _gl.SetUniform(_mmdShader.UniTexMode, 2);
+                    _gl.SetUniform(_mmdShader.UniTexMode, 0);
+                    _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
                 }
 
-                _gl.SetUniform(_mmdShader.UniTexMulFactor, mmdMat.TextureMulFactor);
-                _gl.SetUniform(_mmdShader.UniTexAddFactor, mmdMat.TextureAddFactor);
-
-                _gl.BindTexture(GLEnum.Texture2D, mat.Texture.Id);
-            }
-            else
-            {
-                _gl.SetUniform(_mmdShader.UniTexMode, 0);
-                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
-            }
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 1);
-            _gl.SetUniform(_mmdShader.UniSphereTex, 1);
-            if (mat.SpTexture != null)
-            {
-                if (mmdMat.SpTextureMode == SphereTextureMode.Mul)
+                _gl.ActiveTexture(TextureUnit.Texture0 + 1);
+                _gl.SetUniform(_mmdShader.UniSphereTex, 1);
+                if (mat.SpTexture != null)
                 {
-                    _gl.SetUniform(_mmdShader.UniSphereTexMode, 1);
+                    if (mmdMat.SpTextureMode == SphereTextureMode.Mul)
+                    {
+                        _gl.SetUniform(_mmdShader.UniSphereTexMode, 1);
+                    }
+                    else if (mmdMat.SpTextureMode == SphereTextureMode.Add)
+                    {
+                        _gl.SetUniform(_mmdShader.UniSphereTexMode, 2);
+                    }
+
+                    _gl.SetUniform(_mmdShader.UniSphereTexMulFactor, mmdMat.SpTextureMulFactor);
+                    _gl.SetUniform(_mmdShader.UniSphereTexAddFactor, mmdMat.SpTextureAddFactor);
+
+                    _gl.BindTexture(GLEnum.Texture2D, mat.SpTexture.Id);
                 }
-                else if (mmdMat.SpTextureMode == SphereTextureMode.Add)
+                else
                 {
-                    _gl.SetUniform(_mmdShader.UniSphereTexMode, 2);
+                    _gl.SetUniform(_mmdShader.UniSphereTexMode, 0);
+                    _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
                 }
 
-                _gl.SetUniform(_mmdShader.UniSphereTexMulFactor, mmdMat.SpTextureMulFactor);
-                _gl.SetUniform(_mmdShader.UniSphereTexAddFactor, mmdMat.SpTextureAddFactor);
+                _gl.ActiveTexture(TextureUnit.Texture0 + 2);
+                _gl.SetUniform(_mmdShader.UniToonTex, 2);
+                if (mat.ToonTexture != null)
+                {
+                    _gl.SetUniform(_mmdShader.UniToonTexMulFactor, mmdMat.ToonTextureMulFactor);
+                    _gl.SetUniform(_mmdShader.UniToonTexAddFactor, mmdMat.ToonTextureAddFactor);
+                    _gl.SetUniform(_mmdShader.UniToonTexMode, 1);
 
-                _gl.BindTexture(GLEnum.Texture2D, mat.SpTexture.Id);
+                    _gl.BindTexture(GLEnum.Texture2D, mat.ToonTexture.Id);
+                    _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                    _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                }
+                else
+                {
+                    _gl.SetUniform(_mmdShader.UniToonTexMode, 0);
+                    _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
+                }
+
+                _gl.SetUniform(_mmdShader.UniLightColor, LightColor);
+                _gl.SetUniform(_mmdShader.UniLightDir, LightDir);
+
+                if (mmdMat.BothFace)
+                {
+                    _gl.Disable(GLEnum.CullFace);
+                }
+                else
+                {
+                    _gl.Enable(GLEnum.CullFace);
+                    _gl.CullFace(GLEnum.Back);
+                }
+
+                _gl.SetUniform(_mmdShader.UniShadowMapEnabled, 0);
+                _gl.SetUniform(_mmdShader.UniShadowMap0, 3);
+                _gl.SetUniform(_mmdShader.UniShadowMap1, 4);
+                _gl.SetUniform(_mmdShader.UniShadowMap2, 5);
+                _gl.SetUniform(_mmdShader.UniShadowMap3, 6);
+
+                _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+
+                _gl.ActiveTexture(TextureUnit.Texture0 + 0);
+                _gl.BindTexture(GLEnum.Texture2D, 0);
+
+                _gl.ActiveTexture(TextureUnit.Texture0 + 1);
+                _gl.BindTexture(GLEnum.Texture2D, 0);
+
+                _gl.ActiveTexture(TextureUnit.Texture0 + 2);
+                _gl.BindTexture(GLEnum.Texture2D, 0);
             }
-            else
-            {
-                _gl.SetUniform(_mmdShader.UniSphereTexMode, 0);
-                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
-            }
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 2);
-            _gl.SetUniform(_mmdShader.UniToonTex, 2);
-            if (mat.ToonTexture != null)
-            {
-                _gl.SetUniform(_mmdShader.UniToonTexMulFactor, mmdMat.ToonTextureMulFactor);
-                _gl.SetUniform(_mmdShader.UniToonTexAddFactor, mmdMat.ToonTextureAddFactor);
-                _gl.SetUniform(_mmdShader.UniToonTexMode, 1);
-
-                _gl.BindTexture(GLEnum.Texture2D, mat.ToonTexture.Id);
-                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-            }
-            else
-            {
-                _gl.SetUniform(_mmdShader.UniToonTexMode, 0);
-                _gl.BindTexture(GLEnum.Texture2D, _defaultTexture.Id);
-            }
-
-            _gl.SetUniform(_mmdShader.UniLightColor, LightColor);
-            _gl.SetUniform(_mmdShader.UniLightDir, LightDir);
-
-            if (mmdMat.BothFace)
-            {
-                _gl.Disable(GLEnum.CullFace);
-            }
-            else
-            {
-                _gl.Enable(GLEnum.CullFace);
-                _gl.CullFace(GLEnum.Back);
-            }
-
-            _gl.SetUniform(_mmdShader.UniShadowMapEnabled, 0);
-            _gl.SetUniform(_mmdShader.UniShadowMap0, 3);
-            _gl.SetUniform(_mmdShader.UniShadowMap1, 4);
-            _gl.SetUniform(_mmdShader.UniShadowMap2, 5);
-            _gl.SetUniform(_mmdShader.UniShadowMap3, 6);
-
-            _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 0);
-            _gl.BindTexture(GLEnum.Texture2D, 0);
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 1);
-            _gl.BindTexture(GLEnum.Texture2D, 0);
-
-            _gl.ActiveTexture(TextureUnit.Texture0 + 2);
-            _gl.BindTexture(GLEnum.Texture2D, 0);
 
             _gl.BindVertexArray(0);
             _gl.UseProgram(0);
         }
 
         // Draw edge
-        Vector2 screenSize = new(screenWidth, screenHeight);
-        foreach (MMDMesh mesh in meshes)
         {
-            MMDMaterial mmdMat = mesh.Material;
-
-            if (mmdMat.EdgeFlag == 0)
-            {
-                continue;
-            }
-
-            if (mmdMat.Alpha == 0.0f)
-            {
-                continue;
-            }
+            _gl.Enable(GLEnum.CullFace);
+            _gl.CullFace(GLEnum.Front);
 
             _gl.UseProgram(_mmdEdgeShader.Id);
             _gl.BindVertexArray(mmdEdgeVAO);
 
             _gl.SetUniform(_mmdEdgeShader.UniWVP, transform * camera.View * camera.Projection);
             _gl.SetUniform(_mmdEdgeShader.UniWV, transform * camera.View);
-            _gl.SetUniform(_mmdEdgeShader.UniScreenSize, screenSize);
-            _gl.SetUniform(_mmdEdgeShader.UniEdgeSize, mmdMat.EdgeSize);
-            _gl.SetUniform(_mmdEdgeShader.UniEdgeColor, mmdMat.EdgeColor);
+            _gl.SetUniform(_mmdEdgeShader.UniScreenSize, new Vector2(screenWidth, screenHeight));
 
-            _gl.Enable(GLEnum.CullFace);
-            _gl.CullFace(GLEnum.Front);
+            foreach (MMDMesh mesh in meshes)
+            {
+                MMDMaterial mmdMat = mesh.Material;
 
-            _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+                if (mmdMat.EdgeFlag == 0)
+                {
+                    continue;
+                }
+
+                if (mmdMat.Alpha == 0.0f)
+                {
+                    continue;
+                }
+
+                _gl.SetUniform(_mmdEdgeShader.UniEdgeSize, mmdMat.EdgeSize);
+                _gl.SetUniform(_mmdEdgeShader.UniEdgeColor, mmdMat.EdgeColor);
+
+                _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+            }
 
             _gl.BindVertexArray(0);
             _gl.UseProgram(0);
         }
 
         // Draw ground shadow
-        _gl.Enable(GLEnum.PolygonOffsetFill);
-        _gl.PolygonOffset(-1.0f, -1.0f);
-
-        Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
-        Matrix4x4 shadowMatrix = transform * shadow * camera.View * camera.Projection;
-
-        if (ShadowColor.W < 1.0f)
         {
-            _gl.Enable(GLEnum.Blend);
-            _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+            _gl.Enable(GLEnum.PolygonOffsetFill);
+            _gl.PolygonOffset(-1.0f, -1.0f);
 
-            _gl.Enable(GLEnum.StencilTest);
-            _gl.StencilFuncSeparate(GLEnum.FrontAndBack, GLEnum.Notequal, 1, 1);
-            _gl.StencilOp(GLEnum.Keep, GLEnum.Keep, GLEnum.Replace);
-        }
-        else
-        {
-            _gl.Disable(GLEnum.Blend);
-        }
+            Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
+            Matrix4x4 shadowMatrix = transform * shadow * camera.View * camera.Projection;
 
-        _gl.Disable(GLEnum.CullFace);
-
-        foreach (MMDMesh mesh in meshes)
-        {
-            MMDMaterial mmdMat = mesh.Material;
-
-            if (!mmdMat.GroundShadow)
+            if (ShadowColor.W < 1.0f)
             {
-                continue;
+                _gl.Enable(GLEnum.Blend);
+                _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+
+                _gl.Enable(GLEnum.StencilTest);
+                _gl.StencilFuncSeparate(GLEnum.FrontAndBack, GLEnum.Notequal, 1, 1);
+                _gl.StencilOp(GLEnum.Keep, GLEnum.Keep, GLEnum.Replace);
+            }
+            else
+            {
+                _gl.Disable(GLEnum.Blend);
             }
 
-            if (mmdMat.Alpha == 0.0f)
-            {
-                continue;
-            }
+            _gl.Disable(GLEnum.CullFace);
 
             _gl.UseProgram(_mmdGroundShadowShader.Id);
             _gl.BindVertexArray(mmdGroundShadowVAO);
@@ -341,7 +331,22 @@ public unsafe class MikuMikuDance : IDisposable
             _gl.SetUniform(_mmdGroundShadowShader.UniWVP, shadowMatrix);
             _gl.SetUniform(_mmdGroundShadowShader.UniShadowColor, ShadowColor);
 
-            _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+            foreach (MMDMesh mesh in meshes)
+            {
+                MMDMaterial mmdMat = mesh.Material;
+
+                if (!mmdMat.GroundShadow)
+                {
+                    continue;
+                }
+
+                if (mmdMat.Alpha == 0.0f)
+                {
+                    continue;
+                }
+
+                _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+            }
 
             _gl.BindVertexArray(0);
             _gl.UseProgram(0);
