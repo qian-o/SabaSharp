@@ -38,7 +38,7 @@ public class VmdBezier
         float it = 1.0f - t;
         float it2 = it * it;
         float it3 = it2 * it;
-        float[] x = { 0, Cp1.X, Cp2.X, 1 };
+        float[] x = [0, Cp1.X, Cp2.X, 1];
 
         return t3 * x[3] + 3 * t2 * it * x[2] + 3 * t * it2 * x[1] + it3 * x[0];
     }
@@ -50,7 +50,7 @@ public class VmdBezier
         float it = 1.0f - t;
         float it2 = it * it;
         float it3 = it2 * it;
-        float[] y = { 0, Cp1.Y, Cp2.Y, 1 };
+        float[] y = [0, Cp1.Y, Cp2.Y, 1];
 
         return t3 * y[3] + 3 * t2 * it * y[2] + 3 * t * it2 * y[1] + it3 * y[0];
     }
@@ -114,24 +114,14 @@ public class VmdNodeAnimationKey : VmdAnimationKey
     }
 }
 
-public class VmdMorphAnimationKey : VmdAnimationKey
+public class VmdMorphAnimationKey(int time, float weight) : VmdAnimationKey(time)
 {
-    public float Weight { get; }
-
-    public VmdMorphAnimationKey(int time, float weight) : base(time)
-    {
-        Weight = weight;
-    }
+    public float Weight { get; } = weight;
 }
 
-public class VmdIkAnimationKey : VmdAnimationKey
+public class VmdIkAnimationKey(int time, bool enable) : VmdAnimationKey(time)
 {
-    public bool Enable { get; }
-
-    public VmdIkAnimationKey(int time, bool enable) : base(time)
-    {
-        Enable = enable;
-    }
+    public bool Enable { get; } = enable;
 }
 #endregion
 
@@ -147,7 +137,7 @@ public abstract class VmdAnimationController<TKey, TObject> where TKey : VmdAnim
 
     protected VmdAnimationController(TObject @object)
     {
-        _keys = new List<TKey>();
+        _keys = [];
 
         Object = @object;
     }
@@ -159,7 +149,7 @@ public abstract class VmdAnimationController<TKey, TObject> where TKey : VmdAnim
 
     public void SortKeys()
     {
-        TKey[] keys = _keys.OrderBy(key => key.Time).ToArray();
+        TKey[] keys = [.. _keys.OrderBy(key => key.Time)];
 
         _keys.Clear();
         _keys.AddRange(keys);

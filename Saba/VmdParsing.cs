@@ -13,130 +13,77 @@ public enum ShadowType : byte
 #endregion
 
 #region Classes
-public class VmdHeader
+public class VmdHeader(BinaryReader binaryReader)
 {
-    public string Title { get; }
+    public string Title { get; } = binaryReader.ReadString(30);
 
-    public string ModelName { get; }
-
-    public VmdHeader(BinaryReader binaryReader)
-    {
-        Title = binaryReader.ReadString(30);
-        ModelName = binaryReader.ReadString(20);
-    }
+    public string ModelName { get; } = binaryReader.ReadString(20);
 }
 
-public class VmdMotion
+public class VmdMotion(BinaryReader binaryReader)
 {
-    public string BoneName { get; }
+    public string BoneName { get; } = binaryReader.ReadString(15, BinaryReaderExtensions.ShiftJIS);
 
-    public uint Frame { get; }
+    public uint Frame { get; } = binaryReader.ReadUInt32();
 
-    public Vector3 Translate { get; }
+    public Vector3 Translate { get; } = binaryReader.ReadVector3();
 
-    public Quaternion Quaternion { get; }
+    public Quaternion Quaternion { get; } = binaryReader.ReadQuaternion();
 
-    public byte[] Interpolation { get; }
-
-    public VmdMotion(BinaryReader binaryReader)
-    {
-        BoneName = binaryReader.ReadString(15, BinaryReaderExtensions.ShiftJIS);
-        Frame = binaryReader.ReadUInt32();
-        Translate = binaryReader.ReadVector3();
-        Quaternion = binaryReader.ReadQuaternion();
-        Interpolation = binaryReader.ReadBytes(64);
-    }
+    public byte[] Interpolation { get; } = binaryReader.ReadBytes(64);
 }
 
-public class VmdMorph
+public class VmdMorph(BinaryReader binaryReader)
 {
-    public string BlendShapeName { get; }
+    public string BlendShapeName { get; } = binaryReader.ReadString(15, BinaryReaderExtensions.ShiftJIS);
 
-    public uint Frame { get; }
+    public uint Frame { get; } = binaryReader.ReadUInt32();
 
-    public float Weight { get; }
-
-    public VmdMorph(BinaryReader binaryReader)
-    {
-        BlendShapeName = binaryReader.ReadString(15, BinaryReaderExtensions.ShiftJIS);
-        Frame = binaryReader.ReadUInt32();
-        Weight = binaryReader.ReadSingle();
-    }
+    public float Weight { get; } = binaryReader.ReadSingle();
 }
 
-public class VmdCamera
+public class VmdCamera(BinaryReader binaryReader)
 {
-    public uint Frame { get; }
+    public uint Frame { get; } = binaryReader.ReadUInt32();
 
-    public float Distance { get; }
+    public float Distance { get; } = binaryReader.ReadSingle();
 
-    public Vector3 Interest { get; }
+    public Vector3 Interest { get; } = binaryReader.ReadVector3();
 
-    public Vector3 Rotate { get; }
+    public Vector3 Rotate { get; } = binaryReader.ReadVector3();
 
-    public byte[] Interpolation { get; }
+    public byte[] Interpolation { get; } = binaryReader.ReadBytes(24);
 
-    public uint ViewAngle { get; }
+    public uint ViewAngle { get; } = binaryReader.ReadUInt32();
 
-    public bool IsPerspective { get; }
-
-    public VmdCamera(BinaryReader binaryReader)
-    {
-        Frame = binaryReader.ReadUInt32();
-        Distance = binaryReader.ReadSingle();
-        Interest = binaryReader.ReadVector3();
-        Rotate = binaryReader.ReadVector3();
-        Interpolation = binaryReader.ReadBytes(24);
-        ViewAngle = binaryReader.ReadUInt32();
-        IsPerspective = binaryReader.ReadBoolean();
-    }
+    public bool IsPerspective { get; } = binaryReader.ReadBoolean();
 }
 
-public class VmdLight
+public class VmdLight(BinaryReader binaryReader)
 {
-    public uint Frame { get; }
+    public uint Frame { get; } = binaryReader.ReadUInt32();
 
-    public Vector3 Color { get; }
+    public Vector3 Color { get; } = binaryReader.ReadVector3();
 
-    public Vector3 Position { get; }
-
-    public VmdLight(BinaryReader binaryReader)
-    {
-        Frame = binaryReader.ReadUInt32();
-        Color = binaryReader.ReadVector3();
-        Position = binaryReader.ReadVector3();
-    }
+    public Vector3 Position { get; } = binaryReader.ReadVector3();
 }
 
-public class VmdShadow
+public class VmdShadow(BinaryReader binaryReader)
 {
-    public uint Frame { get; }
+    public uint Frame { get; } = binaryReader.ReadUInt32();
 
-    public ShadowType Mode { get; }
+    public ShadowType Mode { get; } = (ShadowType)binaryReader.ReadByte();
 
-    public float Distance { get; }
-
-    public VmdShadow(BinaryReader binaryReader)
-    {
-        Frame = binaryReader.ReadUInt32();
-        Mode = (ShadowType)binaryReader.ReadByte();
-        Distance = binaryReader.ReadSingle();
-    }
+    public float Distance { get; } = binaryReader.ReadSingle();
 }
 
 public class VmdIk
 {
-    public class Info
+    public class Info(BinaryReader binaryReader)
     {
-        public string Name { get; }
+        public string Name { get; } = binaryReader.ReadString(20, BinaryReaderExtensions.ShiftJIS);
 
-        public bool Enable { get; }
-
-        public Info(BinaryReader binaryReader)
-        {
-            Name = binaryReader.ReadString(20, BinaryReaderExtensions.ShiftJIS);
-            Enable = binaryReader.ReadBoolean();
-        }
+        public bool Enable { get; } = binaryReader.ReadBoolean();
     }
 
     public uint Frame { get; }

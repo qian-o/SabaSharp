@@ -37,7 +37,7 @@ public unsafe class PmxModel : MMDModel
 
     private class PositionMorphData
     {
-        public List<PositionMorph> MorphVertices { get; } = new();
+        public List<PositionMorph> MorphVertices { get; } = [];
     }
 
     private class UVMorph
@@ -49,7 +49,7 @@ public unsafe class PmxModel : MMDModel
 
     private class UVMorphData
     {
-        public List<UVMorph> MorphUVs { get; } = new();
+        public List<UVMorph> MorphUVs { get; } = [];
     }
 
     private class MaterialFactor
@@ -161,31 +161,26 @@ public unsafe class PmxModel : MMDModel
 
     private class MaterialMorphData
     {
-        public List<MaterialMorph> MaterialMorphs { get; } = new();
+        public List<MaterialMorph> MaterialMorphs { get; } = [];
     }
 
-    private class BoneMorph
+    private class BoneMorph(MMDNode node)
     {
-        public MMDNode Node { get; }
+        public MMDNode Node { get; } = node;
 
         public Vector3 Position { get; set; }
 
         public Quaternion Rotate { get; set; }
-
-        public BoneMorph(MMDNode node)
-        {
-            Node = node;
-        }
     }
 
     private class BoneMorphData
     {
-        public List<BoneMorph> BoneMorphs { get; } = new();
+        public List<BoneMorph> BoneMorphs { get; } = [];
     }
 
     private class GroupMorphData
     {
-        public List<GroupMorph> GroupMorphs { get; } = new();
+        public List<GroupMorph> GroupMorphs { get; } = [];
     }
     #endregion
 
@@ -219,9 +214,9 @@ public unsafe class PmxModel : MMDModel
     private FixedArray<Vector3> morphPositions;
     private FixedArray<Vector4> morphUVs;
 
-    private MMDMaterial[] initMaterials = Array.Empty<MMDMaterial>();
-    private MaterialFactor[] mulMaterialFactors = Array.Empty<MaterialFactor>();
-    private MaterialFactor[] addMaterialFactors = Array.Empty<MaterialFactor>();
+    private MMDMaterial[] initMaterials = [];
+    private MaterialFactor[] mulMaterialFactors = [];
+    private MaterialFactor[] addMaterialFactors = [];
 
     private MMDPhysicsManager? physicsManager;
 
@@ -252,17 +247,17 @@ public unsafe class PmxModel : MMDModel
 
     public PmxModel()
     {
-        _materials = new List<MMDMaterial>();
-        _meshes = new List<MMDMesh>();
-        _nodes = new List<PmxNode>();
-        _sortedNodes = new List<PmxNode>();
-        _ikSolvers = new List<MMDIkSolver>();
-        _morphs = new List<PmxMorph>();
-        _positionMorphDatas = new List<PositionMorphData>();
-        _uvMorphDatas = new List<UVMorphData>();
-        _materialMorphDatas = new List<MaterialMorphData>();
-        _boneMorphDatas = new List<BoneMorphData>();
-        _groupMorphDatas = new List<GroupMorphData>();
+        _materials = [];
+        _meshes = [];
+        _nodes = [];
+        _sortedNodes = [];
+        _ikSolvers = [];
+        _morphs = [];
+        _positionMorphDatas = [];
+        _uvMorphDatas = [];
+        _materialMorphDatas = [];
+        _boneMorphDatas = [];
+        _groupMorphDatas = [];
     }
 
     public override bool Load(string path, string mmdDataDir)
@@ -279,7 +274,7 @@ public unsafe class PmxModel : MMDModel
 
         // Create Kernel
         uint alignment = 4096;
-        if (Kernel.Create(File.ReadAllText("skinned_animation.cl"), "Run", new string[] { "-cl-mad-enable" }) is Kernel temp)
+        if (Kernel.Create(File.ReadAllText("skinned_animation.cl"), "Run", ["-cl-mad-enable"]) is Kernel temp)
         {
             kernel = temp;
 
@@ -382,7 +377,7 @@ public unsafe class PmxModel : MMDModel
         }
 
         // 纹理
-        List<string> texturePaths = new();
+        List<string> texturePaths = [];
         foreach (PmxTexture texture in pmx.Textures)
         {
             string texPath = Path.Combine(dir, texture.Name.FormatFilePath());
@@ -816,7 +811,7 @@ public unsafe class PmxModel : MMDModel
 
     public override MMDIkSolver[] GetIkSolvers()
     {
-        return _ikSolvers.ToArray();
+        return [.. _ikSolvers];
     }
 
     public override MMDNode? FindNode(Predicate<MMDNode> predicate)
@@ -881,12 +876,12 @@ public unsafe class PmxModel : MMDModel
 
     public override MMDMaterial[] GetMaterials()
     {
-        return _materials.ToArray();
+        return [.. _materials];
     }
 
     public override MMDMesh[] GetMeshes()
     {
-        return _meshes.ToArray();
+        return [.. _meshes];
     }
 
     public override void InitializeAnimation()
@@ -1217,7 +1212,7 @@ public unsafe class PmxModel : MMDModel
         morphPositions.Dispose();
         morphUVs.Dispose();
 
-        initMaterials = Array.Empty<MMDMaterial>();
+        initMaterials = [];
 
         physicsManager?.Dispose();
 

@@ -4,12 +4,8 @@ using System.Numerics;
 namespace Saba;
 
 #region Classes
-public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMDNode>
+public class VmdNodeController(MMDNode @object) : VmdAnimationController<VmdNodeAnimationKey, MMDNode>(@object)
 {
-    public VmdNodeController(MMDNode @object) : base(@object)
-    {
-    }
-
     public override void Evaluate(float t, float weight = 1.0f)
     {
         if (Object == null)
@@ -76,12 +72,8 @@ public class VmdNodeController : VmdAnimationController<VmdNodeAnimationKey, MMD
     }
 }
 
-public class VmdMorphController : VmdAnimationController<VmdMorphAnimationKey, MMDMorph>
+public class VmdMorphController(MMDMorph @object) : VmdAnimationController<VmdMorphAnimationKey, MMDMorph>(@object)
 {
-    public VmdMorphController(MMDMorph @object) : base(@object)
-    {
-    }
-
     public override void Evaluate(float t, float weight = 1.0f)
     {
         if (Object == null)
@@ -127,12 +119,8 @@ public class VmdMorphController : VmdAnimationController<VmdMorphAnimationKey, M
     }
 }
 
-public class VmdIkController : VmdAnimationController<VmdIkAnimationKey, MMDIkSolver>
+public class VmdIkController(MMDIkSolver @object) : VmdAnimationController<VmdIkAnimationKey, MMDIkSolver>(@object)
 {
-    public VmdIkController(MMDIkSolver @object) : base(@object)
-    {
-    }
-
     public override void Evaluate(float t, float weight = 1.0f)
     {
         if (Object == null)
@@ -196,9 +184,9 @@ public class VmdAnimation : IDisposable
 
     public VmdAnimation()
     {
-        _nodeControllers = new List<VmdNodeController>();
-        _morphControllers = new List<VmdMorphController>();
-        _ikControllers = new List<VmdIkController>();
+        _nodeControllers = [];
+        _morphControllers = [];
+        _ikControllers = [];
     }
 
     public bool Load(string path, MMDModel model)
@@ -255,7 +243,7 @@ public class VmdAnimation : IDisposable
             _morphControllers.Add(controller);
         }
 
-        Dictionary<string, VmdIkController> ikCtrlMap = new();
+        Dictionary<string, VmdIkController> ikCtrlMap = [];
         foreach (VmdIk ik in vmd.Iks)
         {
             foreach (IGrouping<string, VmdIk.Info> ikInfo in ik.Infos.GroupBy(item => item.Name))
@@ -341,7 +329,7 @@ public class VmdAnimation : IDisposable
         int maxTime = 0;
         foreach (VmdNodeController controller in _nodeControllers)
         {
-            if (controller.Keys.Any())
+            if (controller.Keys.Length != 0)
             {
                 maxTime = MathHelper.Max(maxTime, controller.Keys.Last().Time);
             }
@@ -349,7 +337,7 @@ public class VmdAnimation : IDisposable
 
         foreach (VmdMorphController controller in _morphControllers)
         {
-            if (controller.Keys.Any())
+            if (controller.Keys.Length != 0)
             {
                 maxTime = MathHelper.Max(maxTime, controller.Keys.Last().Time);
             }
@@ -357,7 +345,7 @@ public class VmdAnimation : IDisposable
 
         foreach (VmdIkController controller in _ikControllers)
         {
-            if (controller.Keys.Any())
+            if (controller.Keys.Length != 0)
             {
                 maxTime = MathHelper.Max(maxTime, controller.Keys.Last().Time);
             }

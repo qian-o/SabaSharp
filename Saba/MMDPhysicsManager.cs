@@ -14,8 +14,8 @@ public class MMDPhysicsManager : IDisposable
     public MMDPhysicsManager()
     {
         Physics = new MMDPhysics();
-        _rigidBodies = new List<MMDRigidBody>();
-        _joints = new List<MMDJoint>();
+        _rigidBodies = [];
+        _joints = [];
     }
 
     public void AddRigidBody(MMDRigidBody rigidBody)

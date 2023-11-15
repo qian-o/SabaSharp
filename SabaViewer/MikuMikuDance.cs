@@ -58,8 +58,8 @@ public unsafe class MikuMikuDance : IDisposable
         _mmdShader = new(gl);
         _mmdEdgeShader = new(gl);
         _mmdGroundShadowShader = new(gl);
-        _materials = new();
-        _textures = new();
+        _materials = [];
+        _textures = [];
         _defaultTexture = new Texture2D(_gl);
         _defaultTexture.WriteColor(Color.White);
 

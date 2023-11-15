@@ -146,63 +146,40 @@ public enum PmxAeroModel
 #endregion
 
 #region Classes
-public class PmxHeader
+public class PmxHeader(BinaryReader binaryReader)
 {
-    public string Magic { get; }
+    public string Magic { get; } = binaryReader.ReadString(4);
 
-    public float Version { get; }
+    public float Version { get; } = binaryReader.ReadSingle();
 
-    public byte DataSize { get; }
+    public byte DataSize { get; } = binaryReader.ReadByte();
 
-    public Encoding Encoding { get; }
+    public Encoding Encoding { get; } = binaryReader.ReadByte() == 0 ? Encoding.Unicode : Encoding.UTF8;
 
-    public byte AdditionalUV { get; }
+    public byte AdditionalUV { get; } = binaryReader.ReadByte();
 
-    public byte VertexIndexSize { get; }
+    public byte VertexIndexSize { get; } = binaryReader.ReadByte();
 
-    public byte TextureIndexSize { get; }
+    public byte TextureIndexSize { get; } = binaryReader.ReadByte();
 
-    public byte MaterialIndexSize { get; }
+    public byte MaterialIndexSize { get; } = binaryReader.ReadByte();
 
-    public byte BoneIndexSize { get; }
+    public byte BoneIndexSize { get; } = binaryReader.ReadByte();
 
-    public byte MorphIndexSize { get; }
+    public byte MorphIndexSize { get; } = binaryReader.ReadByte();
 
-    public byte RigidBodyIndexSize { get; }
-
-    public PmxHeader(BinaryReader binaryReader)
-    {
-        Magic = binaryReader.ReadString(4);
-        Version = binaryReader.ReadSingle();
-        DataSize = binaryReader.ReadByte();
-        Encoding = binaryReader.ReadByte() == 0 ? Encoding.Unicode : Encoding.UTF8;
-        AdditionalUV = binaryReader.ReadByte();
-        VertexIndexSize = binaryReader.ReadByte();
-        TextureIndexSize = binaryReader.ReadByte();
-        MaterialIndexSize = binaryReader.ReadByte();
-        BoneIndexSize = binaryReader.ReadByte();
-        MorphIndexSize = binaryReader.ReadByte();
-        RigidBodyIndexSize = binaryReader.ReadByte();
-    }
+    public byte RigidBodyIndexSize { get; } = binaryReader.ReadByte();
 }
 
-public class PmxInfo
+public class PmxInfo(BinaryReader binaryReader, PmxHeader header)
 {
-    public string ModelName { get; }
+    public string ModelName { get; } = binaryReader.ReadString(header.Encoding);
 
-    public string ModelNameEn { get; }
+    public string ModelNameEn { get; } = binaryReader.ReadString(header.Encoding);
 
-    public string Comment { get; }
+    public string Comment { get; } = binaryReader.ReadString(header.Encoding);
 
-    public string CommentEn { get; }
-
-    public PmxInfo(BinaryReader binaryReader, PmxHeader header)
-    {
-        ModelName = binaryReader.ReadString(header.Encoding);
-        ModelNameEn = binaryReader.ReadString(header.Encoding);
-        Comment = binaryReader.ReadString(header.Encoding);
-        CommentEn = binaryReader.ReadString(header.Encoding);
-    }
+    public string CommentEn { get; } = binaryReader.ReadString(header.Encoding);
 }
 
 public class PmxVertex
@@ -321,14 +298,9 @@ public class PmxFace
     }
 }
 
-public class PmxTexture
+public class PmxTexture(BinaryReader binaryReader, PmxHeader header)
 {
-    public string Name { get; }
-
-    public PmxTexture(BinaryReader binaryReader, PmxHeader header)
-    {
-        Name = binaryReader.ReadString(header.Encoding);
-    }
+    public string Name { get; } = binaryReader.ReadString(header.Encoding);
 }
 
 public class PmxMaterial
@@ -458,7 +430,7 @@ public class PmxBone
 
     public float IKLimit { get; }
 
-    public IKLink[] IKLinks { get; } = Array.Empty<IKLink>();
+    public IKLink[] IKLinks { get; } = [];
 
     public PmxBone(BinaryReader binaryReader, PmxHeader header)
     {
@@ -518,131 +490,77 @@ public class PmxBone
 
 public class PmxMorph
 {
-    public class PositionMorph
+    public class PositionMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int VertexIndex { get; }
+        public int VertexIndex { get; } = binaryReader.ReadIndex(header.VertexIndexSize);
 
-        public Vector3 Position { get; }
-
-        public PositionMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            VertexIndex = binaryReader.ReadIndex(header.VertexIndexSize);
-            Position = binaryReader.ReadVector3();
-        }
+        public Vector3 Position { get; } = binaryReader.ReadVector3();
     }
 
-    public class UVMorph
+    public class UVMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int VertexIndex { get; }
+        public int VertexIndex { get; } = binaryReader.ReadIndex(header.VertexIndexSize);
 
-        public Vector4 UV { get; }
-
-        public UVMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            VertexIndex = binaryReader.ReadIndex(header.VertexIndexSize);
-            UV = binaryReader.ReadVector4();
-        }
+        public Vector4 UV { get; } = binaryReader.ReadVector4();
     }
 
-    public class BoneMorph
+    public class BoneMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int BoneIndex { get; }
+        public int BoneIndex { get; } = binaryReader.ReadIndex(header.BoneIndexSize);
 
-        public Vector3 Position { get; }
+        public Vector3 Position { get; } = binaryReader.ReadVector3();
 
-        public Quaternion Quaternion { get; }
-
-        public BoneMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            BoneIndex = binaryReader.ReadIndex(header.BoneIndexSize);
-            Position = binaryReader.ReadVector3();
-            Quaternion = binaryReader.ReadQuaternion();
-        }
+        public Quaternion Quaternion { get; } = binaryReader.ReadQuaternion();
     }
 
-    public class MaterialMorph
+    public class MaterialMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int MaterialIndex { get; }
+        public int MaterialIndex { get; } = binaryReader.ReadIndex(header.MaterialIndexSize);
 
-        public PmxOpType OpType { get; }
+        public PmxOpType OpType { get; } = (PmxOpType)binaryReader.ReadByte();
 
-        public Vector4 Diffuse { get; }
+        public Vector4 Diffuse { get; } = binaryReader.ReadVector4();
 
-        public Vector3 Specular { get; }
+        public Vector3 Specular { get; } = binaryReader.ReadVector3();
 
-        public float SpecularPower { get; }
+        public float SpecularPower { get; } = binaryReader.ReadSingle();
 
-        public Vector3 Ambient { get; }
+        public Vector3 Ambient { get; } = binaryReader.ReadVector3();
 
-        public Vector4 EdgeColor { get; }
+        public Vector4 EdgeColor { get; } = binaryReader.ReadVector4();
 
-        public float EdgeSize { get; }
+        public float EdgeSize { get; } = binaryReader.ReadSingle();
 
-        public Vector4 TextureCoefficient { get; }
+        public Vector4 TextureCoefficient { get; } = binaryReader.ReadVector4();
 
-        public Vector4 SphereTextureCoefficient { get; }
+        public Vector4 SphereTextureCoefficient { get; } = binaryReader.ReadVector4();
 
-        public Vector4 ToonTextureCoefficient { get; }
-
-        public MaterialMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            MaterialIndex = binaryReader.ReadIndex(header.MaterialIndexSize);
-            OpType = (PmxOpType)binaryReader.ReadByte();
-            Diffuse = binaryReader.ReadVector4();
-            Specular = binaryReader.ReadVector3();
-            SpecularPower = binaryReader.ReadSingle();
-            Ambient = binaryReader.ReadVector3();
-            EdgeColor = binaryReader.ReadVector4();
-            EdgeSize = binaryReader.ReadSingle();
-            TextureCoefficient = binaryReader.ReadVector4();
-            SphereTextureCoefficient = binaryReader.ReadVector4();
-            ToonTextureCoefficient = binaryReader.ReadVector4();
-        }
+        public Vector4 ToonTextureCoefficient { get; } = binaryReader.ReadVector4();
     }
 
-    public class GroupMorph
+    public class GroupMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int MorphIndex { get; }
+        public int MorphIndex { get; } = binaryReader.ReadIndex(header.MorphIndexSize);
 
-        public float Weight { get; }
-
-        public GroupMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            MorphIndex = binaryReader.ReadIndex(header.MorphIndexSize);
-            Weight = binaryReader.ReadSingle();
-        }
+        public float Weight { get; } = binaryReader.ReadSingle();
     }
 
-    public class FlipMorph
+    public class FlipMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int MorphIndex { get; }
+        public int MorphIndex { get; } = binaryReader.ReadIndex(header.MorphIndexSize);
 
-        public float Weight { get; }
-
-        public FlipMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            MorphIndex = binaryReader.ReadIndex(header.MorphIndexSize);
-            Weight = binaryReader.ReadSingle();
-        }
+        public float Weight { get; } = binaryReader.ReadSingle();
     }
 
-    public class ImpulseMorph
+    public class ImpulseMorph(BinaryReader binaryReader, PmxHeader header)
     {
-        public int RigidBodyIndex { get; }
+        public int RigidBodyIndex { get; } = binaryReader.ReadIndex(header.RigidBodyIndexSize);
 
-        public bool Local { get; }
+        public bool Local { get; } = binaryReader.ReadBoolean();
 
-        public Vector3 Velocity { get; }
+        public Vector3 Velocity { get; } = binaryReader.ReadVector3();
 
-        public Vector3 Torque { get; }
-
-        public ImpulseMorph(BinaryReader binaryReader, PmxHeader header)
-        {
-            RigidBodyIndex = binaryReader.ReadIndex(header.RigidBodyIndexSize);
-            Local = binaryReader.ReadBoolean();
-            Velocity = binaryReader.ReadVector3();
-            Torque = binaryReader.ReadVector3();
-        }
+        public Vector3 Torque { get; } = binaryReader.ReadVector3();
     }
 
     public string Name { get; }
@@ -653,19 +571,19 @@ public class PmxMorph
 
     public PmxMorphType MorphType { get; }
 
-    public PositionMorph[] PositionMorphs { get; } = Array.Empty<PositionMorph>();
+    public PositionMorph[] PositionMorphs { get; } = [];
 
-    public UVMorph[] UVMorphs { get; } = Array.Empty<UVMorph>();
+    public UVMorph[] UVMorphs { get; } = [];
 
-    public BoneMorph[] BoneMorphs { get; } = Array.Empty<BoneMorph>();
+    public BoneMorph[] BoneMorphs { get; } = [];
 
-    public MaterialMorph[] MaterialMorphs { get; } = Array.Empty<MaterialMorph>();
+    public MaterialMorph[] MaterialMorphs { get; } = [];
 
-    public GroupMorph[] GroupMorphs { get; } = Array.Empty<GroupMorph>();
+    public GroupMorph[] GroupMorphs { get; } = [];
 
-    public FlipMorph[] FlipMorphs { get; } = Array.Empty<FlipMorph>();
+    public FlipMorph[] FlipMorphs { get; } = [];
 
-    public ImpulseMorph[] ImpulseMorphs { get; } = Array.Empty<ImpulseMorph>();
+    public ImpulseMorph[] ImpulseMorphs { get; } = [];
 
     public PmxMorph(BinaryReader binaryReader, PmxHeader header)
     {
@@ -776,7 +694,7 @@ public class PmxDisplayFrame
 
     public PmxFrameType FrameType { get; }
 
-    public Target[] Targets { get; } = Array.Empty<Target>();
+    public Target[] Targets { get; } = [];
 
     public PmxDisplayFrame(BinaryReader binaryReader, PmxHeader header)
     {
@@ -793,120 +711,77 @@ public class PmxDisplayFrame
     }
 }
 
-public class PmxRigidBody
+public class PmxRigidBody(BinaryReader binaryReader, PmxHeader header)
 {
-    public string Name { get; }
+    public string Name { get; } = binaryReader.ReadString(header.Encoding);
 
-    public string NameEn { get; }
+    public string NameEn { get; } = binaryReader.ReadString(header.Encoding);
 
-    public int BoneIndex { get; }
+    public int BoneIndex { get; } = binaryReader.ReadIndex(header.BoneIndexSize);
 
-    public byte Group { get; }
+    public byte Group { get; } = binaryReader.ReadByte();
 
-    public ushort CollisionGroup { get; }
+    public ushort CollisionGroup { get; } = binaryReader.ReadUInt16();
 
-    public PmxShape Shape { get; }
+    public PmxShape Shape { get; } = (PmxShape)binaryReader.ReadByte();
 
-    public Vector3 ShapeSize { get; }
+    public Vector3 ShapeSize { get; } = binaryReader.ReadVector3();
 
-    public Vector3 Translate { get; }
+    public Vector3 Translate { get; } = binaryReader.ReadVector3();
 
-    public Vector3 Rotate { get; }
+    public Vector3 Rotate { get; } = binaryReader.ReadVector3();
 
-    public float Mass { get; }
+    public float Mass { get; } = binaryReader.ReadSingle();
 
-    public float TranslateDimmer { get; }
+    public float TranslateDimmer { get; } = binaryReader.ReadSingle();
 
-    public float RotateDimmer { get; }
+    public float RotateDimmer { get; } = binaryReader.ReadSingle();
 
-    public float Repulsion { get; }
+    public float Repulsion { get; } = binaryReader.ReadSingle();
 
-    public float Friction { get; }
+    public float Friction { get; } = binaryReader.ReadSingle();
 
-    public PmxOperation Op { get; }
-
-    public PmxRigidBody(BinaryReader binaryReader, PmxHeader header)
-    {
-        Name = binaryReader.ReadString(header.Encoding);
-        NameEn = binaryReader.ReadString(header.Encoding);
-        BoneIndex = binaryReader.ReadIndex(header.BoneIndexSize);
-        Group = binaryReader.ReadByte();
-        CollisionGroup = binaryReader.ReadUInt16();
-        Shape = (PmxShape)binaryReader.ReadByte();
-        ShapeSize = binaryReader.ReadVector3();
-        Translate = binaryReader.ReadVector3();
-        Rotate = binaryReader.ReadVector3();
-        Mass = binaryReader.ReadSingle();
-        TranslateDimmer = binaryReader.ReadSingle();
-        RotateDimmer = binaryReader.ReadSingle();
-        Repulsion = binaryReader.ReadSingle();
-        Friction = binaryReader.ReadSingle();
-        Op = (PmxOperation)binaryReader.ReadByte();
-    }
+    public PmxOperation Op { get; } = (PmxOperation)binaryReader.ReadByte();
 }
 
-public class PmxJoint
+public class PmxJoint(BinaryReader binaryReader, PmxHeader header)
 {
-    public string Name { get; }
+    public string Name { get; } = binaryReader.ReadString(header.Encoding);
 
-    public string NameEn { get; }
+    public string NameEn { get; } = binaryReader.ReadString(header.Encoding);
 
-    public PmxJointType Type { get; }
+    public PmxJointType Type { get; } = (PmxJointType)binaryReader.ReadByte();
 
-    public int RigidBodyIndexA { get; }
+    public int RigidBodyIndexA { get; } = binaryReader.ReadIndex(header.RigidBodyIndexSize);
 
-    public int RigidBodyIndexB { get; }
+    public int RigidBodyIndexB { get; } = binaryReader.ReadIndex(header.RigidBodyIndexSize);
 
-    public Vector3 Translate { get; }
+    public Vector3 Translate { get; } = binaryReader.ReadVector3();
 
-    public Vector3 Rotate { get; }
+    public Vector3 Rotate { get; } = binaryReader.ReadVector3();
 
-    public Vector3 TranslateLowerLimit { get; }
+    public Vector3 TranslateLowerLimit { get; } = binaryReader.ReadVector3();
 
-    public Vector3 TranslateUpperLimit { get; }
+    public Vector3 TranslateUpperLimit { get; } = binaryReader.ReadVector3();
 
-    public Vector3 RotateLowerLimit { get; }
+    public Vector3 RotateLowerLimit { get; } = binaryReader.ReadVector3();
 
-    public Vector3 RotateUpperLimit { get; }
+    public Vector3 RotateUpperLimit { get; } = binaryReader.ReadVector3();
 
-    public Vector3 SpringTranslate { get; }
+    public Vector3 SpringTranslate { get; } = binaryReader.ReadVector3();
 
-    public Vector3 SpringRotate { get; }
-
-    public PmxJoint(BinaryReader binaryReader, PmxHeader header)
-    {
-        Name = binaryReader.ReadString(header.Encoding);
-        NameEn = binaryReader.ReadString(header.Encoding);
-        Type = (PmxJointType)binaryReader.ReadByte();
-        RigidBodyIndexA = binaryReader.ReadIndex(header.RigidBodyIndexSize);
-        RigidBodyIndexB = binaryReader.ReadIndex(header.RigidBodyIndexSize);
-        Translate = binaryReader.ReadVector3();
-        Rotate = binaryReader.ReadVector3();
-        TranslateLowerLimit = binaryReader.ReadVector3();
-        TranslateUpperLimit = binaryReader.ReadVector3();
-        RotateLowerLimit = binaryReader.ReadVector3();
-        RotateUpperLimit = binaryReader.ReadVector3();
-        SpringTranslate = binaryReader.ReadVector3();
-        SpringRotate = binaryReader.ReadVector3();
-    }
+    public Vector3 SpringRotate { get; } = binaryReader.ReadVector3();
 }
 
 public class PmxSoftBody
 {
-    public class AnchorRigidBody
+    public class AnchorRigidBody(BinaryReader binaryReader, PmxHeader header)
     {
-        public int RigidBodyIndex { get; }
+        public int RigidBodyIndex { get; } = binaryReader.ReadIndex(header.RigidBodyIndexSize);
 
-        public int VertexIndex { get; }
+        public int VertexIndex { get; } = binaryReader.ReadIndex(header.VertexIndexSize);
 
-        public bool NearMode { get; }
-
-        public AnchorRigidBody(BinaryReader binaryReader, PmxHeader header)
-        {
-            RigidBodyIndex = binaryReader.ReadIndex(header.RigidBodyIndexSize);
-            VertexIndex = binaryReader.ReadIndex(header.VertexIndexSize);
-            NearMode = binaryReader.ReadBoolean();
-        }
+        public bool NearMode { get; } = binaryReader.ReadBoolean();
     }
 
     public string Name { get; }
@@ -983,9 +858,9 @@ public class PmxSoftBody
 
     public float VST { get; }
 
-    public AnchorRigidBody[] AnchorRigidbodies { get; } = Array.Empty<AnchorRigidBody>();
+    public AnchorRigidBody[] AnchorRigidbodies { get; } = [];
 
-    public int[] PinVertexIndices { get; } = Array.Empty<int>();
+    public int[] PinVertexIndices { get; } = [];
 
     public PmxSoftBody(BinaryReader binaryReader, PmxHeader header)
     {
@@ -1103,7 +978,7 @@ public class PmxParsing
 
         PmxHeader header = ReadHeader(binaryReader);
 
-        if (!header.Magic.ToUpper().Contains("PMX") || header.Version != 2)
+        if (!header.Magic.Contains("PMX", StringComparison.CurrentCultureIgnoreCase) || header.Version != 2)
         {
             return null;
         }
@@ -1244,7 +1119,7 @@ public class PmxParsing
     {
         if (binaryReader.BaseStream.Position >= binaryReader.BaseStream.Length)
         {
-            return Array.Empty<PmxSoftBody>();
+            return [];
         }
 
         PmxSoftBody[] softBodies = new PmxSoftBody[binaryReader.ReadInt32()];

@@ -2,15 +2,8 @@
 
 namespace Saba;
 
-public class MMDFilterCallback : OverlapFilterCallback
+public class MMDFilterCallback(BroadphaseProxy floor) : OverlapFilterCallback
 {
-    private readonly BroadphaseProxy _floor;
-
-    public MMDFilterCallback(BroadphaseProxy floor)
-    {
-        _floor = floor;
-    }
-
     public override bool NeedBroadphaseCollision(BroadphaseProxy proxy0, BroadphaseProxy proxy1)
     {
         if (proxy1 == null)
@@ -18,7 +11,7 @@ public class MMDFilterCallback : OverlapFilterCallback
             return false;
         }
 
-        if (proxy0 == _floor || proxy1 == _floor)
+        if (proxy0 == floor || proxy1 == floor)
         {
             return true;
         }

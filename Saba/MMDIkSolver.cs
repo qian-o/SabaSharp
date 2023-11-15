@@ -15,9 +15,9 @@ public class MMDIkSolver
     #endregion
 
     #region Classes
-    private class IkChain
+    private class IkChain(MMDNode node)
     {
-        public MMDNode Node { get; }
+        public MMDNode Node { get; } = node;
 
         public bool EnableAxisLimit { get; set; }
 
@@ -30,11 +30,6 @@ public class MMDIkSolver
         public Quaternion SaveIkRot { get; set; }
 
         public float PlaneModeAngle { get; set; }
-
-        public IkChain(MMDNode node)
-        {
-            Node = node;
-        }
     }
     #endregion
 
@@ -54,7 +49,7 @@ public class MMDIkSolver
 
     public MMDIkSolver()
     {
-        _chains = new List<IkChain>();
+        _chains = [];
 
         IterateCount = 1;
         LimitAngle = MathHelper.TwoPi;

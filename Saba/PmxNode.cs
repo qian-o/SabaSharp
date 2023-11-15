@@ -2,9 +2,9 @@
 
 namespace Saba;
 
-public class PmxNode : MMDNode
+public class PmxNode(FixedArray<Matrix4x4> globals, FixedArray<Matrix4x4> inverseInits) : MMDNode(globals, inverseInits)
 {
-    public int DeformDepth { get; set; }
+    public int DeformDepth { get; set; } = -1;
 
     public bool IsDeformAfterPhysics { get; set; }
 
@@ -23,11 +23,6 @@ public class PmxNode : MMDNode
     public Quaternion AppendRotate { get; set; }
 
     public MMDIkSolver? IkSolver { get; set; }
-
-    public PmxNode(FixedArray<Matrix4x4> globals, FixedArray<Matrix4x4> inverseInits) : base(globals, inverseInits)
-    {
-        DeformDepth = -1;
-    }
 
     public void UpdateAppendTransform()
     {

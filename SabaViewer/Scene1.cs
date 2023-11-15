@@ -8,7 +8,7 @@ namespace SabaViewer;
 
 public class Scene1 : Game
 {
-    private readonly List<MikuMikuDance> _mikuMikuDances = new();
+    private readonly List<MikuMikuDance> _mikuMikuDances = [];
 
     private Vector3 translate = new(0.0f, 0.0f, -2.6f);
     private Vector3 scale = new(0.2f, 0.2f, 0.2f);

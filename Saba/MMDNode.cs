@@ -16,7 +16,7 @@ public abstract class MMDNode
 
     public MMDNode? Parent { get; set; }
 
-    public List<MMDNode> Children { get; } = new();
+    public List<MMDNode> Children { get; } = [];
 
     public Vector3 Translate { get; set; }
 

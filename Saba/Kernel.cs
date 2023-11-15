@@ -29,7 +29,7 @@ public unsafe class Kernel : IDisposable
         _queue = queue;
         _program = program;
         _kernel = kernel;
-        _buffers = new();
+        _buffers = [];
 
         Version = GetVersion(cl, device);
         Alignment = GetAlignment(cl, device);
@@ -255,7 +255,7 @@ public unsafe class Kernel : IDisposable
         if (queue == 0)
             return null;
 
-        options ??= new string[] { "-cl-opt-disable" };
+        options ??= ["-cl-opt-disable"];
 
         program = cl.CreateProgramWithSource(context, 1, new[] { code }, null, null);
 
