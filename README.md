@@ -1,5 +1,5 @@
 # SabaSharp
-这是一款基于 .NET 7 的跨平台 MikuMikuDance 渲染器，支持 Windows、Linux、macOS 等系统。
+这是一款基于 .NET 8 的跨平台 MikuMikuDance 渲染器，支持 Windows、Linux、macOS 等系统。
 
 ## 技术实现
 ### 项目参考：[saba](https://github.com/benikabocha/saba)、[Coocoo3D](https://github.com/sselecirPyM/Coocoo3D)
