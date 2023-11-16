@@ -38,7 +38,7 @@ public unsafe class MikuMikuDance : IDisposable
 
     public static Vector3 LightColor { get; set; } = new(1.0f, 1.0f, 1.0f);
 
-    public static Vector4 ShadowColor { get; set; } = new(0.4f, 0.2f, 0.2f, 0.7f);
+    public static Vector4 ShadowColor { get; set; } = new(0.17f, 0.17f, 0.17f, 0.7f);
 
     public static Vector3 LightDir { get; set; } = new(-0.5f, -1.0f, -0.5f);
 
@@ -51,6 +51,8 @@ public unsafe class MikuMikuDance : IDisposable
     public bool IsPlaying { get; set; } = false;
 
     public bool EnablePhysical { get; set; } = true;
+
+    public bool EnableShadow { get; set; } = true;
 
     public MikuMikuDance(GL gl, string modelPath, string? vmdPath = null)
     {
@@ -303,53 +305,56 @@ public unsafe class MikuMikuDance : IDisposable
 
         // Draw ground shadow
         {
-            _gl.Enable(GLEnum.PolygonOffsetFill);
-            _gl.PolygonOffset(-1.0f, -1.0f);
-
-            Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
-            Matrix4x4 shadowMatrix = transform * shadow * camera.View * camera.Projection;
-
-            if (ShadowColor.W < 1.0f)
+            if (EnableShadow)
             {
-                _gl.Enable(GLEnum.Blend);
-                _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+                _gl.Enable(GLEnum.PolygonOffsetFill);
+                _gl.PolygonOffset(-1.0f, -1.0f);
 
-                _gl.Enable(GLEnum.StencilTest);
-                _gl.StencilFuncSeparate(GLEnum.FrontAndBack, GLEnum.Notequal, 1, 1);
-                _gl.StencilOp(GLEnum.Keep, GLEnum.Keep, GLEnum.Replace);
-            }
-            else
-            {
-                _gl.Disable(GLEnum.Blend);
-            }
+                Matrix4x4 shadow = Matrix4x4.CreateShadow(-LightDir, new Plane(0.0f, 1.0f, 0.0f, 0.0f));
+                Matrix4x4 shadowMatrix = transform * shadow * camera.View * camera.Projection;
 
-            _gl.Disable(GLEnum.CullFace);
-
-            _gl.UseProgram(_mmdGroundShadowShader.Id);
-            _gl.BindVertexArray(mmdGroundShadowVAO);
-
-            _gl.SetUniform(_mmdGroundShadowShader.UniWVP, shadowMatrix);
-            _gl.SetUniform(_mmdGroundShadowShader.UniShadowColor, ShadowColor);
-
-            foreach (MMDMesh mesh in meshes)
-            {
-                MMDMaterial mmdMat = mesh.Material;
-
-                if (!mmdMat.GroundShadow)
+                if (ShadowColor.W < 1.0f)
                 {
-                    continue;
+                    _gl.Enable(GLEnum.Blend);
+                    _gl.BlendFunc(GLEnum.SrcAlpha, GLEnum.OneMinusSrcAlpha);
+
+                    _gl.Enable(GLEnum.StencilTest);
+                    _gl.StencilFuncSeparate(GLEnum.FrontAndBack, GLEnum.Notequal, 1, 1);
+                    _gl.StencilOp(GLEnum.Keep, GLEnum.Keep, GLEnum.Replace);
+                }
+                else
+                {
+                    _gl.Disable(GLEnum.Blend);
                 }
 
-                if (mmdMat.Alpha == 0.0f)
+                _gl.Disable(GLEnum.CullFace);
+
+                _gl.UseProgram(_mmdGroundShadowShader.Id);
+                _gl.BindVertexArray(mmdGroundShadowVAO);
+
+                _gl.SetUniform(_mmdGroundShadowShader.UniWVP, shadowMatrix);
+                _gl.SetUniform(_mmdGroundShadowShader.UniShadowColor, ShadowColor);
+
+                foreach (MMDMesh mesh in meshes)
                 {
-                    continue;
+                    MMDMaterial mmdMat = mesh.Material;
+
+                    if (!mmdMat.GroundShadow)
+                    {
+                        continue;
+                    }
+
+                    if (mmdMat.Alpha == 0.0f)
+                    {
+                        continue;
+                    }
+
+                    _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
                 }
 
-                _gl.DrawElements(GLEnum.Triangles, mesh.VertexCount, GLEnum.UnsignedInt, (void*)(mesh.BeginIndex * sizeof(uint)));
+                _gl.BindVertexArray(0);
+                _gl.UseProgram(0);
             }
-
-            _gl.BindVertexArray(0);
-            _gl.UseProgram(0);
         }
 
         _gl.Disable(GLEnum.StencilTest);
