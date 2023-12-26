@@ -18,7 +18,6 @@ public class Scene1 : Game
     protected override void Load()
     {
         _sceneModels.Add(new MikuMikuDance(gl, "Resources/原神天空盒/PMX/NIGHT.pmx".FormatFilePath()) { EnableShadow = false });
-        _sceneModels.Add(new MikuMikuDance(gl, "Resources/鸣神大社/鸣神大社.pmx".FormatFilePath()) { EnableShadow = false });
 
         _characterModels.Add(new MikuMikuDance(gl,
                                                "Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
