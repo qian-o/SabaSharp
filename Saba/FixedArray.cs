@@ -46,14 +46,8 @@ public readonly unsafe struct FixedArray<T> : IDisposable where T : unmanaged
         {
             int length = range.Item2 - range.Item1;
 
-            T* temp = buffer + range.Item1;
-
-            for (int i = 0; i < length; i++)
-            {
-                *temp = value;
-
-                temp++;
-            }
+            Span<T> values = new(buffer + range.Item1, length);
+            values.Fill(value);
         });
     }
 
