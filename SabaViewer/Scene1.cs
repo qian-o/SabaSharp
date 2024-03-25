@@ -1,14 +1,13 @@
-﻿using ImGuiNET;
+﻿using System.Numerics;
+using ImGuiNET;
 using Saba.Helpers;
 using SabaViewer.Contracts;
 using Silk.NET.OpenGLES;
-using System.Numerics;
 
 namespace SabaViewer;
 
 public class Scene1 : Game
 {
-    private readonly List<MikuMikuDance> _sceneModels = [];
     private readonly List<MikuMikuDance> _characterModels = [];
 
     private Vector3 translate = new(0.0f, 0.0f, 1.6f);
@@ -17,8 +16,6 @@ public class Scene1 : Game
 
     protected override void Load()
     {
-        _sceneModels.Add(new MikuMikuDance(gl, "Resources/原神天空盒/PMX/NIGHT.pmx".FormatFilePath()) { EnableShadow = false });
-
         _characterModels.Add(new MikuMikuDance(gl,
                                                "Resources/大喜/模型/登门喜鹊泠鸢yousa-ver2.0/泠鸢yousa登门喜鹊153cm-Apose2.1完整版(2).pmx".FormatFilePath(),
                                                "Resources/大喜/动作数据/大喜MMD动作数据-喜鹊泠鸢专用版.vmd".FormatFilePath()));
@@ -26,24 +23,12 @@ public class Scene1 : Game
         _characterModels.Add(new MikuMikuDance(gl,
                                                "Resources/KizunaAI_ver1.01/kizunaai/kizunaai.pmx".FormatFilePath(),
                                                "Resources/大喜/动作数据/大喜动作数据2.0配布修正滑步身体穿模等问题.vmd".FormatFilePath()));
-
-        foreach (MikuMikuDance mmd in _sceneModels)
-        {
-            mmd.Scale = new Vector3(0.12f);
-
-            mmd.Update(0.0f);
-        }
     }
 
     protected override void Render(double obj)
     {
         gl.ClearColor(1.0f, 0.8f, 0.75f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-
-        foreach (MikuMikuDance mmd in _sceneModels)
-        {
-            mmd.Draw(camera, Width, Height);
-        }
 
         foreach (MikuMikuDance mmd in _characterModels)
         {
