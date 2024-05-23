@@ -1,6 +1,6 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
+using Silk.NET.Maths;
 using Silk.NET.OpenGLES;
-using System.Numerics;
 
 namespace SabaViewer.Helpers;
 

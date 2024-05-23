@@ -1,6 +1,6 @@
-﻿using BulletSharp;
+﻿using System.Numerics;
+using BulletSharp;
 using Saba.Helpers;
-using System.Numerics;
 using BtVector3 = Evergine.Mathematics.Vector3;
 using MathHelper = Saba.Helpers.MathHelper;
 
