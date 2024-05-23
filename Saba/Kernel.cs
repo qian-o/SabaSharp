@@ -250,7 +250,7 @@ public unsafe class Kernel : IDisposable
 
         options ??= ["-cl-opt-disable"];
 
-        program = cl.CreateProgramWithSource(context, 1, new[] { code }, null, null);
+        program = cl.CreateProgramWithSource(context, 1, [code], null, null);
 
         if (cl.BuildProgram(program, 1, &device, string.Join(" ", options), null, null) != 0)
         {

@@ -7,9 +7,9 @@ public class MMDPhysicsManager : IDisposable
 
     public MMDPhysics Physics { get; }
 
-    public MMDRigidBody[] RigidBodies => _rigidBodies.ToArray();
+    public MMDRigidBody[] RigidBodies => [.. _rigidBodies];
 
-    public MMDJoint[] Joints => _joints.ToArray();
+    public MMDJoint[] Joints => [.. _joints];
 
     public MMDPhysicsManager()
     {

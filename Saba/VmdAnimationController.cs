@@ -4,14 +4,9 @@ using Saba.Helpers;
 namespace Saba;
 
 #region Classes
-public abstract class VmdAnimationKey
+public abstract class VmdAnimationKey(int time)
 {
-    public int Time { get; }
-
-    protected VmdAnimationKey(int time)
-    {
-        Time = time;
-    }
+    public int Time { get; } = time;
 }
 
 public class VmdBezier
@@ -125,22 +120,15 @@ public class VmdIkAnimationKey(int time, bool enable) : VmdAnimationKey(time)
 }
 #endregion
 
-public abstract class VmdAnimationController<TKey, TObject> where TKey : VmdAnimationKey
+public abstract class VmdAnimationController<TKey, TObject>(TObject @object) where TKey : VmdAnimationKey
 {
-    protected readonly List<TKey> _keys;
+    protected readonly List<TKey> _keys = [];
 
-    public TObject Object { get; }
+    public TObject Object { get; } = @object;
 
-    public TKey[] Keys => _keys.ToArray();
+    public TKey[] Keys => [.. _keys];
 
     public int StartKeyIndex { get; protected set; }
-
-    protected VmdAnimationController(TObject @object)
-    {
-        _keys = [];
-
-        Object = @object;
-    }
 
     public void AddKey(TKey key)
     {
