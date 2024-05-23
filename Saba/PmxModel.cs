@@ -801,12 +801,12 @@ public unsafe class PmxModel : MMDModel
 
     public override MMDNode[] GetNodes()
     {
-        return _nodes.ToArray();
+        return [.. _nodes];
     }
 
     public override MMDMorph[] GetMorphs()
     {
-        return _morphs.ToArray();
+        return [.. _morphs];
     }
 
     public override MMDIkSolver[] GetIkSolvers()
@@ -1230,14 +1230,9 @@ public unsafe class PmxModel : MMDModel
     {
         if (kernel != null && kernel.UseCoarseBuffer)
         {
-            T* ptr = kernel.SvmAlloc<T>(length, alignment, kernelFlags);
+            void destroy(nint buffer) => kernel.FreeSvm((void*)buffer);
 
-            if (ptr != null)
-            {
-                void destroy(nint buffer) => kernel.FreeSvm((void*)buffer);
-
-                return new FixedArray<T>(ptr, length, destroy);
-            }
+            return new FixedArray<T>(kernel.SvmAlloc<T>(length, kernelFlags), length, destroy);
         }
 
         return new FixedArray<T>(length, alignment);

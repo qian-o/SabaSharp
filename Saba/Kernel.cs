@@ -86,9 +86,9 @@ public unsafe class Kernel : IDisposable
     /// <param name="length">length</param>
     /// <param name="flags">flags</param>
     /// <returns></returns>
-    public T* SvmAlloc<T>(int length, uint alignment, MemFlags flags = MemFlags.None) where T : unmanaged
+    public T* SvmAlloc<T>(int length, MemFlags flags = MemFlags.None) where T : unmanaged
     {
-        return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), alignment);
+        return (T*)_cl.Svmalloc(_context, (SvmMemFlags)flags, (uint)(length * sizeof(T)), 0);
     }
 
     /// <summary>
