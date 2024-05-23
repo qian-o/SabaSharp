@@ -1230,14 +1230,17 @@ public unsafe class PmxModel : MMDModel
     {
         if (kernel != null && kernel.UseCoarseBuffer)
         {
-            void destroy(nint buffer) => kernel.FreeSvm((void*)buffer);
+            T* ptr = kernel.SvmAlloc<T>(length, alignment, kernelFlags);
 
-            return new FixedArray<T>(kernel.SvmAlloc<T>(length, alignment, kernelFlags), length, destroy);
+            if (ptr != null)
+            {
+                void destroy(nint buffer) => kernel.FreeSvm((void*)buffer);
+
+                return new FixedArray<T>(ptr, length, destroy);
+            }
         }
-        else
-        {
-            return new FixedArray<T>(length, alignment);
-        }
+
+        return new FixedArray<T>(length, alignment);
     }
 
     private void BeginMorphMaterial()
