@@ -14,6 +14,8 @@ public unsafe class Kernel : IDisposable
     private readonly nint _kernel;
     private readonly List<nint> _buffers;
 
+    public static bool UseOpenCL { get; set; } = true;
+
     public double Version { get; }
 
     public uint Alignment { get; }
@@ -223,6 +225,11 @@ public unsafe class Kernel : IDisposable
     /// <returns></returns>
     public static Kernel? Create(string code, string method, string[]? options = null)
     {
+        if (!UseOpenCL)
+        {
+            return null;
+        }
+
         CL cl = CL.GetApi();
 
         nint platform;
