@@ -8,7 +8,7 @@ internal class Program
         _ = args;
 
         // 设置是否使用 OpenCL。
-        Kernel.UseOpenCL = false;
+        Kernel.UseOpenCL = true;
 
         Scene1 scene1 = new();
 

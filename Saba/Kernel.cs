@@ -20,6 +20,8 @@ public unsafe class Kernel : IDisposable
 
     public uint Alignment { get; }
 
+    public uint[] MaxWorkItemSizes { get; }
+
     public bool UseCoarseBuffer { get; }
 
     internal Kernel(CL cl, nint platform, nint device, nint context, nint queue, nint program, nint kernel)
@@ -35,6 +37,7 @@ public unsafe class Kernel : IDisposable
 
         Version = GetVersion(cl, device);
         Alignment = GetAlignment(cl, device);
+        MaxWorkItemSizes = GetMaxWorkItemSizes(cl, device);
 
         // 检测支持的 SVM 类型。
         // https://www.intel.cn/content/www/cn/zh/developer/articles/technical/opencl-20-shared-virtual-memory-overview.html
@@ -187,13 +190,28 @@ public unsafe class Kernel : IDisposable
     }
 
     /// <summary>
-    /// Run the kernel.
+    /// Run the kernel by 1 dimension.
     /// </summary>
-    /// <param name="dim">dim</param>
     /// <param name="size">size</param>
-    public void Run(uint dim, int size)
+    public void Run1(int size)
     {
-        int state = _cl.EnqueueNdrangeKernel(_queue, _kernel, dim, null, (uint)size, null, 0, null, null);
+        uint maxWorkItemSize = MaxWorkItemSizes[0] / 2;
+
+        nuint* globalWorkSize = stackalloc nuint[1];
+        globalWorkSize[0] = (nuint)(size / maxWorkItemSize + 1) * maxWorkItemSize;
+
+        nuint* localWorkSize = stackalloc nuint[1];
+        localWorkSize[0] = maxWorkItemSize;
+
+        int state = _cl.EnqueueNdrangeKernel(_queue,
+                                             _kernel,
+                                             1,
+                                             null,
+                                             globalWorkSize,
+                                             localWorkSize,
+                                             0,
+                                             null,
+                                             null);
 
         State(state);
     }
@@ -247,7 +265,7 @@ public unsafe class Kernel : IDisposable
         if (device == 0)
             return null;
 
-        context = cl.CreateContext(null, 1, device, null, null, null);
+        context = cl.CreateContext(null, 1, in device, null, null, null);
         if (context == 0)
             return null;
 
@@ -403,5 +421,29 @@ public unsafe class Kernel : IDisposable
         cl.GetDeviceInfo(device, DeviceInfo.MemBaseAddrAlign, sizeof(uint), alignment, null);
 
         return *alignment;
+    }
+
+    /// <summary>
+    /// Get the maximum work item sizes.
+    /// </summary>
+    /// <param name="cl">cl</param>
+    /// <param name="device">device</param>
+    /// <returns></returns>
+    private static uint[] GetMaxWorkItemSizes(CL cl, nint device)
+    {
+        uint maxWorkItemDimensions = 0;
+        cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemDimensions, sizeof(uint), &maxWorkItemDimensions, null);
+
+        nuint* maxWorkItemSizes = stackalloc nuint[(int)maxWorkItemDimensions];
+        cl.GetDeviceInfo(device, DeviceInfo.MaxWorkItemSizes, (nuint)(sizeof(nuint) * maxWorkItemDimensions), maxWorkItemSizes, null);
+
+        uint[] sizes = new uint[(int)maxWorkItemDimensions];
+
+        for (int i = 0; i < maxWorkItemDimensions; i++)
+        {
+            sizes[i] = (uint)maxWorkItemSizes[i];
+        }
+
+        return sizes;
     }
 }

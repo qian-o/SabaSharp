@@ -48,7 +48,6 @@ public static unsafe class TextureExtensions
             {
                 IsAntialias = true,
                 IsDither = true,
-                FilterQuality = SKFilterQuality.High,
                 Shader = SKShader.CreateLinearGradient(new SKPoint(begin.X * 1024, begin.Y * 1024), new SKPoint(end.X * 1024, end.Y * 1024), colors.Select(c => new SKColor(c.R, c.G, c.B, c.A)).ToArray(), null, SKShaderTileMode.Repeat)
             };
             surface.Canvas.DrawRect(0, 0, 1024, 1024, paint);
@@ -59,7 +58,7 @@ public static unsafe class TextureExtensions
 
     public static void WriteMatrixArray(this Texture2D texture, IEnumerable<Matrix4X4<float>> matrices)
     {
-        Matrix4X4<float>[] matrixArray = matrices.ToArray();
+        Matrix4X4<float>[] matrixArray = [.. matrices];
 
         byte[] bytes = new byte[matrixArray.Length * 16 * sizeof(float)];
 

@@ -1122,7 +1122,7 @@ public unsafe class PmxModel : MMDModel
 
             if (kernel.UseCoarseBuffer)
             {
-                kernel.Run(1, length);
+                kernel.Run1(length);
 
                 kernel.MapSvm(morphPositions.Buffer, length, MapFlags.WriteInvalidateRegion);
                 kernel.MapSvm(morphUVs.Buffer, length, MapFlags.WriteInvalidateRegion);
@@ -1147,7 +1147,7 @@ public unsafe class PmxModel : MMDModel
             }
             else
             {
-                kernel.Run(1, length);
+                kernel.Run1(length);
 
                 morphPositionsPtr = kernel.MapBuffer<Vector3>(morphPositionsBuffer, length, MapFlags.WriteInvalidateRegion);
                 morphUVsPtr = kernel.MapBuffer<Vector4>(morphUVsBuffer, length, MapFlags.WriteInvalidateRegion);
